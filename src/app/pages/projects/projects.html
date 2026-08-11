@@ -161,6 +161,15 @@
               }}</span>
             </span>
           </button>
+          @if (project.status !== 'CANCELLED') {
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="cancelProject(project)">
+              <span class="menu-item-row">
+                <span class="material-symbols-rounded menu-icon">cancel</span>
+                <span>Projekt abbrechen</span>
+              </span>
+            </button>
+          }
         </mat-menu>
       </div>
     } @empty {

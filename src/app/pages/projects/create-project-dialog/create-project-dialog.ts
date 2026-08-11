@@ -3,6 +3,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { ProjectStore } from '../../../core/projects/project-store';
 import { TenantStore } from '../../../core/tenants/tenant-store';
 import { CreateProjectRequest } from '../../../model/project';
+import { getContrastTextColor } from '../../../util/color-contrast';
 
 @Component({
   selector: 'app-create-project-dialog',
@@ -14,6 +15,7 @@ export class CreateProjectDialog {
   private readonly dialogRef = inject(MatDialogRef<CreateProjectDialog>);
   private readonly projectStore = inject(ProjectStore);
   protected readonly tenantStore = inject(TenantStore);
+  protected readonly getContrastTextColor = getContrastTextColor;
 
   readonly tenantId = signal('');
   readonly title = signal('');

@@ -65,9 +65,9 @@
 .hero-tag {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-light);
   padding: 0.4rem 1.2rem;
   border-radius: 50rem;
+  border: 1px solid rgba(255, 255, 255, 0.15); // verhindert das "Verschmelzen" mit dem Hero-Hintergrund
 }
 
 .detail-body {

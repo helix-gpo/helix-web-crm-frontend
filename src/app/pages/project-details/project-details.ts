@@ -12,6 +12,7 @@ import { MilestoneDialog } from './milestone-dialog/milestone-dialog';
 import { EditProjectDialog } from './edit-project-dialog/edit-project-dialog';
 import { Toast } from '../../core/toast/toast';
 import { Project, ProjectStatus, Milestone } from '../../model/project';
+import { getContrastTextColor } from '../../util/color-contrast';
 
 @Component({
   selector: 'app-project-detail',
@@ -28,6 +29,7 @@ export class ProjectDetail {
   private readonly projectStore = inject(ProjectStore);
   private readonly tenantStore = inject(TenantStore);
   private readonly toast = inject(Toast);
+  protected readonly getContrastTextColor = getContrastTextColor;
 
   private readonly projectResource = httpResource<Project>(
     () => `${environment.apiBaseUrl}/projects/${this.id()}`,

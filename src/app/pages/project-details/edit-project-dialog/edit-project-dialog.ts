@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { ProjectApi } from '../../../core/projects/project-api';
 import { Project, ProjectStatus } from '../../../model/project';
+import { getContrastTextColor } from '../../../util/color-contrast';
 
 @Component({
   selector: 'app-edit-project-dialog',
@@ -14,6 +15,7 @@ export class EditProjectDialog {
   private readonly dialogRef = inject(MatDialogRef<EditProjectDialog>);
   private readonly projectApi = inject(ProjectApi);
   protected readonly data = inject<Project>(MAT_DIALOG_DATA);
+  protected readonly getContrastTextColor = getContrastTextColor;
 
   readonly statusOptions: { value: ProjectStatus; label: string }[] = [
     { value: 'LEAD', label: 'Interessent' },

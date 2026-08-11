@@ -8,12 +8,15 @@ import { ProjectApi } from '../../core/projects/project-api';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { CreateProjectDialog } from './create-project-dialog/create-project-dialog';
 import { Project, ProjectStatus } from '../../model/project';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { Toast } from '../../core/toast/toast';
+import { MatDividerModule } from '@angular/material/divider';
 
 type ViewMode = 'kanban' | 'list';
 
 @Component({
   selector: 'app-projects',
-  imports: [MatDialogModule, MatMenuModule],
+  imports: [MatDialogModule, MatMenuModule, MatDividerModule],
   templateUrl: './projects.html',
   styleUrl: './projects.scss',
 })
@@ -23,6 +26,7 @@ export class Projects {
   private readonly projectApi = inject(ProjectApi);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly toast = inject(Toast);
 
   readonly viewMode = signal<ViewMode>('list');
   readonly searchTerm = signal('');
@@ -101,5 +105,29 @@ export class Projects {
       : this.projectApi.publish(project.id);
     await firstValueFrom(call);
     this.projectStore.reload();
+  }
+
+  async cancelProject(project: Project): Promise<void> {
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Projekt abbrechen?',
+        message: `"${project.title}" wird auf "Abgebrochen" gesetzt und verschwindet aus dem aktiven Board. Die Historie (Meilensteine, Rechnungen) bleibt erhalten.`,
+        confirmLabel: 'Abbrechen setzen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      try {
+        await firstValueFrom(this.projectApi.changeStatus(project.id, 'CANCELLED'));
+        this.projectStore.reload();
+        this.toast.success(`${project.title} abgebrochen`);
+      } catch {
+        this.toast.error('Projekt konnte nicht abgebrochen werden');
+      }
+    }
   }
 }

@@ -83,7 +83,11 @@
     @if (tags().length > 0) {
       <div class="chip-list">
         @for (tag of tags(); track tag.value; let i = $index) {
-          <span class="chip" [style.background-color]="tag.colorHex">
+          <span
+            class="chip"
+            [style.background-color]="tag.colorHex"
+            [style.color]="getContrastTextColor(tag.colorHex)"
+          >
             {{ tag.value }}
             <button (click)="removeTag(i)">
               <span class="material-symbols-rounded">close</span>
@@ -105,6 +109,11 @@
           <button
             class="color-swatch"
             [style.background-color]="color.value"
+            [style.border-color]="
+              getContrastTextColor(color.value) === '#ffffff'
+                ? 'rgba(255,255,255,0.4)'
+                : 'rgba(13,20,36,0.3)'
+            "
             [class.color-swatch--active]="newTagColor() === color.value"
             (click)="newTagColor.set(color.value)"
           ></button>
