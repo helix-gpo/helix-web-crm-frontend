@@ -2,16 +2,17 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Avatar } from '../../util/avatar/avatar';
 import { TenantStore } from '../../core/tenants/tenant-store';
-import { Tenant } from '../../model/tenant';
+import { Toast } from '../../core/toast/toast';
 import { CreateTenantDialog } from './create-tenant-dialog/create-tenant-dialog';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { EditCoreDetailsDialog } from './edit-core-details-dialog/edit-core-details-dialog';
+import { Tenant } from '../../model/tenant';
 
 @Component({
   selector: 'app-tenants',
-  imports: [Avatar, MatMenuModule, MatDividerModule],
+  imports: [Avatar, MatMenuModule, MatDividerModule, MatDialogModule],
   templateUrl: './tenants.html',
   styleUrl: './tenants.scss',
 })
@@ -19,6 +20,7 @@ export class Tenants {
   protected readonly tenantStore = inject(TenantStore);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
 
   readonly searchTerm = signal('');
 
@@ -40,10 +42,32 @@ export class Tenants {
     this.router.navigate(['/tenants', tenantId]);
   }
 
+  async activate(tenant: Tenant): Promise<void> {
+    try {
+      await this.tenantStore.activate(tenant.id);
+      this.toast.success(`${tenant.companyName} aktiviert`);
+    } catch {
+      this.toast.error('Mandant konnte nicht aktiviert werden');
+    }
+  }
+
+  async archive(tenant: Tenant): Promise<void> {
+    try {
+      await this.tenantStore.archive(tenant.id);
+      this.toast.success(`${tenant.companyName} archiviert`);
+    } catch {
+      this.toast.error('Mandant konnte nicht archiviert werden');
+    }
+  }
+
   openCreateDialog(): void {
-    this.dialog.open(CreateTenantDialog, {
+    const dialogRef = this.dialog.open(CreateTenantDialog, {
       width: '64rem',
       panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Mandant angelegt');
     });
   }
 
@@ -54,14 +78,11 @@ export class Tenants {
       data: tenant,
     });
 
-    dialogRef.afterClosed().subscribe(() => this.tenantStore.reload());
-  }
-
-  async activate(tenant: Tenant): Promise<void> {
-    await this.tenantStore.activate(tenant.id);
-  }
-
-  async archive(tenant: Tenant): Promise<void> {
-    await this.tenantStore.archive(tenant.id);
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.tenantStore.reload();
+        this.toast.success('Stammdaten aktualisiert');
+      }
+    });
   }
 }

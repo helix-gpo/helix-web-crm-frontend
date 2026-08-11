@@ -1,17 +1,19 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 import { Avatar } from '../../util/avatar/avatar';
 import { environment } from '../../../environments/environment';
-import { Tenant, Partner } from '../../model/tenant';
-import { Project } from '../../model/project';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { PartnerDialog } from '../tenants/partner-dialog/partner-dialog';
-import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { TenantStore } from '../../core/tenants/tenant-store';
 import { TenantApi } from '../../core/tenants/tenant-api';
-import { firstValueFrom } from 'rxjs';
+import { Toast } from '../../core/toast/toast';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { EditTenantDialog } from '../tenants/edit-tenant-dialog/edit-tenant-dialog';
 import { EditCoreDetailsDialog } from '../tenants/edit-core-details-dialog/edit-core-details-dialog';
+import { PartnerDialog } from '../tenants/partner-dialog/partner-dialog';
+import { Tenant, Partner } from '../../model/tenant';
+import { Project } from '../../model/project';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -20,12 +22,13 @@ import { EditCoreDetailsDialog } from '../tenants/edit-core-details-dialog/edit-
   styleUrl: './tenant-detail.scss',
 })
 export class TenantDetail {
-  // Wird automatisch aus dem Route-Parameter :id befüllt (withComponentInputBinding)
   readonly id = input.required<string>();
 
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly tenantStore = inject(TenantStore);
   private readonly tenantApi = inject(TenantApi);
+  private readonly toast = inject(Toast);
 
   private readonly tenantResource = httpResource<Tenant>(
     () => `${environment.apiBaseUrl}/tenants/${this.id()}`,
@@ -61,6 +64,13 @@ export class TenantDetail {
     CANCELLED: 'Abgebrochen',
   };
 
+  // Aktualisiert sowohl diese Detail-Seite als auch die Tenants-Übersicht
+  // (gleiches Zwei-Ressourcen-Problem wie bei Projects)
+  private refreshEverywhere(): void {
+    this.tenantResource.reload();
+    this.tenantStore.reload();
+  }
+
   back(): void {
     this.router.navigate(['/tenants']);
   }
@@ -77,7 +87,8 @@ export class TenantDetail {
 
     dialogRef.afterClosed().subscribe((updated) => {
       if (updated) {
-        this.tenantResource.reload();
+        this.refreshEverywhere();
+        this.toast.success('Kontaktdaten aktualisiert');
       }
     });
   }
@@ -93,7 +104,10 @@ export class TenantDetail {
     });
 
     dialogRef.afterClosed().subscribe((updated) => {
-      if (updated) this.tenantResource.reload();
+      if (updated) {
+        this.refreshEverywhere();
+        this.toast.success('Stammdaten aktualisiert');
+      }
     });
   }
 
@@ -105,7 +119,10 @@ export class TenantDetail {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.partnersResource.reload();
+      if (result) {
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner hinzugefügt');
+      }
     });
   }
 
@@ -117,7 +134,10 @@ export class TenantDetail {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.partnersResource.reload();
+      if (result) {
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner aktualisiert');
+      }
     });
   }
 
@@ -135,8 +155,13 @@ export class TenantDetail {
 
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (confirmed) {
-      await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
-      this.partnersResource.reload();
+      try {
+        await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner entfernt');
+      } catch {
+        this.toast.error('Ansprechpartner konnte nicht entfernt werden');
+      }
     }
   }
 }
