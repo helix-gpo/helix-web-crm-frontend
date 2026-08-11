@@ -1,0 +1,183 @@
+@use '../../../styles' as *;
+
+.page-header {
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 2.4rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 1rem 0.4rem;
+  margin-right: 2rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-grey);
+  cursor: pointer;
+
+  &--active {
+    color: var(--main-navy);
+    border-bottom-color: var(--accent-cyan);
+  }
+}
+
+.tab-badge {
+  background-color: var(--accent-pink);
+  color: var(--text-light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.1rem 0.7rem;
+  border-radius: 50rem;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+
+  @include respond(lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @include respond(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.testimonial-card {
+  @include card-surface;
+  padding: 2rem;
+  @include flex-col(1.4rem);
+}
+
+.testimonial-header {
+  @include flex-between;
+}
+
+.testimonial-stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  font-size: 1.8rem;
+  color: var(--border-color);
+
+  &--filled {
+    color: var(--accent-pink);
+  }
+}
+
+.testimonial-description {
+  font-size: 1.4rem;
+  color: var(--text-dark);
+  font-style: italic;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.testimonial-footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-light);
+}
+
+.testimonial-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.testimonial-role {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.testimonial-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.action-button {
+  flex: 1;
+  @include button-base;
+  font-size: 1.3rem;
+  padding: 0.8rem 1.2rem;
+
+  &--approve {
+    background-color: var(--success-light);
+    color: var(--success);
+
+    &:hover {
+      background-color: var(--success);
+      color: var(--text-light);
+    }
+  }
+
+  &--reject {
+    background-color: var(--danger-light);
+    color: var(--danger);
+
+    &:hover {
+      background-color: var(--danger);
+      color: var(--text-light);
+    }
+  }
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  @include flex-col(0.8rem);
+  align-items: center;
+  padding: 4.8rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 4rem;
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

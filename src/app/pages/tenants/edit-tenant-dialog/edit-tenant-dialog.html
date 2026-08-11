@@ -1,0 +1,77 @@
+<div class="dialog-header">
+  <h2>{{ companyName() }} bearbeiten</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-group">
+    <p class="section-title">Kontaktdaten</p>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Kontakt-Email</label>
+        <input
+          type="email"
+          [value]="contactEmail()"
+          (input)="contactEmail.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input
+          type="text"
+          [value]="contactPhone()"
+          (input)="contactPhone.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field field--full">
+        <label>Straße</label>
+        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-row field-row--three">
+      <div class="field field--small">
+        <label>Nr.</label>
+        <input
+          type="text"
+          [value]="houseNumber()"
+          (input)="houseNumber.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field field--small">
+        <label>PLZ</label>
+        <input
+          type="text"
+          [value]="postalCode()"
+          (input)="postalCode.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Ort</label>
+        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
+      </div>
+    </div>
+  </div>
+
+  <p class="edit-hint">
+    <span class="material-symbols-rounded">info</span>
+    Firmenname, Rechtsform und USt-ID lassen sich hier nicht ändern.
+  </p>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

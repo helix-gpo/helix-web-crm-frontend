@@ -1,0 +1,17 @@
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper" [class.confirm-icon-wrapper--danger]="data.danger">
+    <span class="material-symbols-rounded">
+      {{ data.danger ? 'warning' : 'help' }}
+    </span>
+  </div>
+
+  <h2 class="confirm-title">{{ data.title }}</h2>
+  <p class="confirm-message">{{ data.message }}</p>
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [class.confirm-button--danger]="data.danger" (click)="confirm()">
+      {{ data.confirmLabel || 'Bestätigen' }}
+    </button>
+  </div>
+</div>

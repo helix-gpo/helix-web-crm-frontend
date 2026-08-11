@@ -1,0 +1,160 @@
+<div class="dialog-header">
+  <h2>Neuer Mandant</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-group">
+    <p class="section-title">Stammdaten</p>
+
+    <div class="field" [class.field--full]="true">
+      <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
+      <input
+        type="text"
+        placeholder="z. B. Musterfirma GmbH"
+        [value]="companyName()"
+        (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
+      />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Rechtsform / Vollständiger Name</label>
+        <input
+          type="text"
+          [value]="legalName()"
+          (input)="legalName.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>USt-ID</label>
+        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Kontakt-Email</label>
+        <input
+          type="email"
+          [value]="contactEmail()"
+          (input)="contactEmail.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input
+          type="text"
+          [value]="contactPhone()"
+          (input)="contactPhone.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field field--full">
+        <label>Straße</label>
+        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-row field-row--three">
+      <div class="field field--small">
+        <label>Nr.</label>
+        <input
+          type="text"
+          [value]="houseNumber()"
+          (input)="houseNumber.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field field--small">
+        <label>PLZ</label>
+        <input
+          type="text"
+          [value]="postalCode()"
+          (input)="postalCode.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Ort</label>
+        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="section-title-row">
+      <p class="section-title">Ansprechpartner (optional)</p>
+      <label class="toggle">
+        <input
+          type="checkbox"
+          [checked]="includePartner()"
+          (change)="includePartner.set($any($event.target).checked)"
+        />
+        <span>Direkt anlegen</span>
+      </label>
+    </div>
+
+    @if (includePartner()) {
+      <div class="field-row">
+        <div class="field">
+          <label>Vorname</label>
+          <input
+            type="text"
+            [value]="partnerFirstName()"
+            (input)="partnerFirstName.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Nachname</label>
+          <input
+            type="text"
+            [value]="partnerLastName()"
+            (input)="partnerLastName.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Rolle</label>
+          <input
+            type="text"
+            placeholder="z. B. Geschäftsführer"
+            [value]="partnerRole()"
+            (input)="partnerRole.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input
+            type="email"
+            [value]="partnerEmail()"
+            (input)="partnerEmail.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Telefon</label>
+          <input
+            type="text"
+            [value]="partnerPhone()"
+            (input)="partnerPhone.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Mandant anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

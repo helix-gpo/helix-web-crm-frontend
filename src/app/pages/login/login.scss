@@ -1,0 +1,104 @@
+@use '../../../styles' as *;
+
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  @include flex-center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.login-blob {
+  position: absolute;
+  width: 40rem;
+  height: 40rem;
+  border-radius: 50%;
+  filter: blur(8rem);
+
+  &--cyan {
+    background: rgba(3, 219, 255, 0.18);
+    top: -12rem;
+    left: -10rem;
+  }
+  &--pink {
+    background: rgba(252, 3, 213, 0.14);
+    bottom: -12rem;
+    right: -10rem;
+  }
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 4.8rem 4rem;
+  max-width: 44rem;
+  width: 100%;
+  text-align: center;
+  @include flex-col(1.2rem);
+  align-items: center;
+  backdrop-filter: blur(1rem);
+}
+
+.login-logo {
+  height: 6.4rem;
+  width: auto;
+  margin-bottom: 1.2rem;
+}
+
+.login-eyebrow {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+}
+
+.login-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.login-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+}
+
+.login-button {
+  @include button-base;
+  width: 100%;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  font-size: 1.5rem;
+  padding: 1.2rem 2rem;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+    transform: translateY(-0.2rem);
+  }
+}
+
+.login-back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  text-decoration: none;
+  margin-top: 0.8rem;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover {
+    color: var(--text-light);
+  }
+}

@@ -1,0 +1,159 @@
+@use '../styles' as *;
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-light);
+}
+
+// =====================
+// SIDEBAR
+// =====================
+
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--main-navy);
+  flex-shrink: 0;
+  @include flex-col;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 2.4rem 2.4rem;
+}
+
+.sidebar-logo {
+  height: 3.6rem;
+  width: auto;
+}
+
+.sidebar-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  @include flex-col(0.4rem);
+  padding: 1.2rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 1.4rem;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-light);
+  }
+
+  &.active {
+    background-color: var(--accent-cyan);
+    color: var(--main-navy);
+    font-weight: 700;
+  }
+}
+
+.soon-badge {
+  margin-left: auto;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.8rem;
+  border-radius: 50rem;
+  text-transform: uppercase;
+}
+
+// =====================
+// MAIN AREA
+// =====================
+
+.main-area {
+  flex: 1;
+  @include flex-col;
+  min-width: 0;
+}
+
+.topbar {
+  height: var(--topbar-height);
+  background-color: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+  @include flex-between;
+  padding: 0 2.4rem;
+}
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background-color: var(--bg-light);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1.4rem;
+  width: 32rem;
+
+  .material-symbols-rounded {
+    color: var(--text-grey);
+    font-size: 2rem;
+  }
+
+  input {
+    border: none;
+    background: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 1.4rem;
+    width: 100%;
+  }
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.user-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.logout-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  @include flex-center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.content {
+  flex: 1;
+  padding: 3.2rem;
+  overflow-y: auto;
+}

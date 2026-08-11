@@ -1,0 +1,172 @@
+@use '../../../styles' as *;
+
+.welcome-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  position: relative;
+  overflow: hidden;
+  @include flex-col;
+  align-items: center;
+  padding: 6.4rem 2rem 3.2rem;
+}
+
+.welcome-blob {
+  position: absolute;
+  width: 44rem;
+  height: 44rem;
+  border-radius: 50%;
+  filter: blur(9rem);
+
+  &--cyan {
+    background: rgba(3, 219, 255, 0.16);
+    top: -16rem;
+    left: -12rem;
+  }
+
+  &--pink {
+    background: rgba(252, 3, 213, 0.12);
+    bottom: -16rem;
+    right: -12rem;
+  }
+}
+
+.welcome-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
+  background-size: 2.6rem 2.6rem;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 1;
+  max-width: 76rem;
+  width: 100%;
+  text-align: center;
+  @include flex-col(1.2rem);
+  align-items: center;
+  flex: 1;
+}
+
+.welcome-logo {
+  height: 6.4rem;
+  width: auto;
+  margin-bottom: 1.2rem;
+}
+
+.welcome-eyebrow {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+}
+
+.welcome-title {
+  font-size: 3.6rem;
+  font-weight: 700;
+  color: var(--text-light);
+  line-height: 1.25;
+  max-width: 58rem;
+
+  .highlight {
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  @include respond(sm) {
+    font-size: 2.6rem;
+  }
+}
+
+.welcome-subtitle {
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 52rem;
+  margin-bottom: 0.8rem;
+}
+
+.welcome-login-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  font-size: 1.6rem;
+  padding: 1.3rem 3.2rem;
+  margin-bottom: 4.8rem;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+    transform: translateY(-0.2rem);
+  }
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); // vorher: repeat(4, 1fr)
+  gap: 1.6rem;
+  width: 100%;
+  align-items: stretch;
+
+  @include respond(lg) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.feature-card {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 2.4rem 2rem;
+  text-align: left;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
+  height: 100%; // sorgt zusätzlich für gleiche Höhe, nicht nur Breite
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    transform: translateY(-0.3rem);
+  }
+}
+
+.feature-icon-wrapper {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: var(--radius-sm);
+  background-color: rgba(3, 219, 255, 0.12);
+  @include flex-center;
+  margin-bottom: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2.4rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.feature-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.6rem;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.feature-description {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.welcome-footer {
+  position: relative;
+  z-index: 1;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  margin-top: 3.2rem;
+}

@@ -1,0 +1,348 @@
+@use '../../../styles' as *;
+
+.detail-hero {
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  padding: 4rem 3.2rem 5.6rem;
+  position: relative;
+  overflow: hidden;
+  margin: -3.2rem -3.2rem 0;
+}
+
+.detail-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: linear-gradient(180deg, black, transparent);
+}
+
+.detail-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 100rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50rem;
+  padding: 0.8rem 1.6rem 0.8rem 1.2rem;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  cursor: pointer;
+  margin-bottom: 2.4rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.4rem;
+}
+
+.hero-legal {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.detail-body {
+  max-width: 100rem;
+  margin: -3.2rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr 30rem;
+  gap: 2.4rem;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 3.2rem;
+
+  @include respond(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-main {
+  @include flex-col(2rem);
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.6rem;
+}
+
+.info-card-header .info-card-title {
+  margin-bottom: 0;
+}
+
+.count-badge {
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.2rem 1rem;
+  border-radius: 50rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem 0;
+  font-size: 1.4rem;
+  color: var(--text-dark);
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+    font-size: 2rem;
+  }
+}
+
+.partner-row,
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.project-row {
+  justify-content: space-between;
+}
+
+.partner-name,
+.project-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.partner-role,
+.project-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.detail-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 2rem;
+
+  &--dark {
+    background-color: var(--main-navy);
+    border: none;
+  }
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+
+  &--light {
+    color: var(--text-muted);
+  }
+}
+
+.website-status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 2.2rem;
+  }
+
+  &--active {
+    color: var(--accent-cyan-hover);
+  }
+}
+
+.sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1rem 0.8rem;
+  color: var(--text-light);
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.status-badge--project {
+  &.status-badge--lead {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+  &.status-badge--in_progress {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  &.status-badge--on_hold {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+  &.status-badge--completed {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &.status-badge--cancelled {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.add-icon-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan-light);
+  color: var(--accent-cyan-hover);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan);
+    color: var(--text-light);
+  }
+}
+
+.partner-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.partner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.partner-actions {
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.partner-row:hover .partner-actions {
+  opacity: 1;
+}
+
+.icon-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  outline: none;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--bg-light) !important;
+  }
+
+  &--danger {
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--danger) !important;
+      color: var(--text-light) !important;
+    }
+  }
+}

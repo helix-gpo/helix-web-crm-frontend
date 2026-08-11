@@ -1,0 +1,153 @@
+@if (project(); as p) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Projekte</span>
+      </button>
+
+      <p class="hero-tenant">{{ tenantName() }}</p>
+      <h1 class="hero-title">{{ p.title }}</h1>
+
+      @if (p.tags.length > 0) {
+        <div class="hero-tags">
+          @for (tag of p.tags; track tag.value) {
+            <span class="hero-tag" [style.background-color]="tag.colorHex">{{ tag.value }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      @if (p.description || p.fullDescription) {
+        <div class="info-card">
+          @if (p.description) {
+            <p class="project-intro">{{ p.description }}</p>
+          }
+          @if (p.fullDescription) {
+            <p class="project-full">{{ p.fullDescription }}</p>
+          }
+        </div>
+      }
+
+      @if (p.highlights.length > 0) {
+        <div class="info-card">
+          <p class="info-card-title">Highlights</p>
+          <ul class="highlight-list">
+            @for (highlight of p.highlights; track highlight) {
+              <li>
+                <span class="material-symbols-rounded">check_circle</span>
+                <span>{{ highlight }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Meilensteine</p>
+          <button
+            class="add-icon-button"
+            (click)="openAddMilestoneDialog()"
+            title="Meilenstein hinzufügen"
+          >
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @for (milestone of p.milestones; track milestone.id) {
+          <div class="milestone-row" [class.milestone-row--done]="milestone.status === 'DONE'">
+            <div class="milestone-status-icon">
+              <span class="material-symbols-rounded">
+                {{ milestone.status === 'DONE' ? 'check_circle' : 'radio_button_unchecked' }}
+              </span>
+            </div>
+            <div class="milestone-info">
+              <p class="milestone-title">{{ milestone.title }}</p>
+              <p class="milestone-meta">
+                {{ milestone.dueDate || 'Kein Datum' }} · {{ formatMoney(milestone.price) }}
+              </p>
+            </div>
+            <div class="milestone-actions">
+              <button
+                class="icon-button"
+                (click)="toggleMilestoneStatus(milestone)"
+                [title]="milestone.status === 'DONE' ? 'Als offen markieren' : 'Abschließen'"
+              >
+                <span class="material-symbols-rounded">
+                  {{ milestone.status === 'DONE' ? 'replay' : 'done' }}
+                </span>
+              </button>
+              <button
+                class="icon-button"
+                (click)="openEditMilestoneDialog(milestone)"
+                title="Bearbeiten"
+              >
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+              <button
+                class="icon-button icon-button--danger"
+                (click)="deleteMilestone(milestone)"
+                title="Entfernen"
+              >
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Meilensteine angelegt.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      <button class="edit-project-button" (click)="openEditDialog()">
+        <span class="material-symbols-rounded">edit</span>
+        <span>Projekt bearbeiten</span>
+      </button>
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Status</p>
+        <select
+          class="status-select"
+          [disabled]="changingStatus()"
+          (change)="changeStatus($any($event.target).value)"
+        >
+          @for (option of statusOptions; track option.value) {
+            <option [value]="option.value" [selected]="option.value === p.status">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Website-Sichtbarkeit</p>
+        <button
+          class="website-toggle"
+          [class.website-toggle--active]="p.visibleOnWebsite"
+          [disabled]="togglingPublish()"
+          (click)="togglePublish()"
+        >
+          <span class="material-symbols-rounded">
+            {{ p.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+          <span>{{
+            p.visibleOnWebsite
+              ? 'Sichtbar - klicken zum Verbergen'
+              : 'Nicht sichtbar - klicken zum Veröffentlichen'
+          }}</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Projekt wird geladen...</p>
+  </div>
+}

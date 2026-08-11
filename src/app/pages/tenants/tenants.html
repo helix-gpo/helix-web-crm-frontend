@@ -1,0 +1,120 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Mandanten</h1>
+    <p class="page-subtitle">
+      {{ filteredTenants().length }} von {{ tenantStore.tenants().length }} Mandanten
+    </p>
+  </div>
+  <button class="add-button" (click)="openCreateDialog()">
+    <span class="material-symbols-rounded">add</span>
+    <span>Neuer Mandant</span>
+  </button>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Mandant suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+</div>
+
+@if (tenantStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Mandanten werden geladen...</p>
+  </div>
+} @else if (tenantStore.error()) {
+  <div class="state-panel state-panel--error">
+    <span class="material-symbols-rounded">error</span>
+    <p>{{ tenantStore.error() }}</p>
+    <button class="retry-button" (click)="tenantStore.reload()">Erneut versuchen</button>
+  </div>
+} @else {
+  <div class="tenants-table">
+    <div class="table-row table-row--header">
+      <span>Mandant</span>
+      <span>Kontakt</span>
+      <span>Ort</span>
+      <span>Status</span>
+      <span>Website</span>
+      <span></span>
+    </div>
+
+    @for (tenant of filteredTenants(); track tenant.id) {
+      <div class="table-row" (click)="openDetail(tenant.id)">
+        <div class="tenant-cell">
+          <app-avatar [name]="tenant.companyName"></app-avatar>
+          <div>
+            <p class="tenant-name">{{ tenant.companyName }}</p>
+            @if (tenant.vatId) {
+              <p class="tenant-vat">{{ tenant.vatId }}</p>
+            }
+          </div>
+        </div>
+
+        <span class="contact-cell">{{ tenant.contactEmail || '–' }}</span>
+        <span class="city-cell">{{ tenant.address?.city || '–' }}</span>
+
+        <span class="status-badge" [class]="'status-badge--' + tenant.status.toLowerCase()">
+          {{ statusLabels[tenant.status] }}
+        </span>
+
+        <span class="website-badge" [class.website-badge--active]="tenant.visibleOnWebsite">
+          <span class="material-symbols-rounded">
+            {{ tenant.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+        </span>
+
+        <button
+          class="row-menu-button"
+          [matMenuTriggerFor]="menu"
+          (click)="$event.stopPropagation()"
+        >
+          <span class="material-symbols-rounded">more_vert</span>
+        </button>
+
+        <mat-menu #menu="matMenu" class="app-menu-panel">
+          <button mat-menu-item (click)="openDetail(tenant.id)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">visibility</span>
+              <span>Details ansehen</span>
+            </span>
+          </button>
+          <button mat-menu-item (click)="openEditCoreDetails(tenant); $event.stopPropagation()">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">business_center</span>
+              <span>Stammdaten bearbeiten</span>
+            </span>
+          </button>
+          @if (tenant.status !== 'ACTIVE') {
+            <button mat-menu-item (click)="activate(tenant)">
+              <span class="menu-item-row">
+                <span class="material-symbols-rounded menu-icon">check_circle</span>
+                <span>Aktivieren</span>
+              </span>
+            </button>
+          }
+          @if (tenant.status !== 'ARCHIVED') {
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="archive(tenant)">
+              <span class="menu-item-row">
+                <span class="material-symbols-rounded menu-icon">archive</span>
+                <span>Archivieren</span>
+              </span>
+            </button>
+          }
+        </mat-menu>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">search_off</span>
+        <p>Keine Mandanten gefunden</p>
+      </div>
+    }
+  </div>
+}

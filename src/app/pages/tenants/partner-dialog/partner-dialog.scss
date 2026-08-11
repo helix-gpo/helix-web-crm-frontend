@@ -1,0 +1,132 @@
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  @include flex-col(1.4rem);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    transition: all 0.2s;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--text-light);
+      -webkit-box-shadow: 0 0 0 100rem rgba(255, 255, 255, 0.05) inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 12rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

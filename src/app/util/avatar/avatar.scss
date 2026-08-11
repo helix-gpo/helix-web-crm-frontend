@@ -1,0 +1,11 @@
+@use '../../../styles' as *;
+
+.avatar {
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 1.4rem;
+  @include flex-center;
+  flex-shrink: 0;
+}

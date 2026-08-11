@@ -1,0 +1,74 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Referenzen</h1>
+    <p class="page-subtitle">{{ testimonialStore.testimonials().length }} Referenzen insgesamt</p>
+  </div>
+</div>
+
+<div class="tabs">
+  @for (tab of tabs; track tab.status) {
+    <button
+      class="tab"
+      [class.tab--active]="activeTab() === tab.status"
+      (click)="activeTab.set(tab.status)"
+    >
+      {{ tab.label }}
+      @if (tab.status === 'PENDING_REVIEW' && pendingCount() > 0) {
+        <span class="tab-badge">{{ pendingCount() }}</span>
+      }
+    </button>
+  }
+</div>
+
+@if (testimonialStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Referenzen werden geladen...</p>
+  </div>
+} @else {
+  <div class="testimonials-grid">
+    @for (testimonial of filteredTestimonials(); track testimonial.id) {
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <app-avatar [name]="testimonial.partnerName"></app-avatar>
+          <div class="testimonial-stars">
+            @for (i of ratingArray; track i) {
+              <span
+                class="material-symbols-rounded star"
+                [class.star--filled]="i <= testimonial.rating"
+                >star</span
+              >
+            }
+          </div>
+        </div>
+
+        <p class="testimonial-description">"{{ testimonial.description }}"</p>
+
+        <div class="testimonial-footer">
+          <p class="testimonial-name">{{ testimonial.partnerName }}</p>
+          <p class="testimonial-role">
+            {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
+          </p>
+        </div>
+
+        @if (testimonial.status === 'PENDING_REVIEW') {
+          <div class="testimonial-actions">
+            <button class="action-button action-button--approve" (click)="approve(testimonial.id)">
+              <span class="material-symbols-rounded">check</span>
+              <span>Freigeben</span>
+            </button>
+            <button class="action-button action-button--reject" (click)="reject(testimonial.id)">
+              <span class="material-symbols-rounded">close</span>
+              <span>Ablehnen</span>
+            </button>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">rate_review</span>
+        <p>Keine Referenzen in dieser Kategorie</p>
+      </div>
+    }
+  </div>
+}

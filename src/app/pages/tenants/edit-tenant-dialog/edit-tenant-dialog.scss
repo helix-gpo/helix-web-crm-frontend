@@ -1,0 +1,177 @@
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 60vh;
+  overflow-y: auto;
+  @include flex-col(1.6rem);
+}
+
+.field-group {
+  @include flex-col(1.4rem);
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  width: 100%;
+
+  &--three {
+    grid-template-columns: 8rem 8rem 1fr;
+  }
+}
+
+.field {
+  @include flex-col(0.6rem);
+  min-width: 0;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  &--small {
+    max-width: 10rem;
+  }
+
+  &--small input {
+    text-align: center;
+  }
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    transition: all 0.2s;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--text-light);
+      -webkit-box-shadow: 0 0 0 100rem rgba(255, 255, 255, 0.05) inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  }
+}
+
+.edit-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-sm);
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 12rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

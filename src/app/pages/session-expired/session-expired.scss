@@ -1,0 +1,94 @@
+@use '../../../styles' as *;
+
+.session-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  @include flex-center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.session-blob {
+  position: absolute;
+  width: 40rem;
+  height: 40rem;
+  border-radius: 50%;
+  filter: blur(8rem);
+
+  &--cyan {
+    background: rgba(3, 219, 255, 0.18);
+    top: -12rem;
+    left: -10rem;
+  }
+  &--pink {
+    background: rgba(252, 3, 213, 0.14);
+    bottom: -12rem;
+    right: -10rem;
+  }
+}
+
+.session-card {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 4.8rem 4rem;
+  max-width: 44rem;
+  width: 100%;
+  text-align: center;
+  @include flex-col(1.2rem);
+  align-items: center;
+  backdrop-filter: blur(1rem);
+}
+
+.session-icon-wrapper {
+  width: 7.2rem;
+  height: 7.2rem;
+  border-radius: 50%;
+  background-color: rgba(245, 166, 35, 0.15);
+  @include flex-center;
+  margin-bottom: 1.2rem;
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--warning);
+  }
+}
+
+.session-eyebrow {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+}
+
+.session-title {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.session-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+}
+
+.session-button {
+  @include button-base;
+  width: 100%;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  font-size: 1.5rem;
+  padding: 1.2rem 2rem;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+    transform: translateY(-0.2rem);
+  }
+}

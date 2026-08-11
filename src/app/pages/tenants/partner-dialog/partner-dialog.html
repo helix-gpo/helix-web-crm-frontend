@@ -1,0 +1,59 @@
+<div class="dialog-header">
+  <h2>{{ isEditMode() ? 'Ansprechpartner bearbeiten' : 'Neuer Ansprechpartner' }}</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-row">
+    <div class="field">
+      <label [class.warning]="showNameWarning()">Vorname *</label>
+      <input
+        type="text"
+        [value]="firstName()"
+        (input)="firstName.set($any($event.target).value); showNameWarning.set(false)"
+      />
+    </div>
+    <div class="field">
+      <label [class.warning]="showNameWarning()">Nachname *</label>
+      <input
+        type="text"
+        [value]="lastName()"
+        (input)="lastName.set($any($event.target).value); showNameWarning.set(false)"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Rolle</label>
+    <input
+      type="text"
+      placeholder="z. B. Geschäftsführer"
+      [value]="role()"
+      (input)="role.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" [value]="email()" (input)="email.set($any($event.target).value)" />
+    </div>
+    <div class="field">
+      <label>Telefon</label>
+      <input type="text" [value]="phone()" (input)="phone.set($any($event.target).value)" />
+    </div>
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>{{ isEditMode() ? 'Speichern' : 'Hinzufügen' }}</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

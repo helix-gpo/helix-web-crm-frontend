@@ -1,1 +1,307 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+// =====================
+// MIXINS (identisch zur Website, plus Ergänzungen für Admin-Layout)
+// =====================
+
+@mixin respond($breakpoint) {
+  @if $breakpoint == xl {
+    @media (max-width: 75em) {
+      @content;
+    }
+  }
+  @if $breakpoint == lg {
+    @media (max-width: 64em) {
+      @content;
+    }
+  }
+  @if $breakpoint == md {
+    @media (max-width: 52em) {
+      @content;
+    }
+  }
+  @if $breakpoint == sm {
+    @media (max-width: 36em) {
+      @content;
+    }
+  }
+  @if $breakpoint == xs {
+    @media (max-width: 27em) {
+      @content;
+    }
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-col($gap: 0) {
+  display: flex;
+  flex-direction: column;
+  @if $gap > 0 {
+    gap: $gap;
+  }
+}
+
+@mixin button-base {
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 1rem 1.8rem;
+  @include flex-center;
+  gap: 0.6rem;
+}
+
+@mixin card-surface {
+  background-color: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+// =====================
+// RESET & BASE
+// =====================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+html {
+  height: 100%;
+  font-size: 62.5%;
+  overflow-x: hidden;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$magenta-palette,
+      ),
+      typography: Rubik,
+      density: 0,
+    )
+  );
+
+  @include respond(lg) {
+    font-size: 56.25%;
+  }
+  @include respond(sm) {
+    font-size: 50%;
+  }
+}
+
+body {
+  font-family: 'Rubik', sans-serif;
+  color: var(--text-dark);
+  height: 100%;
+  overflow-x: hidden;
+}
+
+// =====================
+// CSS VARIABLES (Kernfarben identisch zur Website)
+// =====================
+
+:root {
+  --main-navy: #0d1424;
+  --main-navy-light: #171f35;
+  --main-navy-hover: #252c3a;
+
+  --accent-cyan: #03dbff;
+  --accent-cyan-hover: #03c5e6;
+  --accent-cyan-light: #e5fbff;
+
+  --accent-pink: #fc03d5;
+  --accent-pink-hover: #e303c0;
+  --accent-pink-light: #fde6fa;
+
+  --text-dark: #0d1424;
+  --text-light: #ffffff;
+  --text-grey: #868a92;
+  --text-muted: #b0b3ba;
+
+  --bg-white: #ffffff;
+  --bg-light: #f5f7fa;
+
+  --border-color: #e2e5ea;
+
+  --shadow-sm: 0 0.2rem 0.6rem rgba(13, 20, 36, 0.06);
+  --shadow-md: 0 0.6rem 1.8rem rgba(13, 20, 36, 0.1);
+  --shadow-lg: 0 1.2rem 3.2rem rgba(13, 20, 36, 0.16);
+
+  --radius-sm: 0.6rem;
+  --radius-md: 1.2rem;
+  --radius-lg: 1.6rem;
+
+  // Admin-Layout-spezifisch
+  --sidebar-width: 25.6rem;
+  --topbar-height: 6.4rem;
+
+  --success: #1dbf73;
+  --success-light: #e3faf0;
+  --warning: #f5a623;
+  --warning-light: #fef3e0;
+  --danger: #e5484d;
+  --danger-light: #fde8e8;
+}
+
+::-webkit-scrollbar {
+  width: 0.8rem;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-light);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-grey);
+}
+
+// =====================
+// MATERIAL MENU OVERRIDE
+// (mat-menu rendert im CDK-Overlay, außerhalb jeder Component - deshalb
+// global statt component-scoped)
+// =====================
+
+.app-menu-panel {
+  --mat-menu-item-label-text-size: 1.2rem;
+  --mat-menu-item-hover-state-layer-color: rgba(255, 255, 255, 0.06);
+
+  background-color: var(--main-navy) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 0.8rem !important;
+  min-width: 22rem !important;
+
+  .mat-mdc-menu-item {
+    color: var(--text-light) !important;
+    border-radius: var(--radius-sm);
+    min-height: 5.2rem;
+    font-family: 'Rubik', sans-serif;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .mat-ripple-element {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .mat-divider {
+    margin: 0.6rem 0.8rem;
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  // Eigener, robuster Wrapper statt uns auf Material's internen
+  // .mdc-list-item__primary-text-Wrapper zu verlassen
+  .menu-item-row {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+}
+
+.menu-icon {
+  font-size: 2rem !important;
+  color: var(--accent-cyan) !important;
+}
+
+// =====================
+// DIALOG PANEL (global, da in mehreren Pages wiederverwendet)
+// =====================
+
+.app-dialog-panel {
+  .mat-mdc-dialog-container {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .mdc-dialog__surface {
+    background-color: var(--main-navy) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 0 !important;
+  }
+}
+
+// =====================
+// STATUS BADGE (global, da in mehreren Pages wiederverwendet)
+// =====================
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.6rem 1.6rem; // vorher 0.4rem 1.2rem - spürbar luftiger
+  border-radius: 50rem;
+}
+
+// =====================
+// TOAST (global, da in mehreren Pages wiederverwendet)
+// =====================
+
+.app-toast {
+  .mdc-snackbar__surface {
+    background-color: var(--main-navy) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    padding: 0 !important;
+    min-width: 32rem !important;
+  }
+
+  .mdc-snackbar__label {
+    padding: 1.4rem 1.8rem !important;
+  }
+
+  .toast-icon,
+  .toast-text {
+    color: var(--text-light);
+  }
+
+  &--success {
+    .mdc-snackbar__surface {
+      border-left: 4px solid var(--success) !important;
+    }
+    .toast-icon {
+      color: var(--success);
+    }
+  }
+
+  &--error {
+    .mdc-snackbar__surface {
+      border-left: 4px solid var(--danger) !important;
+    }
+    .toast-icon {
+      color: var(--danger);
+    }
+  }
+}

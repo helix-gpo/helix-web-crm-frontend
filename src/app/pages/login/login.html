@@ -1,0 +1,25 @@
+<div class="login-page">
+  <div class="login-blob login-blob--cyan"></div>
+  <div class="login-blob login-blob--pink"></div>
+
+  <div class="login-card">
+    <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="login-logo" />
+
+    <p class="login-eyebrow">Internes CRM</p>
+    <h1 class="login-title">Anmelden</h1>
+    <p class="login-subtitle">
+      Melde dich mit deinem Helix-GPO-Konto an, um auf Mandanten, Projekte und Rechnungen
+      zuzugreifen.
+    </p>
+
+    <button class="login-button" (click)="login()">
+      <span class="material-symbols-rounded">lock</span>
+      <span>Mit Helix-GPO-Konto anmelden</span>
+    </button>
+
+    <a class="login-back-link" routerLink="/">
+      <span class="material-symbols-rounded">arrow_back</span>
+      <span>Zurück zur Startseite</span>
+    </a>
+  </div>
+</div>

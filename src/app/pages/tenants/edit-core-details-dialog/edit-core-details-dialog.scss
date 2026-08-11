@@ -1,0 +1,202 @@
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  align-items: flex-start;
+  padding: 2.4rem 2.4rem 0;
+  border-top: 4px solid var(--warning);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.dialog-eyebrow {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06rem;
+  color: var(--warning);
+  margin-bottom: 0.4rem;
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  @include flex-col(1.6rem);
+}
+
+.warning-banner {
+  display: flex;
+  gap: 1.2rem;
+  background-color: rgba(245, 166, 35, 0.1);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem 1.4rem;
+
+  .material-symbols-rounded {
+    color: var(--warning);
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  p {
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+}
+
+.locked-fields {
+  @include flex-col(0);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.locked-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.locked-label {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+}
+
+.locked-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-align: right;
+}
+
+.unlock-button {
+  @include button-base;
+  background-color: rgba(245, 166, 35, 0.12);
+  color: var(--warning);
+  width: fit-content;
+  align-self: center;
+
+  &:hover {
+    background-color: rgba(245, 166, 35, 0.2);
+  }
+}
+
+.field-group {
+  @include flex-col(1.4rem);
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--warning);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--text-light);
+      -webkit-box-shadow: 0 0 0 100rem rgba(255, 255, 255, 0.05) inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--warning);
+  color: var(--main-navy);
+  min-width: 16rem;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

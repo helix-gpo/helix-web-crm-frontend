@@ -1,0 +1,79 @@
+<div class="dialog-header dialog-header--warning">
+  <div>
+    <p class="dialog-eyebrow">Stammdaten</p>
+    <h2>{{ tenant.companyName }}</h2>
+  </div>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="warning-banner">
+    <span class="material-symbols-rounded">warning</span>
+    <p>
+      Diese Angaben wirken sich auf zukünftige Rechnungen und die Darstellung auf der Website aus.
+      Bereits ausgestellte Rechnungen bleiben unverändert.
+    </p>
+  </div>
+
+  @if (!unlocked()) {
+    <div class="locked-fields">
+      <div class="locked-row">
+        <span class="locked-label">Firmenname</span>
+        <span class="locked-value">{{ companyName() }}</span>
+      </div>
+      <div class="locked-row">
+        <span class="locked-label">Rechtsform / Vollständiger Name</span>
+        <span class="locked-value">{{ legalName() || '-' }}</span>
+      </div>
+      <div class="locked-row">
+        <span class="locked-label">USt-ID</span>
+        <span class="locked-value">{{ vatId() || '-' }}</span>
+      </div>
+    </div>
+
+    <button class="unlock-button" (click)="unlock()">
+      <span class="material-symbols-rounded">lock_open</span>
+      <span>Bearbeiten freischalten</span>
+    </button>
+  } @else {
+    <div class="field-group">
+      <div class="field">
+        <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
+        <input
+          type="text"
+          [value]="companyName()"
+          (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
+        />
+      </div>
+
+      <div class="field">
+        <label>Rechtsform / Vollständiger Name</label>
+        <input
+          type="text"
+          [value]="legalName()"
+          (input)="legalName.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="field">
+        <label>USt-ID</label>
+        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
+      </div>
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  @if (unlocked()) {
+    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+      @if (!submitting()) {
+        <span>Änderungen speichern</span>
+      } @else {
+        <span class="material-symbols-rounded spin">progress_activity</span>
+      }
+    </button>
+  }
+</div>

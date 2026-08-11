@@ -1,0 +1,64 @@
+<div class="dialog-header">
+  <h2>{{ isEditMode() ? 'Meilenstein bearbeiten' : 'Neuer Meilenstein' }}</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field">
+    <label [class.warning]="showWarning()">Titel *</label>
+    <input
+      type="text"
+      [value]="title()"
+      (input)="title.set($any($event.target).value); showWarning.set(false)"
+    />
+  </div>
+
+  <div class="field">
+    <label>Beschreibung</label>
+    <textarea
+      rows="2"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+    ></textarea>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label>Fälligkeitsdatum</label>
+      <input type="date" [value]="dueDate()" (input)="dueDate.set($any($event.target).value)" />
+    </div>
+    <div class="field">
+      <label>Preis (optional, in €)</label>
+      <input
+        type="text"
+        placeholder="z. B. 850,00"
+        [value]="priceAmount()"
+        (input)="priceAmount.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  @if (isEditMode()) {
+    <div class="field">
+      <label>Status</label>
+      <select [value]="status()" (change)="status.set($any($event.target).value)">
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>{{ isEditMode() ? 'Speichern' : 'Hinzufügen' }}</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

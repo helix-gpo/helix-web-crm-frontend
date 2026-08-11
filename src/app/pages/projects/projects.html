@@ -1,0 +1,173 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Projekte</h1>
+    <p class="page-subtitle">{{ projectStore.projects().length }} Projekte insgesamt</p>
+  </div>
+
+  <div class="header-actions">
+    <div class="view-toggle">
+      <button
+        class="view-toggle-button"
+        [class.view-toggle-button--active]="viewMode() === 'list'"
+        (click)="viewMode.set('list')"
+        title="Listen-Ansicht"
+      >
+        <span class="material-symbols-rounded">view_list</span>
+      </button>
+      <button
+        class="view-toggle-button"
+        [class.view-toggle-button--active]="viewMode() === 'kanban'"
+        (click)="viewMode.set('kanban')"
+        title="Kanban-Ansicht"
+      >
+        <span class="material-symbols-rounded">view_kanban</span>
+      </button>
+    </div>
+
+    <button class="add-button" (click)="openCreateDialog()">
+      <span class="material-symbols-rounded">add</span>
+      <span>Neues Projekt</span>
+    </button>
+  </div>
+</div>
+
+@if (projectStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Projekte werden geladen...</p>
+  </div>
+} @else if (viewMode() === 'kanban') {
+  <div class="kanban-board">
+    @for (column of columns; track column.status) {
+      <div class="kanban-column">
+        <div class="column-header">
+          <span class="column-dot" [class]="'column-dot--' + column.status.toLowerCase()"></span>
+          <p class="column-title">{{ column.label }}</p>
+          <span class="column-count">{{ groupedProjects()[column.status].length }}</span>
+        </div>
+
+        <div class="column-body">
+          @for (project of groupedProjects()[column.status]; track project.id) {
+            <div
+              class="project-card"
+              [class]="'project-card--' + column.status.toLowerCase()"
+              (click)="openProject(project.id)"
+            >
+              <p class="card-tenant">{{ tenantName(project.tenantId) }}</p>
+              <p class="card-title">{{ project.title }}</p>
+
+              @if (project.tags.length > 0) {
+                <div class="card-tags">
+                  @for (tag of project.tags; track tag.value) {
+                    <span class="card-tag" [style.background-color]="tag.colorHex">{{
+                      tag.value
+                    }}</span>
+                  }
+                </div>
+              }
+
+              <div class="card-footer">
+                <span class="milestone-progress">
+                  <span class="material-symbols-rounded">checklist</span>
+                  {{ completedMilestones(project) }}/{{ project.milestones.length }}
+                </span>
+                @if (project.visibleOnWebsite) {
+                  <span class="material-symbols-rounded website-icon" title="Auf Website sichtbar"
+                    >public</span
+                  >
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="column-empty">Keine Projekte</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="filter-bar">
+    <div class="filter-search">
+      <span class="material-symbols-rounded">search</span>
+      <input
+        type="text"
+        placeholder="Projekt oder Mandant suchen..."
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)"
+      />
+    </div>
+
+    <select
+      class="status-select"
+      [value]="statusFilter()"
+      (change)="statusFilter.set($any($event.target).value)"
+    >
+      <option value="ALL">Alle Status</option>
+      @for (column of columns; track column.status) {
+        <option [value]="column.status">{{ column.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="projects-table">
+    <div class="table-row table-row--header">
+      <span>Projekt</span>
+      <span>Mandant</span>
+      <span>Status</span>
+      <span>Meilensteine</span>
+      <span>Website</span>
+      <span></span>
+    </div>
+
+    @for (project of filteredListProjects(); track project.id) {
+      <div class="table-row" (click)="openProject(project.id)">
+        <span class="project-title-cell">{{ project.title }}</span>
+        <span>{{ tenantName(project.tenantId) }}</span>
+        <span
+          class="status-badge"
+          [class]="'status-badge--project status-badge--' + project.status.toLowerCase()"
+        >
+          {{ statusLabels[project.status] }}
+        </span>
+        <span>{{ completedMilestones(project) }}/{{ project.milestones.length }}</span>
+        <span class="website-badge" [class.website-badge--active]="project.visibleOnWebsite">
+          <span class="material-symbols-rounded">
+            {{ project.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+        </span>
+
+        <button
+          class="row-menu-button"
+          [matMenuTriggerFor]="menu"
+          (click)="$event.stopPropagation()"
+        >
+          <span class="material-symbols-rounded">more_vert</span>
+        </button>
+
+        <mat-menu #menu="matMenu" class="app-menu-panel">
+          <button mat-menu-item (click)="openProject(project.id)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">visibility</span>
+              <span>Details ansehen</span>
+            </span>
+          </button>
+          <button mat-menu-item (click)="togglePublish(project)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">{{
+                project.visibleOnWebsite ? 'visibility_off' : 'public'
+              }}</span>
+              <span>{{
+                project.visibleOnWebsite ? 'Von Website entfernen' : 'Auf Website veröffentlichen'
+              }}</span>
+            </span>
+          </button>
+        </mat-menu>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">search_off</span>
+        <p>Keine Projekte gefunden</p>
+      </div>
+    }
+  </div>
+}

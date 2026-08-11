@@ -1,0 +1,224 @@
+@use '../../../styles' as *;
+
+.page-header {
+  @include flex-between;
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.add-button {
+  @include button-base;
+  background-color: var(--main-navy);
+  color: var(--text-light);
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background-color: var(--main-navy-hover);
+  }
+}
+
+.filter-bar {
+  margin-bottom: 1.6rem;
+}
+
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1.4rem;
+  width: 32rem;
+
+  .material-symbols-rounded {
+    color: var(--text-grey);
+    font-size: 2rem;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 1.4rem;
+    width: 100%;
+  }
+}
+
+.tenants-table {
+  @include card-surface;
+  overflow: hidden;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.6fr 1fr 0.9fr 0.6fr 3.2rem;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 1.4rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--header {
+    background-color: var(--bg-light);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04rem;
+    color: var(--text-grey);
+  }
+
+  &:not(&--header):hover {
+    background-color: var(--bg-light);
+  }
+}
+
+.tenant-cell {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.tenant-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.tenant-vat {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.contact-cell,
+.city-cell {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+}
+
+.status-badge {
+  &--active {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+
+  &--prospect {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+
+  &--inactive {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+
+  &--archived {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+}
+
+.website-badge {
+  color: var(--border-color);
+
+  &--active {
+    color: var(--accent-cyan);
+  }
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+  }
+}
+
+.row-menu-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--border-color);
+  }
+}
+
+.empty-state {
+  @include flex-col(0.8rem);
+  align-items: center;
+  padding: 4.8rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 4rem;
+  }
+
+  .state-panel {
+    @include card-surface;
+    @include flex-col(1.2rem);
+    align-items: center;
+    padding: 4.8rem 2rem;
+    text-align: center;
+    color: var(--text-grey);
+
+    .material-symbols-rounded {
+      font-size: 3.6rem;
+      color: var(--accent-cyan);
+    }
+
+    &--error .material-symbols-rounded {
+      color: var(--danger);
+    }
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .retry-button {
+    @include button-base;
+    background-color: var(--main-navy);
+    color: var(--text-light);
+    margin-top: 0.4rem;
+
+    &:hover {
+      background-color: var(--main-navy-hover);
+    }
+  }
+}
+
+.table-row:not(.table-row--header) {
+  cursor: pointer;
+}
+
+.menu-icon {
+  font-size: 1.8rem;
+  margin-right: 1rem;
+  vertical-align: middle;
+  color: var(--text-grey);
+}

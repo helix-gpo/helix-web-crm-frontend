@@ -1,0 +1,191 @@
+@use '../../../styles' as *;
+
+.page-header {
+  @include flex-between;
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.add-button {
+  @include button-base;
+  background-color: var(--main-navy);
+  color: var(--text-light);
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background-color: var(--main-navy-hover);
+  }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.6rem;
+  margin-bottom: 2.4rem;
+
+  @include respond(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  border-radius: var(--radius-md);
+  padding: 2rem 2.4rem;
+  box-shadow: var(--shadow-md);
+
+  .material-symbols-rounded {
+    font-size: 2.8rem;
+    color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.12);
+    border-radius: 50%;
+    padding: 1rem;
+  }
+
+  &--warning .material-symbols-rounded {
+    color: var(--warning);
+    background-color: rgba(245, 166, 35, 0.15);
+  }
+
+  &--muted .material-symbols-rounded {
+    color: var(--text-muted);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.stat-label {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.invoices-table {
+  @include card-surface;
+  overflow: hidden;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.6fr 1fr 1fr 1fr 1fr;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 1.4rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 1.4rem;
+  color: var(--text-dark);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--header {
+    background-color: var(--bg-light);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04rem;
+    color: var(--text-grey);
+  }
+
+  &:not(&--header):hover {
+    background-color: var(--bg-light);
+  }
+}
+
+.invoice-number {
+  font-weight: 700;
+}
+
+.amount-cell {
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 50rem;
+
+  &--invoice-draft {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+  &--invoice-issued {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+  &--invoice-sent {
+    background-color: var(--accent-pink-light);
+    color: var(--accent-pink-hover);
+  }
+  &--invoice-paid {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &--invoice-overdue {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+  &--invoice-cancelled {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+}
+
+.empty-state {
+  @include flex-col(0.8rem);
+  align-items: center;
+  padding: 4.8rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 4rem;
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

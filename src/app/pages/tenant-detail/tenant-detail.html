@@ -1,0 +1,163 @@
+@if (tenant(); as t) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Mandanten</span>
+      </button>
+
+      <div class="hero-main">
+        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
+        <div>
+          <h1 class="hero-title">{{ t.companyName }}</h1>
+          @if (t.legalName && t.legalName !== t.companyName) {
+            <p class="hero-legal">{{ t.legalName }}</p>
+          }
+          <span class="status-badge" [class]="'status-badge--' + t.status.toLowerCase()">
+            {{ statusLabels[t.status] }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <p class="info-card-title">Kontaktdaten</p>
+        <div class="info-row">
+          <span class="material-symbols-rounded">mail</span>
+          <span>{{ t.contactEmail || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">call</span>
+          <span>{{ t.contactPhone || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">location_on</span>
+          <span>
+            @if (t.address; as a) {
+              {{ a.street }} {{ a.houseNumber }}, {{ a.postalCode }} {{ a.city }}
+            } @else {
+              -
+            }
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>{{ t.vatId || 'Keine USt-ID hinterlegt' }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Ansprechpartner</p>
+          <div class="header-actions">
+            <span class="count-badge">{{ partners().length }}</span>
+            <button
+              class="add-icon-button"
+              (click)="openAddPartnerDialog()"
+              title="Ansprechpartner hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          </div>
+        </div>
+
+        @for (partner of partners(); track partner.id) {
+          <div class="partner-row">
+            <app-avatar
+              [name]="partner.firstName + ' ' + partner.lastName"
+              [size]="'3.6rem'"
+            ></app-avatar>
+            <div class="partner-info">
+              <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
+              <p class="partner-role">
+                {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
+              </p>
+            </div>
+            <div class="partner-actions">
+              <button
+                class="icon-button"
+                (click)="openEditPartnerDialog(partner)"
+                title="Bearbeiten"
+              >
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+              <button
+                class="icon-button icon-button--danger"
+                (click)="deletePartner(partner)"
+                title="Entfernen"
+              >
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Ansprechpartner hinterlegt.</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Projekte</p>
+          <span class="count-badge">{{ projects().length }}</span>
+        </div>
+        @for (project of projects(); track project.id) {
+          <div class="project-row">
+            <div>
+              <p class="project-title">{{ project.title }}</p>
+              <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
+            </div>
+            <span
+              class="status-badge status-badge--project"
+              [class]="'status-badge--' + project.status.toLowerCase()"
+            >
+              {{ projectStatusLabels[project.status] }}
+            </span>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      <div class="sidebar-card">
+        <p class="sidebar-label">Website-Sichtbarkeit</p>
+        <div class="website-status" [class.website-status--active]="t.visibleOnWebsite">
+          <span class="material-symbols-rounded">
+            {{ t.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+          <span>{{ t.visibleOnWebsite ? 'Sichtbar' : 'Nicht sichtbar' }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
+        <button class="sidebar-action" (click)="openEditCoreDetails()">
+          <span class="material-symbols-rounded">business_center</span>
+          <span>Stammdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openEditDialog()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>Kontaktdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action">
+          <span class="material-symbols-rounded">add</span>
+          <span>Projekt anlegen</span>
+        </button>
+        <button class="sidebar-action">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Mandant wird geladen...</p>
+  </div>
+}
