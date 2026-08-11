@@ -11,6 +11,7 @@ import { Project, ProjectStatus } from '../../model/project';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { Toast } from '../../core/toast/toast';
 import { MatDividerModule } from '@angular/material/divider';
+import { getContrastTextColor } from '../../util/color-contrast';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -27,6 +28,7 @@ export class Projects {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly toast = inject(Toast);
+  protected readonly getContrastTextColor = getContrastTextColor;
 
   readonly viewMode = signal<ViewMode>('list');
   readonly searchTerm = signal('');

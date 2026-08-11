@@ -40,8 +40,7 @@
   <div class="kanban-board">
     @for (column of columns; track column.status) {
       <div class="kanban-column">
-        <div class="column-header">
-          <span class="column-dot" [class]="'column-dot--' + column.status.toLowerCase()"></span>
+        <div class="column-header" [class]="'column-header--' + column.status.toLowerCase()">
           <p class="column-title">{{ column.label }}</p>
           <span class="column-count">{{ groupedProjects()[column.status].length }}</span>
         </div>
@@ -59,9 +58,12 @@
               @if (project.tags.length > 0) {
                 <div class="card-tags">
                   @for (tag of project.tags; track tag.value) {
-                    <span class="card-tag" [style.background-color]="tag.colorHex">{{
-                      tag.value
-                    }}</span>
+                    <span
+                      class="card-tag"
+                      [style.background-color]="tag.colorHex"
+                      [style.color]="getContrastTextColor(tag.colorHex)"
+                      >{{ tag.value }}</span
+                    >
                   }
                 </div>
               }
@@ -81,6 +83,11 @@
           } @empty {
             <p class="column-empty">Keine Projekte</p>
           }
+
+          <button class="column-add-button" (click)="openCreateDialog()">
+            <span class="material-symbols-rounded">add</span>
+            <span>Neues Projekt</span>
+          </button>
         </div>
       </div>
     }
