@@ -84,7 +84,7 @@
             <p class="column-empty">Keine Projekte</p>
           }
 
-          <button class="column-add-button" (click)="openCreateDialog()">
+          <button class="column-add-button" (click)="openCreateDialog(column.status)">
             <span class="material-symbols-rounded">add</span>
             <span>Neues Projekt</span>
           </button>

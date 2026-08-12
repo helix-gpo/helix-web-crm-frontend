@@ -1,9 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ProjectStore } from '../../../core/projects/project-store';
 import { TenantStore } from '../../../core/tenants/tenant-store';
-import { CreateProjectRequest } from '../../../model/project';
 import { getContrastTextColor } from '../../../util/color-contrast';
+import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
+
+export interface CreateProjectDialogData {
+  initialStatus?: ProjectStatus;
+}
 
 @Component({
   selector: 'app-create-project-dialog',
@@ -15,7 +19,19 @@ export class CreateProjectDialog {
   private readonly dialogRef = inject(MatDialogRef<CreateProjectDialog>);
   private readonly projectStore = inject(ProjectStore);
   protected readonly tenantStore = inject(TenantStore);
+  private readonly dialogData = inject<CreateProjectDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
+
   protected readonly getContrastTextColor = getContrastTextColor;
+
+  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
+    { value: 'LEAD', label: 'Interessent' },
+    { value: 'IN_PROGRESS', label: 'In Arbeit' },
+    { value: 'ON_HOLD', label: 'Pausiert' },
+    { value: 'COMPLETED', label: 'Abgeschlossen' },
+    { value: 'CANCELLED', label: 'Abgebrochen' },
+  ];
 
   readonly tenantId = signal('');
   readonly title = signal('');
@@ -23,6 +39,7 @@ export class CreateProjectDialog {
   readonly fullDescription = signal('');
   readonly startDate = signal('');
   readonly endDate = signal('');
+  readonly status = signal<ProjectStatus>(this.dialogData?.initialStatus ?? 'LEAD');
 
   readonly highlights = signal<string[]>([]);
   readonly newHighlight = signal('');
@@ -84,6 +101,7 @@ export class CreateProjectDialog {
       tags: this.tags(),
       startDate: this.startDate() || undefined,
       endDate: this.endDate() || undefined,
+      status: this.status(),
     };
 
     try {

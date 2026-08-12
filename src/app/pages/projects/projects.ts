@@ -2,16 +2,16 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { firstValueFrom } from 'rxjs';
 import { ProjectStore } from '../../core/projects/project-store';
 import { ProjectApi } from '../../core/projects/project-api';
 import { TenantStore } from '../../core/tenants/tenant-store';
-import { CreateProjectDialog } from './create-project-dialog/create-project-dialog';
-import { Project, ProjectStatus } from '../../model/project';
-import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { Toast } from '../../core/toast/toast';
-import { MatDividerModule } from '@angular/material/divider';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { CreateProjectDialog } from './create-project-dialog/create-project-dialog';
 import { getContrastTextColor } from '../../util/color-contrast';
+import { Project, ProjectStatus } from '../../model/project';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -28,6 +28,7 @@ export class Projects {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly toast = inject(Toast);
+
   protected readonly getContrastTextColor = getContrastTextColor;
 
   readonly viewMode = signal<ViewMode>('list');
@@ -94,19 +95,31 @@ export class Projects {
     this.router.navigate(['/projects', projectId]);
   }
 
-  openCreateDialog(): void {
-    this.dialog.open(CreateProjectDialog, {
+  openCreateDialog(initialStatus?: ProjectStatus): void {
+    const dialogRef = this.dialog.open(CreateProjectDialog, {
       width: '64rem',
       panelClass: 'app-dialog-panel',
+      data: { initialStatus },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Projekt angelegt');
     });
   }
 
   async togglePublish(project: Project): Promise<void> {
-    const call = project.visibleOnWebsite
-      ? this.projectApi.unpublish(project.id)
-      : this.projectApi.publish(project.id);
-    await firstValueFrom(call);
-    this.projectStore.reload();
+    try {
+      const call = project.visibleOnWebsite
+        ? this.projectApi.unpublish(project.id)
+        : this.projectApi.publish(project.id);
+      await firstValueFrom(call);
+      this.projectStore.reload();
+      this.toast.success(
+        project.visibleOnWebsite ? 'Von Website entfernt' : 'Auf Website veröffentlicht',
+      );
+    } catch {
+      this.toast.error('Aktion fehlgeschlagen');
+    }
   }
 
   async cancelProject(project: Project): Promise<void> {

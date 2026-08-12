@@ -46,6 +46,7 @@ export interface CreateProjectRequest {
   tags: ProjectTag[];
   startDate?: string;
   endDate?: string;
+  status?: ProjectStatus;
 }
 
 export interface UpdateProjectRequest {
