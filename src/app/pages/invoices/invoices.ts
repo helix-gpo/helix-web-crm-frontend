@@ -3,6 +3,9 @@ import { DecimalPipe } from '@angular/common';
 import { InvoiceStore } from '../../core/invoices/invoice-store';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { Invoice, InvoiceStatus } from '../../model/invoice';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Toast } from '../../core/toast/toast';
+import { CreateInvoiceDialog } from './create-invoice-dialog/create-invoice-dialog';
 
 @Component({
   selector: 'app-invoices',
@@ -13,6 +16,8 @@ import { Invoice, InvoiceStatus } from '../../model/invoice';
 export class Invoices {
   protected readonly invoiceStore = inject(InvoiceStore);
   private readonly tenantStore = inject(TenantStore);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
 
   readonly statusLabels: Record<InvoiceStatus, string> = {
     DRAFT: 'Entwurf',
@@ -53,5 +58,16 @@ export class Invoices {
       style: 'currency',
       currency: invoice.grossTotal.currencyCode,
     }).format(invoice.grossTotal.amount);
+  }
+
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Rechnung angelegt');
+    });
   }
 }

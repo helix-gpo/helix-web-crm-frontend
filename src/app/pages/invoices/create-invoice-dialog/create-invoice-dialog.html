@@ -1,0 +1,235 @@
+<div class="dialog-header">
+  <h2>Neue Rechnung</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
+    </div>
+  } @else {
+    <div class="field-row">
+      <div class="field">
+        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
+            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+            @for (tenant of tenantStore.tenants(); track tenant.id) {
+              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+                {{ tenant.companyName }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
+        <select [disabled]="!tenantId()" (change)="onProjectChange($any($event.target).value)">
+          <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
+          @for (project of tenantProjects(); track project.id) {
+            <option [value]="project.id" [selected]="project.id === projectId()">
+              {{ project.title }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Auftrags-Referenz</label>
+        <input
+          type="text"
+          placeholder="z. B. MBS.4"
+          [value]="buyerReference()"
+          (input)="buyerReference.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Zahlungsziel (Tage)</label>
+        <input
+          type="text"
+          [value]="paymentTermsDays()"
+          (input)="paymentTermsDays.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (tenantId() && projectId()) {
+      <div class="section-title">Positionen</div>
+
+      @if (prefillLoading()) {
+        <div class="prefill-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+          <span>Meilensteine werden geladen...</span>
+        </div>
+      } @else if (prefill(); as p) {
+        @if (p.availableMilestones.length > 0) {
+          <div class="milestone-grid">
+            @for (milestone of p.availableMilestones; track milestone.id) {
+              <button
+                type="button"
+                class="milestone-tile"
+                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+                [disabled]="milestone.alreadyInvoiced"
+                (click)="toggleMilestone(milestone)"
+              >
+                <div class="milestone-tile-icon">
+                  <span class="material-symbols-rounded">
+                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+                  </span>
+                </div>
+                <div class="milestone-tile-body">
+                  <p class="milestone-tile-title">{{ milestone.title }}</p>
+                  @if (milestone.price) {
+                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+                  }
+
+                  @if (milestone.alreadyInvoiced) {
+                    <div class="milestone-tile-tags">
+                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                        <span class="material-symbols-rounded">lock</span>
+                        Abgerechnet
+                      </span>
+                    </div>
+                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                    <div class="milestone-tile-tags">
+                      @if (milestone.inDraftInvoice) {
+                        <span class="milestone-tile-tag milestone-tile-tag--draft">
+                          <span class="material-symbols-rounded">edit_note</span>
+                          In Rechnungsentwurf
+                        </span>
+                      }
+                      @if (milestone.milestoneStatus !== 'DONE') {
+                        <span class="milestone-tile-tag milestone-tile-tag--pending">
+                          <span class="material-symbols-rounded">hourglass_empty</span>
+                          Nicht abgeschlossen
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
+        }
+
+        <div class="free-position-row">
+          <input
+            type="text"
+            class="free-description"
+            placeholder="Freie Position, z. B. Gerät (Hardware)"
+            [value]="freeDescription()"
+            (input)="freeDescription.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-quantity"
+            placeholder="Menge"
+            [value]="freeQuantity()"
+            (input)="freeQuantity.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-price"
+            placeholder="Preis netto"
+            [value]="freeUnitPrice()"
+            (input)="freeUnitPrice.set($any($event.target).value)"
+          />
+          <select
+            class="free-tax"
+            [value]="freeTaxRate()"
+            (change)="freeTaxRate.set(+$any($event.target).value)"
+          >
+            @for (rate of taxRateOptions; track rate) {
+              <option [value]="rate">{{ rate }} %</option>
+            }
+          </select>
+          <button type="button" class="free-add-button" (click)="addFreePosition()">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @if (lineItems().length > 0) {
+          <div class="positions-list">
+            @for (item of lineItems(); track item.key) {
+              <div class="position-row">
+                <div class="position-main">
+                  <span class="position-source-icon material-symbols-rounded">
+                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+                  </span>
+                  <div>
+                    <p class="position-description">{{ item.description }}</p>
+                    <p class="position-meta">
+                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
+                    </p>
+                  </div>
+                </div>
+
+                <select
+                  class="position-tax-select"
+                  [value]="item.taxRatePercentage"
+                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+                >
+                  @for (rate of taxRateOptions; track rate) {
+                    <option [value]="rate">{{ rate }} % USt</option>
+                  }
+                </select>
+
+                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
+
+                <button
+                  type="button"
+                  class="position-remove-button"
+                  (click)="removeLineItem(item.key)"
+                >
+                  <span class="material-symbols-rounded">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <span>Netto</span>
+              <span>{{ formatMoney(totals().net) }}</span>
+            </div>
+            @for (group of taxBreakdown(); track group.rate) {
+              <div class="summary-row summary-row--muted">
+                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
+                <span>{{ formatMoney(group.tax) }}</span>
+              </div>
+            }
+            <div class="summary-row summary-row--total">
+              <span>Rechnungsbetrag</span>
+              <span>{{ formatMoney(totals().gross) }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="no-positions-hint">
+            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
+          </p>
+        }
+      }
+    }
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Rechnung anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

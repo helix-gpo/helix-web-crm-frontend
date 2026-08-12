@@ -3,7 +3,7 @@
     <h1 class="page-title">Rechnungen</h1>
     <p class="page-subtitle">{{ invoiceStore.invoices().length }} Rechnungen insgesamt</p>
   </div>
-  <button class="add-button">
+  <button class="add-button" (click)="openCreateDialog()">
     <span class="material-symbols-rounded">add</span>
     <span>Neue Rechnung</span>
   </button>

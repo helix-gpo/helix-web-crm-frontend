@@ -6,135 +6,150 @@
 </div>
 
 <div class="dialog-body">
-  <div class="field">
-    <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
-    <select [value]="tenantId()" (change)="tenantId.set($any($event.target).value)">
-      <option value="" disabled selected>Mandant auswählen...</option>
-      @for (tenant of tenantStore.tenants(); track tenant.id) {
-        <option [value]="tenant.id">{{ tenant.companyName }}</option>
-      }
-    </select>
-  </div>
-
-  <div class="field">
-    <label>Status</label>
-    <select (change)="status.set($any($event.target).value)">
-      @for (option of statusOptions; track option.value) {
-        <option [value]="option.value" [selected]="option.value === status()">
-          {{ option.label }}
-        </option>
-      }
-    </select>
-  </div>
-
-  <div class="field">
-    <label [class.warning]="showWarning() && !title()">Projekttitel *</label>
-    <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" />
-  </div>
-
-  <div class="field">
-    <label>Kurzbeschreibung</label>
-    <input
-      type="text"
-      [value]="description()"
-      (input)="description.set($any($event.target).value)"
-    />
-  </div>
-
-  <div class="field">
-    <label>Ausführliche Beschreibung</label>
-    <textarea
-      rows="3"
-      [value]="fullDescription()"
-      (input)="fullDescription.set($any($event.target).value)"
-    ></textarea>
-  </div>
-
-  <div class="field-row">
-    <div class="field">
-      <label>Startdatum</label>
-      <input type="date" [value]="startDate()" (input)="startDate.set($any($event.target).value)" />
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
     </div>
+  } @else {
     <div class="field">
-      <label>Enddatum</label>
-      <input type="date" [value]="endDate()" (input)="endDate.set($any($event.target).value)" />
-    </div>
-  </div>
-
-  <div class="field-group">
-    <p class="section-title">Highlights</p>
-    @if (highlights().length > 0) {
-      <div class="chip-list">
-        @for (highlight of highlights(); track highlight; let i = $index) {
-          <span class="chip">
-            {{ highlight }}
-            <button (click)="removeHighlight(i)">
-              <span class="material-symbols-rounded">close</span>
-            </button>
-          </span>
-        }
+      <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+      <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+        <select [disabled]="tenantLocked()" (change)="tenantId.set($any($event.target).value)">
+          <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+          @for (tenant of tenantStore.tenants(); track tenant.id) {
+            <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+              {{ tenant.companyName }}
+            </option>
+          }
+        </select>
       </div>
-    }
-    <div class="add-row">
+    </div>
+
+    <div class="field">
+      <label>Status</label>
+      <select (change)="status.set($any($event.target).value)">
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === status()">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label [class.warning]="showWarning() && !title()">Projekttitel *</label>
+      <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" />
+    </div>
+
+    <div class="field">
+      <label>Kurzbeschreibung</label>
       <input
         type="text"
-        placeholder="Highlight hinzufügen und Enter drücken..."
-        [value]="newHighlight()"
-        (input)="newHighlight.set($any($event.target).value)"
-        (keydown.enter)="addHighlight()"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
       />
-      <button class="add-button" (click)="addHighlight()">
-        <span class="material-symbols-rounded">add</span>
-      </button>
     </div>
-  </div>
 
-  <div class="field-group">
-    <p class="section-title">Tags</p>
-    @if (tags().length > 0) {
-      <div class="chip-list">
-        @for (tag of tags(); track tag.value; let i = $index) {
-          <span
-            class="chip"
-            [style.background-color]="tag.colorHex"
-            [style.color]="getContrastTextColor(tag.colorHex)"
-          >
-            {{ tag.value }}
-            <button (click)="removeTag(i)">
-              <span class="material-symbols-rounded">close</span>
-            </button>
-          </span>
-        }
-      </div>
-    }
-    <div class="add-row">
-      <input
-        type="text"
-        placeholder="Tag-Name..."
-        [value]="newTagName()"
-        (input)="newTagName.set($any($event.target).value)"
-        (keydown.enter)="addTag()"
-      />
-      <div class="color-picker">
-        @for (color of tagPalette; track color.value) {
-          <button
-            class="color-swatch"
-            [style.background-color]="color.value"
-            [style.border-color]="
-              getContrastTextColor(color.value) === '#ffffff'
-                ? 'rgba(255,255,255,0.4)'
-                : 'rgba(13,20,36,0.3)'
-            "
-            [class.color-swatch--active]="newTagColor() === color.value"
-            (click)="newTagColor.set(color.value)"
-          ></button>
-        }
-      </div>
-      <button class="add-button" (click)="addTag()">
-        <span class="material-symbols-rounded">add</span>
-      </button>
+    <div class="field">
+      <label>Ausführliche Beschreibung</label>
+      <textarea
+        rows="3"
+        [value]="fullDescription()"
+        (input)="fullDescription.set($any($event.target).value)"
+      ></textarea>
     </div>
-  </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Startdatum</label>
+        <input
+          type="date"
+          [value]="startDate()"
+          (input)="startDate.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Enddatum</label>
+        <input type="date" [value]="endDate()" (input)="endDate.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="section-title">Highlights</p>
+      @if (highlights().length > 0) {
+        <div class="chip-list">
+          @for (highlight of highlights(); track highlight; let i = $index) {
+            <span class="chip">
+              {{ highlight }}
+              <button (click)="removeHighlight(i)">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </span>
+          }
+        </div>
+      }
+      <div class="add-row">
+        <input
+          type="text"
+          placeholder="Highlight hinzufügen und Enter drücken..."
+          [value]="newHighlight()"
+          (input)="newHighlight.set($any($event.target).value)"
+          (keydown.enter)="addHighlight()"
+        />
+        <button class="add-button" (click)="addHighlight()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="section-title">Tags</p>
+      @if (tags().length > 0) {
+        <div class="chip-list">
+          @for (tag of tags(); track tag.value; let i = $index) {
+            <span
+              class="chip"
+              [style.background-color]="tag.colorHex"
+              [style.color]="getContrastTextColor(tag.colorHex)"
+            >
+              {{ tag.value }}
+              <button (click)="removeTag(i)">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </span>
+          }
+        </div>
+      }
+      <div class="add-row">
+        <input
+          type="text"
+          placeholder="Tag-Name..."
+          [value]="newTagName()"
+          (input)="newTagName.set($any($event.target).value)"
+          (keydown.enter)="addTag()"
+        />
+        <div class="color-picker">
+          @for (color of tagPalette; track color.value) {
+            <button
+              class="color-swatch"
+              [style.background-color]="color.value"
+              [style.border-color]="
+                getContrastTextColor(color.value) === '#ffffff'
+                  ? 'rgba(255,255,255,0.4)'
+                  : 'rgba(13,20,36,0.3)'
+              "
+              [class.color-swatch--active]="newTagColor() === color.value"
+              (click)="newTagColor.set(color.value)"
+            ></button>
+          }
+        </div>
+        <button class="add-button" (click)="addTag()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+      </div>
+    </div>
+  }
 </div>
 
 <div class="dialog-footer">

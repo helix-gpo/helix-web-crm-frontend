@@ -14,6 +14,8 @@ import { EditCoreDetailsDialog } from '../tenants/edit-core-details-dialog/edit-
 import { PartnerDialog } from '../tenants/partner-dialog/partner-dialog';
 import { Tenant, Partner } from '../../model/tenant';
 import { Project } from '../../model/project';
+import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
+import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -138,6 +140,33 @@ export class TenantDetail {
         this.partnersResource.reload();
         this.toast.success('Ansprechpartner aktualisiert');
       }
+    });
+  }
+
+  openCreateProjectDialog(): void {
+    const dialogRef = this.dialog.open(CreateProjectDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.projectsResource.reload();
+        this.toast.success('Projekt angelegt');
+      }
+    });
+  }
+
+  openCreateInvoiceDialog(): void {
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Rechnung angelegt');
     });
   }
 

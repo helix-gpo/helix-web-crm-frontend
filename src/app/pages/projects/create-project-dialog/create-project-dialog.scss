@@ -102,6 +102,11 @@
     background-color: var(--main-navy);
     color: var(--text-light);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .chip-list {
@@ -231,5 +236,29 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.select-lock {
+  position: relative;
+
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
   }
 }

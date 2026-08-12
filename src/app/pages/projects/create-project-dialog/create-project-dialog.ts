@@ -7,6 +7,7 @@ import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
 
 export interface CreateProjectDialogData {
   initialStatus?: ProjectStatus;
+  tenantId?: string;
 }
 
 @Component({
@@ -33,13 +34,15 @@ export class CreateProjectDialog {
     { value: 'CANCELLED', label: 'Abgebrochen' },
   ];
 
-  readonly tenantId = signal('');
   readonly title = signal('');
   readonly description = signal('');
   readonly fullDescription = signal('');
   readonly startDate = signal('');
   readonly endDate = signal('');
   readonly status = signal<ProjectStatus>(this.dialogData?.initialStatus ?? 'LEAD');
+  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
+  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly dataLoading = computed(() => this.tenantStore.loading());
 
   readonly highlights = signal<string[]>([]);
   readonly newHighlight = signal('');
