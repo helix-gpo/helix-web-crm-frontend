@@ -13,6 +13,7 @@ export interface Tenant {
   companyName: string;
   legalName?: string;
   vatId?: string;
+  referenceCode?: string;
   address?: Address;
   contactEmail?: string;
   contactPhone?: string;
@@ -26,6 +27,7 @@ export interface CreateTenantRequest {
   companyName: string;
   legalName?: string;
   vatId?: string;
+  referenceCode?: string;
   address?: Address;
   contactEmail?: string;
   contactPhone?: string;
@@ -41,6 +43,7 @@ export interface UpdateTenantCoreDetailsRequest {
   companyName: string;
   legalName?: string;
   vatId?: string;
+  referenceCode?: string;
 }
 
 export interface Partner {

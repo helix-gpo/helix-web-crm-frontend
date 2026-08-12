@@ -17,6 +17,7 @@ export class CreateTenantDialog {
   readonly companyName = signal('');
   readonly legalName = signal('');
   readonly vatId = signal('');
+  readonly referenceCode = signal('');
   readonly contactEmail = signal('');
   readonly contactPhone = signal('');
   readonly street = signal('');
@@ -41,6 +42,19 @@ export class CreateTenantDialog {
     this.dialogRef.close();
   }
 
+  onCompanyNameBlur(): void {
+    // Nur vorschlagen, wenn User das Kürzel noch nicht selbst editiert hat
+    if (this.referenceCode().trim()) return;
+    const initials = this.companyName()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 4);
+    this.referenceCode.set(initials);
+  }
+
   async submit(): Promise<void> {
     if (!this.isValid()) {
       this.showCompanyNameWarning.set(true);
@@ -53,6 +67,7 @@ export class CreateTenantDialog {
       companyName: this.companyName().trim(),
       legalName: this.legalName().trim() || undefined,
       vatId: this.vatId().trim() || undefined,
+      referenceCode: this.referenceCode().trim().toUpperCase() || undefined,
       contactEmail: this.contactEmail().trim() || undefined,
       contactPhone: this.contactPhone().trim() || undefined,
       address:

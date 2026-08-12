@@ -16,6 +16,7 @@
         placeholder="z. B. Musterfirma GmbH"
         [value]="companyName()"
         (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
+        (blur)="onCompanyNameBlur()"
       />
     </div>
 
@@ -32,6 +33,19 @@
         <label>USt-ID</label>
         <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
       </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Kürzel (für Rechnungsreferenzen)</label>
+        <input
+          type="text"
+          placeholder="z. B. MBS"
+          [value]="referenceCode()"
+          (input)="referenceCode.set($any($event.target).value.toUpperCase())"
+        />
+      </div>
+      <div class="field"></div>
     </div>
 
     <div class="field-row">

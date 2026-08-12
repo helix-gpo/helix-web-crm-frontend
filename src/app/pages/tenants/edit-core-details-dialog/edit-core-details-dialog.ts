@@ -12,11 +12,12 @@ import { Tenant } from '../../../model/tenant';
 export class EditCoreDetailsDialog {
   private readonly dialogRef = inject(MatDialogRef<EditCoreDetailsDialog>);
   private readonly tenantStore = inject(TenantStore);
-  
+
   readonly tenant = inject<Tenant>(MAT_DIALOG_DATA);
   readonly companyName = signal(this.tenant.companyName);
   readonly legalName = signal(this.tenant.legalName ?? '');
   readonly vatId = signal(this.tenant.vatId ?? '');
+  readonly referenceCode = signal(this.tenant.referenceCode ?? '');
 
   // Felder starten gesperrt - verhindert Versehens-Änderungen
   readonly unlocked = signal(false);
@@ -44,6 +45,7 @@ export class EditCoreDetailsDialog {
         companyName: this.companyName().trim(),
         legalName: this.legalName().trim() || undefined,
         vatId: this.vatId().trim() || undefined,
+        referenceCode: this.referenceCode().trim().toUpperCase() || undefined,
       });
       this.dialogRef.close(updated);
     } finally {
