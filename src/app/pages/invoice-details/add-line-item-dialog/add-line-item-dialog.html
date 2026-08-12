@@ -1,0 +1,149 @@
+<div class="dialog-header">
+  <h2>Position hinzufügen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (prefillLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Meilensteine werden geladen...</span>
+    </div>
+  } @else {
+    @if (availableMilestones().length > 0) {
+      <div class="milestone-grid">
+        @for (milestone of availableMilestones(); track milestone.id) {
+          <button
+            type="button"
+            class="milestone-tile"
+            [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+            [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+            [disabled]="milestone.alreadyInvoiced"
+            (click)="toggleMilestone(milestone)"
+          >
+            <div class="milestone-tile-icon">
+              <span class="material-symbols-rounded">
+                {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+              </span>
+            </div>
+            <div class="milestone-tile-body">
+              <p class="milestone-tile-title">{{ milestone.title }}</p>
+              @if (milestone.price) {
+                <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+              }
+              @if (milestone.alreadyInvoiced) {
+                <div class="milestone-tile-tags">
+                  <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                    <span class="material-symbols-rounded">lock</span>
+                    Abgerechnet
+                  </span>
+                </div>
+              } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                <div class="milestone-tile-tags">
+                  @if (milestone.inDraftInvoice) {
+                    <span class="milestone-tile-tag milestone-tile-tag--draft">
+                      <span class="material-symbols-rounded">edit_note</span>
+                      In anderem Entwurf
+                    </span>
+                  }
+                  @if (milestone.milestoneStatus !== 'DONE') {
+                    <span class="milestone-tile-tag milestone-tile-tag--pending">
+                      <span class="material-symbols-rounded">hourglass_empty</span>
+                      Nicht abgeschlossen
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="no-milestones">Keine weiteren Meilensteine verfügbar.</p>
+    }
+
+    <div class="free-position-row">
+      <input
+        type="text"
+        class="free-description"
+        placeholder="Freie Position"
+        [value]="freeDescription()"
+        (input)="freeDescription.set($any($event.target).value)"
+      />
+      <input
+        type="text"
+        class="free-quantity"
+        placeholder="Menge"
+        [value]="freeQuantity()"
+        (input)="freeQuantity.set($any($event.target).value)"
+      />
+      <input
+        type="text"
+        class="free-price"
+        placeholder="Preis netto"
+        [value]="freeUnitPrice()"
+        (input)="freeUnitPrice.set($any($event.target).value)"
+      />
+      <select
+        class="free-tax"
+        [value]="freeTaxRate()"
+        (change)="freeTaxRate.set(+$any($event.target).value)"
+      >
+        @for (rate of taxRateOptions; track rate) {
+          <option [value]="rate">{{ rate }} %</option>
+        }
+      </select>
+      <button type="button" class="free-add-button" (click)="addFreePosition()">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+    </div>
+
+    @if (draftItems().length > 0) {
+      <div class="positions-list">
+        @for (item of draftItems(); track item.key) {
+          <div class="position-row">
+            <div class="position-main">
+              <span class="position-source-icon material-symbols-rounded">
+                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+              </span>
+              <p class="position-description">{{ item.description }}</p>
+            </div>
+            <select
+              class="position-tax-select"
+              [value]="item.taxRatePercentage"
+              (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+            >
+              @for (rate of taxRateOptions; track rate) {
+                <option [value]="rate">{{ rate }} % USt</option>
+              }
+            </select>
+            <button
+              type="button"
+              class="position-remove-button"
+              (click)="removeDraftItem(item.key)"
+            >
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button
+    class="submit-button"
+    [disabled]="submitting() || draftItems().length === 0"
+    (click)="submit()"
+  >
+    @if (!submitting()) {
+      <span>{{ draftItems().length }} Position(en) hinzufügen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

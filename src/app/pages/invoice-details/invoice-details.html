@@ -1,0 +1,203 @@
+@if (invoice(); as inv) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Rechnungen</span>
+      </button>
+
+      <p class="hero-tenant">
+        {{ tenantName() }}
+        @if (projectName()) {
+          · {{ projectName() }}
+        }
+      </p>
+      <h1 class="hero-title">{{ inv.invoiceNumber || 'Rechnungsentwurf' }}</h1>
+
+      <span class="status-badge" [class]="'status-badge--invoice-' + inv.status.toLowerCase()">
+        {{ statusLabels[inv.status] }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <div class="parties-grid">
+          <div>
+            <p class="party-label">Von</p>
+            <p class="party-name">{{ inv.seller?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.seller?.address) }}</p>
+            @if (inv.seller?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.seller?.vatId }}</p>
+            }
+          </div>
+          <div>
+            <p class="party-label">An</p>
+            <p class="party-name">{{ inv.buyer?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.buyer?.address) }}</p>
+            @if (inv.buyer?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.buyer?.vatId }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Positionen</p>
+          @if (isDraft()) {
+            <button
+              class="add-icon-button"
+              (click)="openAddLineItemDialog()"
+              title="Position hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          }
+        </div>
+
+        @for (item of inv.lineItems; track item.id) {
+          <div class="line-item-row">
+            <div class="line-item-main">
+              <span class="line-item-source-icon material-symbols-rounded">
+                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+              </span>
+              <div>
+                <p class="line-item-description">{{ item.description }}</p>
+                <p class="line-item-meta">
+                  {{ item.quantity }} × {{ formatMoney(item.unitPrice) }} ·
+                  {{ item.taxRatePercentage }} % USt
+                </p>
+              </div>
+            </div>
+            <span class="line-item-gross">{{ formatMoney(item.grossAmount) }}</span>
+            @if (isDraft()) {
+              <div class="line-item-actions">
+                <button
+                  class="icon-button"
+                  (click)="openEditLineItemDialog(item)"
+                  title="Bearbeiten"
+                >
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+                <button
+                  class="icon-button icon-button--danger"
+                  (click)="removeLineItem(item)"
+                  title="Entfernen"
+                >
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Positionen auf dieser Rechnung.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      @if (isDraft()) {
+        <button
+          class="issue-button"
+          [disabled]="issuing() || inv.lineItems.length === 0"
+          (click)="issueInvoice()"
+        >
+          @if (!issuing()) {
+            <span class="material-symbols-rounded">task_alt</span>
+            <span>Rechnung ausstellen</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Summen</p>
+        <div class="summary-row">
+          <span>Netto</span>
+          <span>{{ formatMoney(inv.netTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--muted">
+          <span>USt</span>
+          <span>{{ formatMoney(inv.taxTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--total">
+          <span>Brutto</span>
+          <span>{{ formatMoney(inv.grossTotal) }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-label-row">
+          <p class="sidebar-label">Details</p>
+          @if (isDraft() && !editingHeader()) {
+            <button class="inline-edit-button" (click)="startEditHeader()" title="Bearbeiten">
+              <span class="material-symbols-rounded">edit</span>
+            </button>
+          }
+        </div>
+
+        @if (editingHeader()) {
+          <div class="header-edit-form">
+            <input
+              type="text"
+              placeholder="Auftrags-Referenz"
+              [value]="headerBuyerReference()"
+              (input)="headerBuyerReference.set($any($event.target).value)"
+            />
+            <input
+              type="text"
+              placeholder="Zahlungsziel (Tage)"
+              [value]="headerPaymentTermsDays()"
+              (input)="headerPaymentTermsDays.set($any($event.target).value)"
+            />
+            <div class="header-edit-actions">
+              <button class="cancel-button" (click)="cancelEditHeader()">Abbrechen</button>
+              <button class="submit-button" [disabled]="savingHeader()" (click)="saveHeader()">
+                Speichern
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="detail-row">
+            <span>Ausgestellt</span>
+            <span>{{ inv.issueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Fällig</span>
+            <span>{{ inv.dueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Zahlungsziel</span>
+            <span>{{ inv.paymentTermsDays ? inv.paymentTermsDays + ' Tage' : '–' }}</span>
+          </div>
+          @if (inv.buyerReference) {
+            <div class="detail-row">
+              <span>Referenz</span>
+              <span>{{ inv.buyerReference }}</span>
+            </div>
+          }
+        }
+      </div>
+
+      @if (isDraft()) {
+        <button
+          class="delete-draft-button"
+          [disabled]="deletingDraft()"
+          (click)="deleteDraftInvoice()"
+        >
+          <span class="material-symbols-rounded">delete</span>
+          <span>Entwurf löschen</span>
+        </button>
+      }
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rechnung wird geladen...</p>
+  </div>
+}

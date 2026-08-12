@@ -6,6 +6,7 @@ import { Invoice, InvoiceStatus } from '../../model/invoice';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Toast } from '../../core/toast/toast';
 import { CreateInvoiceDialog } from './create-invoice-dialog/create-invoice-dialog';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-invoices',
@@ -18,6 +19,7 @@ export class Invoices {
   private readonly tenantStore = inject(TenantStore);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(Toast);
+  private readonly router = inject(Router);
 
   readonly statusLabels: Record<InvoiceStatus, string> = {
     DRAFT: 'Entwurf',
@@ -69,5 +71,9 @@ export class Invoices {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) this.toast.success('Rechnung angelegt');
     });
+  }
+
+  openInvoice(invoiceId: string): void {
+    this.router.navigate(['/invoices', invoiceId]);
   }
 }

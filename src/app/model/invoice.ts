@@ -102,3 +102,16 @@ export interface InvoicePrefill {
   suggestedBuyer: BillingParty;
   availableMilestones: MilestoneOption[];
 }
+
+export interface UpdateInvoiceHeaderRequest {
+  buyerReference?: string;
+  paymentTermsDays?: number;
+}
+
+export interface UpdateLineItemRequest {
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}

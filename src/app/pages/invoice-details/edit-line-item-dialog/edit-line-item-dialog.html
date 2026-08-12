@@ -1,0 +1,47 @@
+<div class="dialog-header">
+  <h2>Position bearbeiten</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field">
+    <label [class.warning]="showWarning() && !description().trim()">Beschreibung *</label>
+    <input
+      type="text"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label>Menge</label>
+      <input type="text" [value]="quantity()" (input)="quantity.set($any($event.target).value)" />
+    </div>
+    <div class="field">
+      <label>Preis netto</label>
+      <input type="text" [value]="unitPrice()" (input)="unitPrice.set($any($event.target).value)" />
+    </div>
+    <div class="field">
+      <label>USt</label>
+      <select [value]="taxRate()" (change)="taxRate.set(+$any($event.target).value)">
+        @for (rate of taxRateOptions; track rate) {
+          <option [value]="rate">{{ rate }} %</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

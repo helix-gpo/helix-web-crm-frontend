@@ -8,6 +8,8 @@ import {
   InvoicePrefill,
   IssueInvoiceRequest,
   LineItemRequest,
+  UpdateInvoiceHeaderRequest,
+  UpdateLineItemRequest,
 } from '../../model/invoice';
 
 @Injectable({ providedIn: 'root' })
@@ -41,5 +43,24 @@ export class InvoiceApi {
 
   issue(invoiceId: string, request?: IssueInvoiceRequest): Observable<Invoice> {
     return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/issue`, request ?? {});
+  }
+
+  updateHeader(invoiceId: string, request: UpdateInvoiceHeaderRequest): Observable<Invoice> {
+    return this.http.patch<Invoice>(`${this.baseUrl}/${invoiceId}`, request);
+  }
+
+  updateLineItem(
+    invoiceId: string,
+    lineItemId: string,
+    request: UpdateLineItemRequest,
+  ): Observable<Invoice> {
+    return this.http.patch<Invoice>(
+      `${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`,
+      request,
+    );
+  }
+
+  deleteDraft(invoiceId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${invoiceId}`);
   }
 }

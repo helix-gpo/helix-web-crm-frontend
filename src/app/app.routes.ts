@@ -9,6 +9,7 @@ import { Login } from './pages/login/login';
 import { SessionExpired } from './pages/session-expired/session-expired';
 import { authGuard } from './core/auth/auth.guard';
 import { ProjectDetail } from './pages/project-details/project-details';
+import { InvoiceDetail } from './pages/invoice-details/invoice-details';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -20,5 +21,6 @@ export const routes: Routes = [
   { path: 'projects', component: Projects, canActivate: [authGuard] },
   { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
   { path: 'invoices', component: Invoices, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
   { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
 ];

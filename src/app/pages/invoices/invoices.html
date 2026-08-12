@@ -52,7 +52,7 @@
     </div>
 
     @for (invoice of invoiceStore.invoices(); track invoice.id) {
-      <div class="table-row">
+      <div class="table-row" (click)="openInvoice(invoice.id)">
         <span class="invoice-number">{{ invoice.invoiceNumber || '- (Entwurf)' }}</span>
         <span>{{ tenantName(invoice.tenantId) }}</span>
         <span>{{ invoice.issueDate || '-' }}</span>
