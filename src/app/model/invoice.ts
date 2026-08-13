@@ -57,6 +57,7 @@ export interface Invoice {
   netTotal: Money;
   taxTotal: Money;
   grossTotal: Money;
+  documentKey?: string;
   createdAt: string;
   updatedAt: string;
 }

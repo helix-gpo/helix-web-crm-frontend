@@ -189,6 +189,17 @@ export class InvoiceDetail {
     }
   }
 
+  async openDocument(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+    try {
+      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+      window.open(url, '_blank');
+    } catch {
+      this.toast.error('Dokument konnte nicht geladen werden');
+    }
+  }
+
   startEditHeader(): void {
     const inv = this.invoice();
     if (!inv) return;

@@ -114,6 +114,13 @@
         </button>
       }
 
+      @if (inv.status !== 'DRAFT' && inv.documentKey) {
+        <button class="issue-button" (click)="openDocument()">
+          <span class="material-symbols-rounded">description</span>
+          <span>Rechnung öffnen (PDF)</span>
+        </button>
+      }
+
       <div class="sidebar-card">
         <p class="sidebar-label">Summen</p>
         <div class="summary-row">

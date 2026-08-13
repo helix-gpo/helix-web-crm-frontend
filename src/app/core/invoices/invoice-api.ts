@@ -63,4 +63,8 @@ export class InvoiceApi {
   deleteDraft(invoiceId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${invoiceId}`);
   }
+
+  getDocumentUrl(invoiceId: string): Observable<{ url: string }> {
+    return this.http.get<{ url: string }>(`${this.baseUrl}/${invoiceId}/document`);
+  }
 }
