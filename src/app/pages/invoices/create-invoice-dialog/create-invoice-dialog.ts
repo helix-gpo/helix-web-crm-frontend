@@ -48,6 +48,7 @@ export class CreateInvoiceDialog {
 
   readonly tenantId = signal(this.dialogData?.tenantId ?? '');
   readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly projectLocked = computed(() => !!this.dialogData?.projectId);
   readonly projectId = signal(this.dialogData?.projectId ?? '');
   readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
 

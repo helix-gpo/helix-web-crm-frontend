@@ -10,6 +10,7 @@ import { TenantStore } from '../../core/tenants/tenant-store';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { MilestoneDialog } from './milestone-dialog/milestone-dialog';
 import { EditProjectDialog } from './edit-project-dialog/edit-project-dialog';
+import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
 import { Toast } from '../../core/toast/toast';
 import { Project, ProjectStatus, Milestone } from '../../model/project';
 import { getContrastTextColor } from '../../util/color-contrast';
@@ -115,6 +116,24 @@ export class ProjectDetail {
       if (updated) {
         this.refreshEverywhere();
         this.toast.success('Projekt aktualisiert');
+      }
+    });
+  }
+
+  openCreateInvoiceDialog(): void {
+    const p = this.project();
+    if (!p) return;
+
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: p.tenantId, projectId: p.id },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.toast.success('Rechnung angelegt');
+        this.router.navigate(['/invoices', result.id]);
       }
     });
   }

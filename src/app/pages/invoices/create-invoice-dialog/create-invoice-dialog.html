@@ -29,14 +29,19 @@
 
       <div class="field">
         <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
-        <select [disabled]="!tenantId()" (change)="onProjectChange($any($event.target).value)">
-          <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
-          @for (project of tenantProjects(); track project.id) {
-            <option [value]="project.id" [selected]="project.id === projectId()">
-              {{ project.title }}
-            </option>
-          }
-        </select>
+        <div class="select-lock" [class.select-lock--active]="projectLocked()">
+          <select
+            [disabled]="!tenantId() || projectLocked()"
+            (change)="onProjectChange($any($event.target).value)"
+          >
+            <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
+            @for (project of tenantProjects(); track project.id) {
+              <option [value]="project.id" [selected]="project.id === projectId()">
+                {{ project.title }}
+              </option>
+            }
+          </select>
+        </div>
       </div>
     </div>
 

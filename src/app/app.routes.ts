@@ -10,12 +10,14 @@ import { SessionExpired } from './pages/session-expired/session-expired';
 import { authGuard } from './core/auth/auth.guard';
 import { ProjectDetail } from './pages/project-details/project-details';
 import { InvoiceDetail } from './pages/invoice-details/invoice-details';
+import { Dashboard } from './pages/dashboard/dashboard';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
   { path: 'login', component: Login },
   { path: 'session-expired', component: SessionExpired },
   { path: 'callback', redirectTo: 'tenants', pathMatch: 'full' },
+  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'tenants', component: Tenants, canActivate: [authGuard] },
   { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
   { path: 'projects', component: Projects, canActivate: [authGuard] },

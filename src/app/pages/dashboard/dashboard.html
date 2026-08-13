@@ -1,0 +1,130 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">
+      Schön, dass du da bist{{ auth.userName() ? ', ' + auth.userName() : '' }} - hier der Überblick
+      über Mandanten, Projekte und Rechnungen.
+    </p>
+  </div>
+</div>
+
+@if (!loading()) {
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="material-symbols-rounded">payments</span>
+      <div>
+        <p class="stat-value">{{ formatAmount(openAmount()) }}</p>
+        <p class="stat-label">Offener Betrag</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--warning">
+      <span class="material-symbols-rounded">warning</span>
+      <div>
+        <p class="stat-value">{{ overdueCount() }}</p>
+        <p class="stat-label">Überfällige Rechnungen</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--muted">
+      <span class="material-symbols-rounded">work</span>
+      <div>
+        <p class="stat-value">{{ activeProjectsCount() }}</p>
+        <p class="stat-label">Aktive Projekte</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--muted">
+      <span class="material-symbols-rounded">apartment</span>
+      <div>
+        <p class="stat-value">{{ activeTenantsCount() }}</p>
+        <p class="stat-label">Aktive Mandanten</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <div class="dashboard-main">
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Anstehende & überfällige Rechnungen</p>
+          <a class="text-link" routerLink="/invoices">Alle ansehen</a>
+        </div>
+
+        @for (invoice of upcomingInvoices(); track invoice.id) {
+          <div class="invoice-row" (click)="openInvoice(invoice.id)">
+            <div class="invoice-row-main">
+              <span
+                class="invoice-status-dot"
+                [class.invoice-status-dot--overdue]="invoice.status === 'OVERDUE'"
+              ></span>
+              <div>
+                <p class="invoice-row-title">{{ invoice.invoiceNumber }}</p>
+                <p class="invoice-row-meta">
+                  {{ tenantName(invoice.tenantId) }}
+                  @if (projectName(invoice.projectId)) {
+                    · {{ projectName(invoice.projectId) }}
+                  }
+                </p>
+              </div>
+            </div>
+            <div class="invoice-row-end">
+              <span
+                class="invoice-row-due"
+                [class.invoice-row-due--overdue]="invoice.status === 'OVERDUE'"
+              >
+                Fällig {{ invoice.dueDate }}
+              </span>
+              <span class="invoice-row-amount">{{ formatMoney(invoice.grossTotal) }}</span>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Keine offenen Rechnungen - alles erledigt.</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <p class="info-card-title">Projekte nach Status</p>
+
+        @for (item of projectsByStatus(); track item.status) {
+          <div class="status-distribution-row">
+            <div class="status-distribution-label">
+              <span>{{ item.label }}</span>
+              <span>{{ item.count }}</span>
+            </div>
+            <div class="status-distribution-track">
+              <div
+                class="status-distribution-bar"
+                [class]="'status-distribution-bar--' + item.status.toLowerCase()"
+                [style.width.%]="item.percentage"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellzugriff</p>
+        <button class="sidebar-action" (click)="openCreateTenantDialog()">
+          <span class="material-symbols-rounded">apartment</span>
+          <span>Mandant anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateProjectDialog()">
+          <span class="material-symbols-rounded">work</span>
+          <span>Projekt anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Dashboard wird geladen...</p>
+  </div>
+}

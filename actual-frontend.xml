@@ -62,6 +62,7 @@ src/app/core/auth/auth-config.ts
 src/app/core/auth/auth.guard.ts
 src/app/core/auth/auth.interceptor.ts
 src/app/core/auth/auth.ts
+src/app/core/invoices/invoice-api.ts
 src/app/core/invoices/invoice-store.ts
 src/app/core/projects/project-api.ts
 src/app/core/projects/project-store.ts
@@ -77,6 +78,18 @@ src/app/model/invoice.ts
 src/app/model/project.ts
 src/app/model/tenant.ts
 src/app/model/testimonial.ts
+src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.html
+src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.scss
+src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.ts
+src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.html
+src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.scss
+src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.ts
+src/app/pages/invoice-details/invoice-details.html
+src/app/pages/invoice-details/invoice-details.scss
+src/app/pages/invoice-details/invoice-details.ts
+src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html
+src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss
+src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts
 src/app/pages/invoices/invoices.html
 src/app/pages/invoices/invoices.scss
 src/app/pages/invoices/invoices.ts
@@ -534,28 +547,6 @@ export class Auth {
 }
 </file>
 
-<file path="src/app/core/invoices/invoice-store.ts">
-import { Injectable, computed } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { Invoice } from '../../model/invoice';
-
-@Injectable({ providedIn: 'root' })
-export class InvoiceStore {
-  private readonly invoicesResource = httpResource<Invoice[]>(
-    () => `${environment.apiBaseUrl}/invoices`,
-    { defaultValue: [] },
-  );
-
-  readonly invoices = computed(() => this.invoicesResource.value() ?? []);
-  readonly loading = computed(() => this.invoicesResource.isLoading());
-
-  reload(): void {
-    this.invoicesResource.reload();
-  }
-}
-</file>
-
 <file path="src/app/core/projects/project-api.ts">
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -949,103 +940,6 @@ export class Toast {
 }
 </file>
 
-<file path="src/app/model/invoice.ts">
-export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-
-export interface Money {
-  amount: number;
-  currencyCode: string;
-}
-
-export interface Invoice {
-  id: string;
-  invoiceNumber?: string;
-  tenantId: string;
-  projectId?: string;
-  status: InvoiceStatus;
-  currencyCode: string;
-  issueDate?: string;
-  dueDate?: string;
-  netTotal: Money;
-  taxTotal: Money;
-  grossTotal: Money;
-  createdAt: string;
-  updatedAt: string;
-}
-</file>
-
-<file path="src/app/model/tenant.ts">
-export interface Address {
-  street?: string;
-  houseNumber?: string;
-  postalCode?: string;
-  city?: string;
-  countryCode?: string;
-}
-
-export type TenantStatus = 'PROSPECT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
-
-export interface Tenant {
-  id: string;
-  companyName: string;
-  legalName?: string;
-  vatId?: string;
-  address?: Address;
-  contactEmail?: string;
-  contactPhone?: string;
-  status: TenantStatus;
-  visibleOnWebsite: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTenantRequest {
-  companyName: string;
-  legalName?: string;
-  vatId?: string;
-  address?: Address;
-  contactEmail?: string;
-  contactPhone?: string;
-}
-
-export interface UpdateTenantContactDetailsRequest {
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: Address;
-}
-
-export interface UpdateTenantCoreDetailsRequest {
-  companyName: string;
-  legalName?: string;
-  vatId?: string;
-}
-
-export interface Partner {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role?: string;
-  email?: string;
-  phone?: string;
-}
-
-export interface CreatePartnerRequest {
-  firstName: string;
-  lastName: string;
-  role?: string;
-  email?: string;
-  phone?: string;
-}
-
-export interface UpdatePartnerRequest {
-  firstName: string;
-  lastName: string;
-  role?: string;
-  email?: string;
-  phone?: string;
-}
-</file>
-
 <file path="src/app/model/testimonial.ts">
 export type TestimonialStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
 
@@ -1065,81 +959,2278 @@ export interface Testimonial {
 }
 </file>
 
-<file path="src/app/pages/invoices/invoices.html">
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Rechnungen</h1>
-    <p class="page-subtitle">{{ invoiceStore.invoices().length }} Rechnungen insgesamt</p>
-  </div>
-  <button class="add-button">
-    <span class="material-symbols-rounded">add</span>
-    <span>Neue Rechnung</span>
+<file path="src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.html">
+<div class="dialog-header">
+  <h2>Position hinzufügen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
   </button>
 </div>
 
-<div class="stats-row">
-  <div class="stat-card">
-    <span class="material-symbols-rounded">payments</span>
-    <div>
-      <p class="stat-value">{{ openAmount() | number: '1.2-2' : 'de' }} €</p>
-      <p class="stat-label">Offener Betrag</p>
+<div class="dialog-body">
+  @if (prefillLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Meilensteine werden geladen...</span>
     </div>
+  } @else {
+    @if (availableMilestones().length > 0) {
+      <div class="milestone-grid">
+        @for (milestone of availableMilestones(); track milestone.id) {
+          <button
+            type="button"
+            class="milestone-tile"
+            [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+            [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+            [disabled]="milestone.alreadyInvoiced"
+            (click)="toggleMilestone(milestone)"
+          >
+            <div class="milestone-tile-icon">
+              <span class="material-symbols-rounded">
+                {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+              </span>
+            </div>
+            <div class="milestone-tile-body">
+              <p class="milestone-tile-title">{{ milestone.title }}</p>
+              @if (milestone.price) {
+                <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+              }
+              @if (milestone.alreadyInvoiced) {
+                <div class="milestone-tile-tags">
+                  <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                    <span class="material-symbols-rounded">lock</span>
+                    Abgerechnet
+                  </span>
+                </div>
+              } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                <div class="milestone-tile-tags">
+                  @if (milestone.inDraftInvoice) {
+                    <span class="milestone-tile-tag milestone-tile-tag--draft">
+                      <span class="material-symbols-rounded">edit_note</span>
+                      In anderem Entwurf
+                    </span>
+                  }
+                  @if (milestone.milestoneStatus !== 'DONE') {
+                    <span class="milestone-tile-tag milestone-tile-tag--pending">
+                      <span class="material-symbols-rounded">hourglass_empty</span>
+                      Nicht abgeschlossen
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="no-milestones">Keine weiteren Meilensteine verfügbar.</p>
+    }
+
+    <div class="free-position-row">
+      <input
+        type="text"
+        class="free-description"
+        placeholder="Freie Position"
+        [value]="freeDescription()"
+        (input)="freeDescription.set($any($event.target).value)"
+      />
+      <input
+        type="text"
+        class="free-quantity"
+        placeholder="Menge"
+        [value]="freeQuantity()"
+        (input)="freeQuantity.set($any($event.target).value)"
+      />
+      <input
+        type="text"
+        class="free-price"
+        placeholder="Preis netto"
+        [value]="freeUnitPrice()"
+        (input)="freeUnitPrice.set($any($event.target).value)"
+      />
+      <select
+        class="free-tax"
+        [value]="freeTaxRate()"
+        (change)="freeTaxRate.set(+$any($event.target).value)"
+      >
+        @for (rate of taxRateOptions; track rate) {
+          <option [value]="rate">{{ rate }} %</option>
+        }
+      </select>
+      <button type="button" class="free-add-button" (click)="addFreePosition()">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+    </div>
+
+    @if (draftItems().length > 0) {
+      <div class="positions-list">
+        @for (item of draftItems(); track item.key) {
+          <div class="position-row">
+            <div class="position-main">
+              <span class="position-source-icon material-symbols-rounded">
+                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+              </span>
+              <p class="position-description">{{ item.description }}</p>
+            </div>
+            <select
+              class="position-tax-select"
+              [value]="item.taxRatePercentage"
+              (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+            >
+              @for (rate of taxRateOptions; track rate) {
+                <option [value]="rate">{{ rate }} % USt</option>
+              }
+            </select>
+            <button
+              type="button"
+              class="position-remove-button"
+              (click)="removeDraftItem(item.key)"
+            >
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button
+    class="submit-button"
+    [disabled]="submitting() || draftItems().length === 0"
+    (click)="submit()"
+  >
+    @if (!submitting()) {
+      <span>{{ draftItems().length }} Position(en) hinzufügen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 68vh;
+  overflow-y: auto;
+  @include flex-col(1.6rem);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+}
+
+.field input,
+.field select,
+.free-position-row input,
+.free-position-row select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
+  }
+}
+
+// Erzwingt "not-allowed"-Cursor über gesperrten Selects (z. B. vorausgewählter
+// Mandant) - native disabled-Selects respektieren cursor-CSS browserübergreifend
+// nicht zuverlässig, daher ein unsichtbares Overlay statt Verlass auf :disabled
+.select-lock {
+  position: relative;
+
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
+  }
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
+
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+// ===== Meilenstein-Kacheln =====
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.milestone-tile {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  min-height: 8.4rem; // Platz für Titel + Preis + bis zu zwei Tags
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+
+  &:hover:not(&--disabled) {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.06);
+  }
+
+  &--active {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.1);
+
+    .milestone-tile-icon .material-symbols-rounded {
+      color: var(--accent-cyan);
+    }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.milestone-tile-icon .material-symbols-rounded {
+  font-size: 2.2rem;
+  color: var(--text-muted);
+}
+
+.milestone-tile-body {
+  @include flex-col(0.3rem);
+  min-width: 0; // verhindert Overflow bei langen Titeln
+}
+
+.milestone-tile-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.milestone-tile-price {
+  font-size: 1.3rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.milestone-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.milestone-tile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 50rem;
+
+  .material-symbols-rounded {
+    font-size: 1.3rem;
+  }
+
+  &--invoiced {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+
+  &--draft {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+
+  &--pending {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+.no-milestones,
+.no-positions-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+// ===== Freie Position =====
+
+.free-position-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem 10rem 8rem auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.free-add-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+// ===== Positionsliste =====
+
+.positions-list {
+  @include card-surface;
+  @include flex-col(0);
+  overflow: hidden;
+}
+
+.position-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem 9rem auto;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.position-main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.position-source-icon {
+  font-size: 1.8rem;
+  color: var(--text-grey);
+  flex-shrink: 0;
+}
+
+.position-description {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.position-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.position-tax-select {
+  font-size: 1.3rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+}
+
+.position-gross {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.position-remove-button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { InvoiceApi } from '../../../core/invoices/invoice-api';
+import { InvoicePrefill, LineItemSource, Money, MilestoneOption } from '../../../model/invoice';
+
+export interface AddLineItemDialogData {
+  invoiceId: string;
+  tenantId: string;
+  projectId?: string;
+  existingMilestoneIds: string[];
+}
+
+interface DraftLineItem {
+  key: string;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}
+
+@Component({
+  selector: 'app-add-line-item-dialog',
+  imports: [],
+  templateUrl: './add-line-item-dialog.html',
+  styleUrl: './add-line-item-dialog.scss',
+})
+export class AddLineItemDialog {
+  private readonly dialogRef = inject(MatDialogRef<AddLineItemDialog>);
+  private readonly invoiceApi = inject(InvoiceApi);
+  protected readonly data = inject<AddLineItemDialogData>(MAT_DIALOG_DATA);
+
+  readonly taxRateOptions = [19, 7, 0];
+
+  readonly draftItems = signal<DraftLineItem[]>([]);
+
+  readonly freeDescription = signal('');
+  readonly freeQuantity = signal('1');
+  readonly freeUnitPrice = signal('');
+  readonly freeTaxRate = signal(19);
+
+  readonly submitting = signal(false);
+
+  private readonly prefillResource = httpResource<InvoicePrefill>(() =>
+    this.data.projectId
+      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${this.data.tenantId}&projectId=${this.data.projectId}`
+      : undefined,
+  );
+
+  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
+
+  // Meilensteine, die auf DIESER Rechnung noch nicht drauf sind, dazu noch
+  // nicht lokal ausgewählt - alleiniger Blocker bleibt "wirklich ausgestellt"
+  readonly availableMilestones = computed<MilestoneOption[]>(() => {
+    const all = this.prefillResource.value()?.availableMilestones ?? [];
+    return all.filter((m) => !this.data.existingMilestoneIds.includes(m.id));
+  });
+
+  isMilestoneAdded(milestoneId: string): boolean {
+    return this.draftItems().some((i) => i.milestoneId === milestoneId);
+  }
+
+  toggleMilestone(milestone: MilestoneOption): void {
+    if (milestone.alreadyInvoiced) return;
+
+    if (this.isMilestoneAdded(milestone.id)) {
+      this.draftItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
+      return;
+    }
+
+    this.draftItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'MILESTONE',
+        milestoneId: milestone.id,
+        description: milestone.title,
+        quantity: 1,
+        unitCode: 'C62',
+        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
+        taxRatePercentage: 19,
+      },
+    ]);
+  }
+
+  addFreePosition(): void {
+    const description = this.freeDescription().trim();
+    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
+    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
+
+    if (!description || isNaN(amount) || amount <= 0) return;
+
+    this.draftItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'CUSTOM',
+        description,
+        quantity,
+        unitCode: 'C62',
+        unitPrice: { amount, currencyCode: 'EUR' },
+        taxRatePercentage: this.freeTaxRate(),
+      },
+    ]);
+
+    this.freeDescription.set('');
+    this.freeQuantity.set('1');
+    this.freeUnitPrice.set('');
+    this.freeTaxRate.set(19);
+  }
+
+  removeDraftItem(key: string): void {
+    this.draftItems.update((list) => list.filter((i) => i.key !== key));
+  }
+
+  updateItemTaxRate(key: string, rate: number): void {
+    this.draftItems.update((list) =>
+      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
+    );
+  }
+
+  formatMoney(amount: number, currencyCode = 'EUR'): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
+      amount,
+    );
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    const items = this.draftItems();
+    if (items.length === 0) return;
+
+    this.submitting.set(true);
+    try {
+      // Nacheinander statt Promise.all - jeder Call hängt vom aktuellen
+      // Rechnungsstatus ab, parallel wäre bei schnellen Doppelklicks riskant
+      for (const item of items) {
+        await firstValueFrom(
+          this.invoiceApi.addLineItem(this.data.invoiceId, {
+            source: item.source,
+            milestoneId: item.milestoneId,
+            description: item.description,
+            quantity: item.quantity,
+            unitCode: item.unitCode,
+            unitPrice: item.unitPrice,
+            taxRatePercentage: item.taxRatePercentage,
+          }),
+        );
+      }
+      this.dialogRef.close(true);
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.html">
+<div class="dialog-header">
+  <h2>Position bearbeiten</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field">
+    <label [class.warning]="showWarning() && !description().trim()">Beschreibung *</label>
+    <input
+      type="text"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+    />
   </div>
 
-  <div class="stat-card stat-card--warning">
-    <span class="material-symbols-rounded">warning</span>
-    <div>
-      <p class="stat-value">{{ overdueCount() }}</p>
-      <p class="stat-label">Überfällig</p>
+  <div class="field-row">
+    <div class="field">
+      <label>Menge</label>
+      <input type="text" [value]="quantity()" (input)="quantity.set($any($event.target).value)" />
     </div>
-  </div>
-
-  <div class="stat-card stat-card--muted">
-    <span class="material-symbols-rounded">edit_note</span>
-    <div>
-      <p class="stat-value">{{ draftCount() }}</p>
-      <p class="stat-label">Entwürfe</p>
+    <div class="field">
+      <label>Preis netto</label>
+      <input type="text" [value]="unitPrice()" (input)="unitPrice.set($any($event.target).value)" />
+    </div>
+    <div class="field">
+      <label>USt</label>
+      <select [value]="taxRate()" (change)="taxRate.set(+$any($event.target).value)">
+        @for (rate of taxRateOptions; track rate) {
+          <option [value]="rate">{{ rate }} %</option>
+        }
+      </select>
     </div>
   </div>
 </div>
 
-@if (invoiceStore.loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Rechnungen werden geladen...</p>
-  </div>
-} @else {
-  <div class="invoices-table">
-    <div class="table-row table-row--header">
-      <span>Nummer</span>
-      <span>Mandant</span>
-      <span>Ausgestellt</span>
-      <span>Fällig</span>
-      <span>Betrag</span>
-      <span>Status</span>
-    </div>
-
-    @for (invoice of invoiceStore.invoices(); track invoice.id) {
-      <div class="table-row">
-        <span class="invoice-number">{{ invoice.invoiceNumber || '- (Entwurf)' }}</span>
-        <span>{{ tenantName(invoice.tenantId) }}</span>
-        <span>{{ invoice.issueDate || '-' }}</span>
-        <span>{{ invoice.dueDate || '-' }}</span>
-        <span class="amount-cell">{{ formatAmount(invoice) }}</span>
-        <span
-          class="status-badge"
-          [class]="'status-badge--invoice-' + invoice.status.toLowerCase()"
-        >
-          {{ statusLabels[invoice.status] }}
-        </span>
-      </div>
-    } @empty {
-      <div class="empty-state">
-        <span class="material-symbols-rounded">receipt_long</span>
-        <p>Noch keine Rechnungen vorhanden</p>
-      </div>
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
     }
-  </div>
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 68vh;
+  overflow-y: auto;
+  @include flex-col(1.6rem);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+}
+
+.field input,
+.field select,
+.free-position-row input,
+.free-position-row select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
+  }
+}
+
+// Erzwingt "not-allowed"-Cursor über gesperrten Selects (z. B. vorausgewählter
+// Mandant) - native disabled-Selects respektieren cursor-CSS browserübergreifend
+// nicht zuverlässig, daher ein unsichtbares Overlay statt Verlass auf :disabled
+.select-lock {
+  position: relative;
+
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
+  }
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
+
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+// ===== Meilenstein-Kacheln =====
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.milestone-tile {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  min-height: 8.4rem; // Platz für Titel + Preis + bis zu zwei Tags
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+
+  &:hover:not(&--disabled) {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.06);
+  }
+
+  &--active {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.1);
+
+    .milestone-tile-icon .material-symbols-rounded {
+      color: var(--accent-cyan);
+    }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.milestone-tile-icon .material-symbols-rounded {
+  font-size: 2.2rem;
+  color: var(--text-muted);
+}
+
+.milestone-tile-body {
+  @include flex-col(0.3rem);
+  min-width: 0; // verhindert Overflow bei langen Titeln
+}
+
+.milestone-tile-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.milestone-tile-price {
+  font-size: 1.3rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.milestone-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.milestone-tile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 50rem;
+
+  .material-symbols-rounded {
+    font-size: 1.3rem;
+  }
+
+  &--invoiced {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+
+  &--draft {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+
+  &--pending {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+.no-milestones,
+.no-positions-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+// ===== Freie Position =====
+
+.free-position-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem 10rem 8rem auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.free-add-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+// ===== Positionsliste =====
+
+.positions-list {
+  @include card-surface;
+  @include flex-col(0);
+  overflow: hidden;
+}
+
+.position-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem 9rem auto;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.position-main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.position-source-icon {
+  font-size: 1.8rem;
+  color: var(--text-grey);
+  flex-shrink: 0;
+}
+
+.position-description {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.position-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.position-tax-select {
+  font-size: 1.3rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+}
+
+.position-gross {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.position-remove-button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+// ===== Summenkarte =====
+
+.summary-card {
+  @include flex-col(0.6rem);
+  padding: 1.4rem 1.6rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  color: var(--text-light);
+
+  &--muted {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  &--total {
+    padding-top: 0.8rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.ts">
+import { Component, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { InvoiceApi } from '../../../core/invoices/invoice-api';
+import { InvoiceLineItem } from '../../../model/invoice';
+
+export interface EditLineItemDialogData {
+  invoiceId: string;
+  item: InvoiceLineItem;
+}
+
+@Component({
+  selector: 'app-edit-line-item-dialog',
+  imports: [],
+  templateUrl: './edit-line-item-dialog.html',
+  styleUrl: './edit-line-item-dialog.scss',
+})
+export class EditLineItemDialog {
+  private readonly dialogRef = inject(MatDialogRef<EditLineItemDialog>);
+  private readonly invoiceApi = inject(InvoiceApi);
+  protected readonly data = inject<EditLineItemDialogData>(MAT_DIALOG_DATA);
+
+  readonly taxRateOptions = [19, 7, 0];
+
+  readonly description = signal(this.data.item.description);
+  readonly quantity = signal(this.data.item.quantity.toString());
+  readonly unitPrice = signal(this.data.item.unitPrice.amount.toString());
+  readonly taxRate = signal(this.data.item.taxRatePercentage);
+
+  readonly submitting = signal(false);
+  readonly showWarning = signal(false);
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    const description = this.description().trim();
+    const amount = parseFloat(this.unitPrice().replace(',', '.'));
+    const quantity = parseFloat(this.quantity().replace(',', '.'));
+
+    if (!description || isNaN(amount) || amount <= 0 || isNaN(quantity) || quantity <= 0) {
+      this.showWarning.set(true);
+      return;
+    }
+
+    this.submitting.set(true);
+    try {
+      const result = await firstValueFrom(
+        this.invoiceApi.updateLineItem(this.data.invoiceId, this.data.item.id, {
+          description,
+          quantity,
+          unitCode: this.data.item.unitCode,
+          unitPrice: { amount, currencyCode: this.data.item.unitPrice.currencyCode },
+          taxRatePercentage: this.taxRate(),
+        }),
+      );
+      this.dialogRef.close(result);
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.scss">
+@use '../../../styles' as *;
+
+.detail-hero {
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  padding: 4rem 3.2rem 5.6rem;
+  position: relative;
+  overflow: hidden;
+  margin: -3.2rem -3.2rem 0;
+}
+
+.detail-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: linear-gradient(180deg, black, transparent);
+}
+
+.detail-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 100rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50rem;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  padding: 0.7rem 1.4rem;
+  cursor: pointer;
+  margin-bottom: 2rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.hero-tenant {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 1.2rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 50rem;
+
+  &--invoice-draft {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+  }
+  &--invoice-issued {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+  &--invoice-sent {
+    background-color: var(--accent-pink-light);
+    color: var(--accent-pink-hover);
+  }
+  &--invoice-paid {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &--invoice-overdue {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+  &--invoice-cancelled {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr 32rem;
+  gap: 2.4rem;
+  padding: 3.2rem;
+  margin: 0 -3.2rem;
+}
+
+.detail-main {
+  @include flex-col(2rem);
+}
+
+.detail-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.info-card-header .info-card-title {
+  margin-bottom: 0;
+}
+
+.add-icon-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan-light);
+  color: var(--accent-cyan-hover);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan);
+    color: var(--text-light);
+  }
+}
+
+.parties-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.4rem;
+}
+
+.party-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 0.6rem;
+}
+
+.party-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.party-line {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  line-height: 1.5;
+}
+
+.line-item-row {
+  display: grid;
+  grid-template-columns: 1fr 10rem auto;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.line-item-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.line-item-source-icon {
+  font-size: 1.8rem;
+  color: var(--text-grey);
+  flex-shrink: 0;
+}
+
+.line-item-description {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.line-item-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.line-item-gross {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.icon-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &--danger:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.line-item-actions {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.empty-hint {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.issue-button {
+  @include button-base;
+  width: 100%;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 1.8rem;
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+}
+
+.summary-row,
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  color: var(--text-dark);
+  padding: 0.4rem 0;
+}
+
+.summary-row--muted {
+  color: var(--text-grey);
+  font-size: 1.3rem;
+}
+
+.summary-row--total {
+  padding-top: 0.8rem;
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--bg-light);
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+.detail-row span:first-child {
+  color: var(--text-grey);
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sidebar-label-row {
+  @include flex-between;
+  margin-bottom: 1.2rem;
+
+  .sidebar-label {
+    margin-bottom: 0;
+  }
+}
+
+.inline-edit-button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--bg-light);
+  }
+}
+
+.header-edit-form {
+  @include flex-col(0.8rem);
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.3rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+  }
+}
+
+.header-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-top: 0.4rem;
+
+  button {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+.delete-draft-button {
+  @include button-base;
+  width: 100%;
+  justify-content: center;
+  background-color: var(--danger-light);
+  color: var(--danger);
+
+  &:hover:not(:disabled) {
+    background-color: var(--danger);
+    color: var(--text-light);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 68vh;
+  overflow-y: auto;
+  @include flex-col(1.6rem);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+}
+
+.field input,
+.field select,
+.free-position-row input,
+.free-position-row select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
+  }
+}
+
+// Erzwingt "not-allowed"-Cursor über gesperrten Selects (z. B. vorausgewählter
+// Mandant) - native disabled-Selects respektieren cursor-CSS browserübergreifend
+// nicht zuverlässig, daher ein unsichtbares Overlay statt Verlass auf :disabled
+.select-lock {
+  position: relative;
+
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
+  }
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
+
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+// ===== Meilenstein-Kacheln =====
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.milestone-tile {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  min-height: 8.4rem; // Platz für Titel + Preis + bis zu zwei Tags
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+
+  &:hover:not(&--disabled) {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.06);
+  }
+
+  &--active {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.1);
+
+    .milestone-tile-icon .material-symbols-rounded {
+      color: var(--accent-cyan);
+    }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.milestone-tile-icon .material-symbols-rounded {
+  font-size: 2.2rem;
+  color: var(--text-muted);
+}
+
+.milestone-tile-body {
+  @include flex-col(0.3rem);
+  min-width: 0; // verhindert Overflow bei langen Titeln
+}
+
+.milestone-tile-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.milestone-tile-price {
+  font-size: 1.3rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.milestone-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.milestone-tile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 50rem;
+
+  .material-symbols-rounded {
+    font-size: 1.3rem;
+  }
+
+  &--invoiced {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+
+  &--draft {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+
+  &--pending {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+.no-milestones,
+.no-positions-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+// ===== Freie Position =====
+
+.free-position-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem 10rem 8rem auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.free-add-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+// ===== Positionsliste =====
+
+.positions-list {
+  @include card-surface;
+  @include flex-col(0);
+  overflow: hidden;
+}
+
+.position-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem 9rem auto;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.position-main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.position-source-icon {
+  font-size: 1.8rem;
+  color: var(--text-grey);
+  flex-shrink: 0;
+}
+
+.position-description {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.position-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.position-tax-select {
+  font-size: 1.3rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+}
+
+.position-gross {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.position-remove-button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+// ===== Summenkarte =====
+
+.summary-card {
+  @include flex-col(0.6rem);
+  padding: 1.4rem 1.6rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  color: var(--text-light);
+
+  &--muted {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  &--total {
+    padding-top: 0.8rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { environment } from '../../../../environments/environment';
+import { InvoiceStore } from '../../../core/invoices/invoice-store';
+import { ProjectStore } from '../../../core/projects/project-store';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import {
+  CreateInvoiceRequest,
+  InvoicePrefill,
+  LineItemSource,
+  Money,
+  MilestoneOption,
+} from '../../../model/invoice';
+
+export interface CreateInvoiceDialogData {
+  tenantId?: string;
+  projectId?: string;
+}
+
+interface DraftLineItem {
+  key: string;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}
+
+@Component({
+  selector: 'app-create-invoice-dialog',
+  imports: [],
+  templateUrl: './create-invoice-dialog.html',
+  styleUrl: './create-invoice-dialog.scss',
+})
+export class CreateInvoiceDialog {
+  private readonly dialogRef = inject(MatDialogRef<CreateInvoiceDialog>);
+  private readonly invoiceStore = inject(InvoiceStore);
+  protected readonly tenantStore = inject(TenantStore);
+  protected readonly projectStore = inject(ProjectStore);
+  private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
+
+  readonly taxRateOptions = [19, 7, 0];
+
+  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
+  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly projectId = signal(this.dialogData?.projectId ?? '');
+  readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
+
+  readonly buyerReference = signal('');
+  readonly paymentTermsDays = signal('14');
+
+  readonly lineItems = signal<DraftLineItem[]>([]);
+
+  readonly freeDescription = signal('');
+  readonly freeQuantity = signal('1');
+  readonly freeUnitPrice = signal('');
+  readonly freeTaxRate = signal(19);
+
+  readonly submitting = signal(false);
+  readonly showWarning = signal(false);
+
+  // Nur Projekte des gewählten Mandanten - Projekt ist bei uns Pflichtfeld
+  readonly tenantProjects = computed(() =>
+    this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
+  );
+
+  private readonly prefillResource = httpResource<InvoicePrefill>(() => {
+    const tenantId = this.tenantId();
+    const projectId = this.projectId();
+    return tenantId && projectId
+      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${tenantId}&projectId=${projectId}`
+      : undefined;
+  });
+
+  readonly prefill = computed(() => this.prefillResource.value());
+  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
+
+  readonly totals = computed(() => {
+    const items = this.lineItems();
+    return {
+      net: items.reduce((sum, i) => sum + this.itemNet(i), 0),
+      tax: items.reduce((sum, i) => sum + this.itemTax(i), 0),
+      gross: items.reduce((sum, i) => sum + this.itemGross(i), 0),
+    };
+  });
+
+  // Aufschlüsselung pro Steuersatz - genau das, was auf der Rechnung als
+  // eigene USt-Zeile je Satz ausgewiesen werden muss
+  readonly taxBreakdown = computed(() => {
+    const map = new Map<number, { net: number; tax: number }>();
+    for (const item of this.lineItems()) {
+      const net = this.itemNet(item);
+      const tax = this.itemTax(item);
+      const entry = map.get(item.taxRatePercentage) ?? { net: 0, tax: 0 };
+      entry.net += net;
+      entry.tax += tax;
+      map.set(item.taxRatePercentage, entry);
+    }
+    return [...map.entries()]
+      .map(([rate, values]) => ({ rate, ...values }))
+      .sort((a, b) => b.rate - a.rate);
+  });
+
+  readonly isValid = computed(
+    () => !!this.tenantId() && !!this.projectId() && this.lineItems().length > 0,
+  );
+
+  itemNet(item: DraftLineItem): number {
+    return item.unitPrice.amount * item.quantity;
+  }
+
+  itemTax(item: DraftLineItem): number {
+    return this.itemNet(item) * (item.taxRatePercentage / 100);
+  }
+
+  itemGross(item: DraftLineItem): number {
+    return this.itemNet(item) + this.itemTax(item);
+  }
+
+  onTenantChange(value: string): void {
+    this.tenantId.set(value);
+    this.projectId.set('');
+    this.lineItems.set([]);
+  }
+
+  onProjectChange(value: string): void {
+    this.projectId.set(value);
+    this.lineItems.set([]);
+  }
+
+  isMilestoneAdded(milestoneId: string): boolean {
+    return this.lineItems().some((i) => i.milestoneId === milestoneId);
+  }
+
+  toggleMilestone(milestone: MilestoneOption): void {
+    if (milestone.alreadyInvoiced) return;
+
+    if (this.isMilestoneAdded(milestone.id)) {
+      this.lineItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
+      return;
+    }
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'MILESTONE',
+        milestoneId: milestone.id,
+        description: milestone.title,
+        quantity: 1,
+        unitCode: 'C62',
+        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
+        taxRatePercentage: 19,
+      },
+    ]);
+  }
+
+  addFreePosition(): void {
+    const description = this.freeDescription().trim();
+    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
+    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
+
+    if (!description || isNaN(amount) || amount <= 0) return;
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'CUSTOM',
+        description,
+        quantity,
+        unitCode: 'C62',
+        unitPrice: { amount, currencyCode: 'EUR' },
+        taxRatePercentage: this.freeTaxRate(),
+      },
+    ]);
+
+    this.freeDescription.set('');
+    this.freeQuantity.set('1');
+    this.freeUnitPrice.set('');
+    this.freeTaxRate.set(19);
+  }
+
+  removeLineItem(key: string): void {
+    this.lineItems.update((list) => list.filter((i) => i.key !== key));
+  }
+
+  updateItemTaxRate(key: string, rate: number): void {
+    this.lineItems.update((list) =>
+      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
+    );
+  }
+
+  formatMoney(amount: number, currencyCode = 'EUR'): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
+      amount,
+    );
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    if (!this.isValid()) {
+      this.showWarning.set(true);
+      return;
+    }
+
+    this.submitting.set(true);
+
+    const request: CreateInvoiceRequest = {
+      tenantId: this.tenantId(),
+      projectId: this.projectId(),
+      buyerReference: this.buyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.paymentTermsDays(), 10) || undefined,
+      lineItems: this.lineItems().map((i) => ({
+        source: i.source,
+        milestoneId: i.milestoneId,
+        description: i.description,
+        quantity: i.quantity,
+        unitCode: i.unitCode,
+        unitPrice: i.unitPrice,
+        taxRatePercentage: i.taxRatePercentage,
+      })),
+    };
+
+    try {
+      const invoice = await this.invoiceStore.create(request);
+      this.dialogRef.close(invoice);
+    } finally {
+      this.submitting.set(false);
+    }
+  }
 }
 </file>
 
@@ -1333,66 +3424,6 @@ export interface Testimonial {
   }
   to {
     transform: rotate(360deg);
-  }
-}
-</file>
-
-<file path="src/app/pages/invoices/invoices.ts">
-import { Component, computed, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
-import { InvoiceStore } from '../../core/invoices/invoice-store';
-import { TenantStore } from '../../core/tenants/tenant-store';
-import { Invoice, InvoiceStatus } from '../../model/invoice';
-
-@Component({
-  selector: 'app-invoices',
-  imports: [DecimalPipe],
-  templateUrl: './invoices.html',
-  styleUrl: './invoices.scss',
-})
-export class Invoices {
-  protected readonly invoiceStore = inject(InvoiceStore);
-  private readonly tenantStore = inject(TenantStore);
-
-  readonly statusLabels: Record<InvoiceStatus, string> = {
-    DRAFT: 'Entwurf',
-    ISSUED: 'Ausgestellt',
-    SENT: 'Versendet',
-    PAID: 'Bezahlt',
-    OVERDUE: 'Überfällig',
-    CANCELLED: 'Storniert',
-  };
-
-  private readonly tenantNameById = computed(() => {
-    const map = new Map<string, string>();
-    this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
-    return map;
-  });
-
-  readonly openAmount = computed(() =>
-    this.invoiceStore
-      .invoices()
-      .filter((i) => ['ISSUED', 'SENT', 'OVERDUE'].includes(i.status))
-      .reduce((sum, i) => sum + i.grossTotal.amount, 0),
-  );
-
-  readonly overdueCount = computed(
-    () => this.invoiceStore.invoices().filter((i) => i.status === 'OVERDUE').length,
-  );
-
-  readonly draftCount = computed(
-    () => this.invoiceStore.invoices().filter((i) => i.status === 'DRAFT').length,
-  );
-
-  tenantName(tenantId: string): string {
-    return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
-  }
-
-  formatAmount(invoice: Pick<Invoice, 'grossTotal'>): string {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: invoice.grossTotal.currencyCode,
-    }).format(invoice.grossTotal.amount);
   }
 }
 </file>
@@ -3100,244 +5131,6 @@ export class ProjectDetail {
 }
 </file>
 
-<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.scss">
-@use '../../../../styles' as *;
-
-.dialog-header {
-  @include flex-between;
-  padding: 2.4rem 2.4rem 0;
-
-  h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-light);
-  }
-}
-
-.close-button {
-  width: 3.6rem;
-  height: 3.6rem;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-    color: var(--text-light);
-  }
-}
-
-.dialog-body {
-  padding: 2rem 2.4rem;
-  box-sizing: border-box;
-  max-height: 64vh;
-  overflow-y: auto;
-  @include flex-col(1.8rem);
-}
-
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.2rem;
-}
-
-.field,
-.field-group {
-  @include flex-col(0.6rem);
-
-  label {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-light);
-
-    &.warning {
-      color: var(--accent-pink);
-    }
-  }
-}
-
-.section-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04rem;
-  color: var(--text-muted);
-}
-
-.field input,
-.field textarea,
-.field select,
-.add-row input {
-  width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: 1.4rem;
-  color: var(--text-light);
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem;
-  transition: all 0.2s;
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-    background-color: rgba(255, 255, 255, 0.08);
-  }
-}
-
-.field textarea {
-  resize: vertical;
-  min-height: 7rem;
-}
-
-.field select {
-  cursor: pointer;
-
-  option {
-    background-color: var(--main-navy);
-    color: var(--text-light);
-  }
-}
-
-.chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: var(--main-navy); // Basis-Farbe zurück - gilt für Highlights (fester Cyan-Hintergrund)
-  background-color: var(
-    --accent-cyan
-  ); // Highlights haben keine eigene Farbe, nutzen diesen Default
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 1.2rem;
-  font-weight: 600;
-  padding: 0.5rem 0.5rem 0.5rem 1.2rem;
-  border-radius: 50rem;
-
-  button {
-    display: flex;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.7;
-
-    .material-symbols-rounded {
-      font-size: 1.6rem;
-    }
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-}
-
-.add-row {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-
-  input {
-    flex: 1;
-  }
-}
-
-.color-picker {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.color-swatch {
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 50%;
-  border-width: 2px;
-  border-style: solid;
-  // border-color kommt jetzt dynamisch per [style.border-color]
-  cursor: pointer;
-
-  &--active {
-    border-color: var(--text-light) !important;
-  }
-}
-
-.add-button {
-  width: 3.8rem;
-  height: 3.8rem;
-  border-radius: var(--radius-sm);
-  border: none;
-  background-color: rgba(255, 255, 255, 0.08);
-  color: var(--text-light);
-  cursor: pointer;
-  @include flex-center;
-  flex-shrink: 0;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.dialog-footer {
-  @include flex-between;
-  padding: 1.6rem 2.4rem 2.4rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 0.4rem;
-}
-
-.cancel-button {
-  @include button-base;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: var(--text-light);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-  }
-}
-
-.submit-button {
-  @include button-base;
-  background-color: var(--accent-cyan);
-  color: var(--main-navy);
-  box-shadow: var(--shadow-cyan);
-  min-width: 14rem;
-
-  &:hover:not(:disabled) {
-    background-color: var(--accent-cyan-hover);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-</file>
-
 <file path="src/app/pages/session-expired/session-expired.html">
 <div class="session-page">
   <div class="session-blob session-blob--cyan"></div>
@@ -3476,172 +5269,6 @@ export class SessionExpired {
   backToStart(): void {
     this.router.navigate(['/']);
   }
-}
-</file>
-
-<file path="src/app/pages/tenant-detail/tenant-detail.html">
-@if (tenant(); as t) {
-  <div class="detail-hero">
-    <div class="detail-hero-pattern"></div>
-    <div class="detail-hero-content">
-      <button class="back-button" (click)="back()">
-        <span class="material-symbols-rounded">arrow_back</span>
-        <span>Alle Mandanten</span>
-      </button>
-
-      <div class="hero-main">
-        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
-        <div>
-          <h1 class="hero-title">{{ t.companyName }}</h1>
-          @if (t.legalName && t.legalName !== t.companyName) {
-            <p class="hero-legal">{{ t.legalName }}</p>
-          }
-          <span class="status-badge" [class]="'status-badge--' + t.status.toLowerCase()">
-            {{ statusLabels[t.status] }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="detail-body">
-    <div class="detail-main">
-      <div class="info-card">
-        <p class="info-card-title">Kontaktdaten</p>
-        <div class="info-row">
-          <span class="material-symbols-rounded">mail</span>
-          <span>{{ t.contactEmail || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">call</span>
-          <span>{{ t.contactPhone || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">location_on</span>
-          <span>
-            @if (t.address; as a) {
-              {{ a.street }} {{ a.houseNumber }}, {{ a.postalCode }} {{ a.city }}
-            } @else {
-              -
-            }
-          </span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>{{ t.vatId || 'Keine USt-ID hinterlegt' }}</span>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Ansprechpartner</p>
-          <div class="header-actions">
-            <span class="count-badge">{{ partners().length }}</span>
-            <button
-              class="add-icon-button"
-              (click)="openAddPartnerDialog()"
-              title="Ansprechpartner hinzufügen"
-            >
-              <span class="material-symbols-rounded">add</span>
-            </button>
-          </div>
-        </div>
-
-        @for (partner of partners(); track partner.id) {
-          <div class="partner-row">
-            <app-avatar
-              [name]="partner.firstName + ' ' + partner.lastName"
-              [size]="'3.6rem'"
-            ></app-avatar>
-            <div class="partner-info">
-              <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
-              <p class="partner-role">
-                {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
-              </p>
-            </div>
-            <div class="partner-actions">
-              <button
-                class="icon-button"
-                (click)="openEditPartnerDialog(partner)"
-                title="Bearbeiten"
-              >
-                <span class="material-symbols-rounded">edit</span>
-              </button>
-              <button
-                class="icon-button icon-button--danger"
-                (click)="deletePartner(partner)"
-                title="Entfernen"
-              >
-                <span class="material-symbols-rounded">delete</span>
-              </button>
-            </div>
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Ansprechpartner hinterlegt.</p>
-        }
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Projekte</p>
-          <span class="count-badge">{{ projects().length }}</span>
-        </div>
-        @for (project of projects(); track project.id) {
-          <div class="project-row">
-            <div>
-              <p class="project-title">{{ project.title }}</p>
-              <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
-            </div>
-            <span
-              class="status-badge status-badge--project"
-              [class]="'status-badge--' + project.status.toLowerCase()"
-            >
-              {{ projectStatusLabels[project.status] }}
-            </span>
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
-        }
-      </div>
-    </div>
-
-    <aside class="detail-sidebar">
-      <div class="sidebar-card">
-        <p class="sidebar-label">Website-Sichtbarkeit</p>
-        <div class="website-status" [class.website-status--active]="t.visibleOnWebsite">
-          <span class="material-symbols-rounded">
-            {{ t.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
-          </span>
-          <span>{{ t.visibleOnWebsite ? 'Sichtbar' : 'Nicht sichtbar' }}</span>
-        </div>
-      </div>
-
-      <div class="sidebar-card sidebar-card--dark">
-        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
-        <button class="sidebar-action" (click)="openEditCoreDetails()">
-          <span class="material-symbols-rounded">business_center</span>
-          <span>Stammdaten bearbeiten</span>
-        </button>
-        <button class="sidebar-action" (click)="openEditDialog()">
-          <span class="material-symbols-rounded">edit</span>
-          <span>Kontaktdaten bearbeiten</span>
-        </button>
-        <button class="sidebar-action">
-          <span class="material-symbols-rounded">add</span>
-          <span>Projekt anlegen</span>
-        </button>
-        <button class="sidebar-action">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>Rechnung erstellen</span>
-        </button>
-      </div>
-    </aside>
-  </div>
-} @else if (loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Mandant wird geladen...</p>
-  </div>
 }
 </file>
 
@@ -3996,169 +5623,6 @@ export class SessionExpired {
 }
 </file>
 
-<file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.html">
-<div class="dialog-header">
-  <h2>Neuer Mandant</h2>
-  <button class="close-button" (click)="close()">
-    <span class="material-symbols-rounded">close</span>
-  </button>
-</div>
-
-<div class="dialog-body">
-  <div class="field-group">
-    <p class="section-title">Stammdaten</p>
-
-    <div class="field" [class.field--full]="true">
-      <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
-      <input
-        type="text"
-        placeholder="z. B. Musterfirma GmbH"
-        [value]="companyName()"
-        (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
-      />
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label>Rechtsform / Vollständiger Name</label>
-        <input
-          type="text"
-          [value]="legalName()"
-          (input)="legalName.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label>USt-ID</label>
-        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label>Kontakt-Email</label>
-        <input
-          type="email"
-          [value]="contactEmail()"
-          (input)="contactEmail.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label>Telefon</label>
-        <input
-          type="text"
-          [value]="contactPhone()"
-          (input)="contactPhone.set($any($event.target).value)"
-        />
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field field--full">
-        <label>Straße</label>
-        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
-      </div>
-    </div>
-
-    <div class="field-row field-row--three">
-      <div class="field field--small">
-        <label>Nr.</label>
-        <input
-          type="text"
-          [value]="houseNumber()"
-          (input)="houseNumber.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field field--small">
-        <label>PLZ</label>
-        <input
-          type="text"
-          [value]="postalCode()"
-          (input)="postalCode.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label>Ort</label>
-        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
-      </div>
-    </div>
-  </div>
-
-  <div class="field-group">
-    <div class="section-title-row">
-      <p class="section-title">Ansprechpartner (optional)</p>
-      <label class="toggle">
-        <input
-          type="checkbox"
-          [checked]="includePartner()"
-          (change)="includePartner.set($any($event.target).checked)"
-        />
-        <span>Direkt anlegen</span>
-      </label>
-    </div>
-
-    @if (includePartner()) {
-      <div class="field-row">
-        <div class="field">
-          <label>Vorname</label>
-          <input
-            type="text"
-            [value]="partnerFirstName()"
-            (input)="partnerFirstName.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label>Nachname</label>
-          <input
-            type="text"
-            [value]="partnerLastName()"
-            (input)="partnerLastName.set($any($event.target).value)"
-          />
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>Rolle</label>
-          <input
-            type="text"
-            placeholder="z. B. Geschäftsführer"
-            [value]="partnerRole()"
-            (input)="partnerRole.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input
-            type="email"
-            [value]="partnerEmail()"
-            (input)="partnerEmail.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label>Telefon</label>
-          <input
-            type="text"
-            [value]="partnerPhone()"
-            (input)="partnerPhone.set($any($event.target).value)"
-          />
-        </div>
-      </div>
-    }
-  </div>
-</div>
-
-<div class="dialog-footer">
-  <button class="cancel-button" (click)="close()">Abbrechen</button>
-  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
-    @if (!submitting()) {
-      <span>Mandant anlegen</span>
-    } @else {
-      <span class="material-symbols-rounded spin">progress_activity</span>
-    }
-  </button>
-</div>
-</file>
-
 <file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.scss">
 @use '../../../../styles' as *;
 
@@ -4354,179 +5818,6 @@ export class SessionExpired {
     transition: background-color 5000s ease-in-out 0s;
   }
 }
-</file>
-
-<file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.ts">
-import { Component, computed, inject, signal } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { TenantStore } from '../../../core/tenants/tenant-store';
-import { CreateTenantRequest, CreatePartnerRequest } from '../../../model/tenant';
-
-@Component({
-  selector: 'app-create-tenant-dialog',
-  imports: [],
-  templateUrl: './create-tenant-dialog.html',
-  styleUrl: './create-tenant-dialog.scss',
-})
-export class CreateTenantDialog {
-  private readonly dialogRef = inject(MatDialogRef<CreateTenantDialog>);
-  private readonly tenantStore = inject(TenantStore);
-
-  // Tenant-Felder
-  readonly companyName = signal('');
-  readonly legalName = signal('');
-  readonly vatId = signal('');
-  readonly contactEmail = signal('');
-  readonly contactPhone = signal('');
-  readonly street = signal('');
-  readonly houseNumber = signal('');
-  readonly postalCode = signal('');
-  readonly city = signal('');
-
-  // Optionaler erster Partner
-  readonly includePartner = signal(true);
-  readonly partnerFirstName = signal('');
-  readonly partnerLastName = signal('');
-  readonly partnerRole = signal('');
-  readonly partnerEmail = signal('');
-  readonly partnerPhone = signal('');
-
-  readonly submitting = signal(false);
-  readonly showCompanyNameWarning = signal(false);
-
-  readonly isValid = computed(() => this.companyName().trim().length > 0);
-
-  close(): void {
-    this.dialogRef.close();
-  }
-
-  async submit(): Promise<void> {
-    if (!this.isValid()) {
-      this.showCompanyNameWarning.set(true);
-      return;
-    }
-
-    this.submitting.set(true);
-
-    const request: CreateTenantRequest = {
-      companyName: this.companyName().trim(),
-      legalName: this.legalName().trim() || undefined,
-      vatId: this.vatId().trim() || undefined,
-      contactEmail: this.contactEmail().trim() || undefined,
-      contactPhone: this.contactPhone().trim() || undefined,
-      address:
-        this.street() || this.city()
-          ? {
-              street: this.street().trim() || undefined,
-              houseNumber: this.houseNumber().trim() || undefined,
-              postalCode: this.postalCode().trim() || undefined,
-              city: this.city().trim() || undefined,
-              countryCode: 'DE',
-            }
-          : undefined,
-    };
-
-    let partner: CreatePartnerRequest | undefined;
-    if (this.includePartner() && this.partnerFirstName().trim() && this.partnerLastName().trim()) {
-      partner = {
-        firstName: this.partnerFirstName().trim(),
-        lastName: this.partnerLastName().trim(),
-        role: this.partnerRole().trim() || undefined,
-        email: this.partnerEmail().trim() || undefined,
-        phone: this.partnerPhone().trim() || undefined,
-      };
-    }
-
-    try {
-      const tenant = await this.tenantStore.create(request, partner);
-      this.dialogRef.close(tenant);
-    } finally {
-      this.submitting.set(false);
-    }
-  }
-}
-</file>
-
-<file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.html">
-<div class="dialog-header dialog-header--warning">
-  <div>
-    <p class="dialog-eyebrow">Stammdaten</p>
-    <h2>{{ tenant.companyName }}</h2>
-  </div>
-  <button class="close-button" (click)="close()">
-    <span class="material-symbols-rounded">close</span>
-  </button>
-</div>
-
-<div class="dialog-body">
-  <div class="warning-banner">
-    <span class="material-symbols-rounded">warning</span>
-    <p>
-      Diese Angaben wirken sich auf zukünftige Rechnungen und die Darstellung auf der Website aus.
-      Bereits ausgestellte Rechnungen bleiben unverändert.
-    </p>
-  </div>
-
-  @if (!unlocked()) {
-    <div class="locked-fields">
-      <div class="locked-row">
-        <span class="locked-label">Firmenname</span>
-        <span class="locked-value">{{ companyName() }}</span>
-      </div>
-      <div class="locked-row">
-        <span class="locked-label">Rechtsform / Vollständiger Name</span>
-        <span class="locked-value">{{ legalName() || '-' }}</span>
-      </div>
-      <div class="locked-row">
-        <span class="locked-label">USt-ID</span>
-        <span class="locked-value">{{ vatId() || '-' }}</span>
-      </div>
-    </div>
-
-    <button class="unlock-button" (click)="unlock()">
-      <span class="material-symbols-rounded">lock_open</span>
-      <span>Bearbeiten freischalten</span>
-    </button>
-  } @else {
-    <div class="field-group">
-      <div class="field">
-        <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
-        <input
-          type="text"
-          [value]="companyName()"
-          (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
-        />
-      </div>
-
-      <div class="field">
-        <label>Rechtsform / Vollständiger Name</label>
-        <input
-          type="text"
-          [value]="legalName()"
-          (input)="legalName.set($any($event.target).value)"
-        />
-      </div>
-
-      <div class="field">
-        <label>USt-ID</label>
-        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
-      </div>
-    </div>
-  }
-</div>
-
-<div class="dialog-footer">
-  <button class="cancel-button" (click)="close()">Abbrechen</button>
-  @if (unlocked()) {
-    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
-      @if (!submitting()) {
-        <span>Änderungen speichern</span>
-      } @else {
-        <span class="material-symbols-rounded spin">progress_activity</span>
-      }
-    </button>
-  }
-</div>
 </file>
 
 <file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.scss">
@@ -4730,62 +6021,6 @@ export class CreateTenantDialog {
   }
   to {
     transform: rotate(360deg);
-  }
-}
-</file>
-
-<file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.ts">
-import { Component, inject, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { TenantStore } from '../../../core/tenants/tenant-store';
-import { Tenant } from '../../../model/tenant';
-
-@Component({
-  selector: 'app-edit-core-details-dialog',
-  imports: [],
-  templateUrl: './edit-core-details-dialog.html',
-  styleUrl: './edit-core-details-dialog.scss',
-})
-export class EditCoreDetailsDialog {
-  private readonly dialogRef = inject(MatDialogRef<EditCoreDetailsDialog>);
-  private readonly tenantStore = inject(TenantStore);
-  
-  readonly tenant = inject<Tenant>(MAT_DIALOG_DATA);
-  readonly companyName = signal(this.tenant.companyName);
-  readonly legalName = signal(this.tenant.legalName ?? '');
-  readonly vatId = signal(this.tenant.vatId ?? '');
-
-  // Felder starten gesperrt - verhindert Versehens-Änderungen
-  readonly unlocked = signal(false);
-  readonly submitting = signal(false);
-  readonly showCompanyNameWarning = signal(false);
-
-  unlock(): void {
-    this.unlocked.set(true);
-  }
-
-  close(): void {
-    this.dialogRef.close();
-  }
-
-  async submit(): Promise<void> {
-    if (!this.companyName().trim()) {
-      this.showCompanyNameWarning.set(true);
-      return;
-    }
-
-    this.submitting.set(true);
-
-    try {
-      const updated = await this.tenantStore.updateCoreDetails(this.tenant.id, {
-        companyName: this.companyName().trim(),
-        legalName: this.legalName().trim() || undefined,
-        vatId: this.vatId().trim() || undefined,
-      });
-      this.dialogRef.close(updated);
-    } finally {
-      this.submitting.set(false);
-    }
   }
 }
 </file>
@@ -6772,33 +8007,6 @@ export const appConfig: ApplicationConfig = {
 }
 </file>
 
-<file path="src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { Tenants } from './pages/tenants/tenants';
-import { TenantDetail } from './pages/tenant-detail/tenant-detail';
-import { Projects } from './pages/projects/projects';
-import { Invoices } from './pages/invoices/invoices';
-import { Testimonials } from './pages/testimonials/testimonials';
-import { Welcome } from './pages/welcome/welcome';
-import { Login } from './pages/login/login';
-import { SessionExpired } from './pages/session-expired/session-expired';
-import { authGuard } from './core/auth/auth.guard';
-import { ProjectDetail } from './pages/project-details/project-details';
-
-export const routes: Routes = [
-  { path: '', component: Welcome },
-  { path: 'login', component: Login },
-  { path: 'session-expired', component: SessionExpired },
-  { path: 'callback', redirectTo: 'tenants', pathMatch: 'full' },
-  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
-  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
-  { path: 'projects', component: Projects, canActivate: [authGuard] },
-  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
-  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
-  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
-];
-</file>
-
 <file path="src/app/app.scss">
 @use '../styles' as *;
 
@@ -6992,6 +8200,41 @@ export class App {
 }
 </file>
 
+<file path="src/app/core/invoices/invoice-store.ts">
+import { Injectable, computed, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { CreateInvoiceRequest, Invoice } from '../../model/invoice';
+import { InvoiceApi } from './invoice-api';
+
+@Injectable({ providedIn: 'root' })
+export class InvoiceStore {
+  private readonly invoiceApi = inject(InvoiceApi);
+
+  private readonly invoicesResource = httpResource<Invoice[]>(
+    () => `${environment.apiBaseUrl}/invoices`,
+    { defaultValue: [] },
+  );
+
+  readonly invoices = computed(() => this.invoicesResource.value() ?? []);
+  readonly loading = computed(() => this.invoicesResource.isLoading());
+  readonly error = computed(() =>
+    this.invoicesResource.error() ? 'Rechnungen konnten nicht geladen werden.' : null,
+  );
+
+  reload(): void {
+    this.invoicesResource.reload();
+  }
+
+  async create(request: CreateInvoiceRequest): Promise<Invoice> {
+    const invoice = await firstValueFrom(this.invoiceApi.create(request));
+    this.reload();
+    return invoice;
+  }
+}
+</file>
+
 <file path="src/app/model/project.ts">
 export type ProjectStatus = 'LEAD' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 export type MilestoneStatus = 'PLANNED' | 'IN_PROGRESS' | 'DONE';
@@ -7068,151 +8311,812 @@ export interface UpdateMilestoneRequest extends AddMilestoneRequest {
 }
 </file>
 
-<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.html">
+<file path="src/app/model/tenant.ts">
+export interface Address {
+  street?: string;
+  houseNumber?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+}
+
+export type TenantStatus = 'PROSPECT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
+export interface Tenant {
+  id: string;
+  companyName: string;
+  legalName?: string;
+  vatId?: string;
+  referenceCode?: string;
+  address?: Address;
+  contactEmail?: string;
+  contactPhone?: string;
+  status: TenantStatus;
+  visibleOnWebsite: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTenantRequest {
+  companyName: string;
+  legalName?: string;
+  vatId?: string;
+  referenceCode?: string;
+  address?: Address;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
+export interface UpdateTenantContactDetailsRequest {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: Address;
+}
+
+export interface UpdateTenantCoreDetailsRequest {
+  companyName: string;
+  legalName?: string;
+  vatId?: string;
+  referenceCode?: string;
+}
+
+export interface Partner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface CreatePartnerRequest {
+  firstName: string;
+  lastName: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface UpdatePartnerRequest {
+  firstName: string;
+  lastName: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.html">
+@if (invoice(); as inv) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Rechnungen</span>
+      </button>
+
+      <p class="hero-tenant">
+        {{ tenantName() }}
+        @if (projectName()) {
+          · {{ projectName() }}
+        }
+      </p>
+      <h1 class="hero-title">{{ inv.invoiceNumber || 'Rechnungsentwurf' }}</h1>
+
+      <span class="status-badge" [class]="'status-badge--invoice-' + inv.status.toLowerCase()">
+        {{ statusLabels[inv.status] }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <div class="parties-grid">
+          <div>
+            <p class="party-label">Von</p>
+            <p class="party-name">{{ inv.seller?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.seller?.address) }}</p>
+            @if (inv.seller?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.seller?.vatId }}</p>
+            }
+          </div>
+          <div>
+            <p class="party-label">An</p>
+            <p class="party-name">{{ inv.buyer?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.buyer?.address) }}</p>
+            @if (inv.buyer?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.buyer?.vatId }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Positionen</p>
+          @if (isDraft()) {
+            <button
+              class="add-icon-button"
+              (click)="openAddLineItemDialog()"
+              title="Position hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          }
+        </div>
+
+        @for (item of inv.lineItems; track item.id) {
+          <div class="line-item-row">
+            <div class="line-item-main">
+              <span class="line-item-source-icon material-symbols-rounded">
+                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+              </span>
+              <div>
+                <p class="line-item-description">{{ item.description }}</p>
+                <p class="line-item-meta">
+                  {{ item.quantity }} × {{ formatMoney(item.unitPrice) }} ·
+                  {{ item.taxRatePercentage }} % USt
+                </p>
+              </div>
+            </div>
+            <span class="line-item-gross">{{ formatMoney(item.grossAmount) }}</span>
+            @if (isDraft()) {
+              <div class="line-item-actions">
+                <button
+                  class="icon-button"
+                  (click)="openEditLineItemDialog(item)"
+                  title="Bearbeiten"
+                >
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+                <button
+                  class="icon-button icon-button--danger"
+                  (click)="removeLineItem(item)"
+                  title="Entfernen"
+                >
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Positionen auf dieser Rechnung.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      @if (isDraft()) {
+        <button
+          class="issue-button"
+          [disabled]="issuing() || inv.lineItems.length === 0"
+          (click)="issueInvoice()"
+        >
+          @if (!issuing()) {
+            <span class="material-symbols-rounded">task_alt</span>
+            <span>Rechnung ausstellen</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
+      @if (inv.status !== 'DRAFT' && inv.documentKey) {
+        <button class="issue-button" (click)="openDocument()">
+          <span class="material-symbols-rounded">description</span>
+          <span>Rechnung öffnen (PDF)</span>
+        </button>
+      }
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Summen</p>
+        <div class="summary-row">
+          <span>Netto</span>
+          <span>{{ formatMoney(inv.netTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--muted">
+          <span>USt</span>
+          <span>{{ formatMoney(inv.taxTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--total">
+          <span>Brutto</span>
+          <span>{{ formatMoney(inv.grossTotal) }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-label-row">
+          <p class="sidebar-label">Details</p>
+          @if (isDraft() && !editingHeader()) {
+            <button class="inline-edit-button" (click)="startEditHeader()" title="Bearbeiten">
+              <span class="material-symbols-rounded">edit</span>
+            </button>
+          }
+        </div>
+
+        @if (editingHeader()) {
+          <div class="header-edit-form">
+            <input
+              type="text"
+              placeholder="Auftrags-Referenz"
+              [value]="headerBuyerReference()"
+              (input)="headerBuyerReference.set($any($event.target).value)"
+            />
+            <input
+              type="text"
+              placeholder="Zahlungsziel (Tage)"
+              [value]="headerPaymentTermsDays()"
+              (input)="headerPaymentTermsDays.set($any($event.target).value)"
+            />
+            <div class="header-edit-actions">
+              <button class="cancel-button" (click)="cancelEditHeader()">Abbrechen</button>
+              <button class="submit-button" [disabled]="savingHeader()" (click)="saveHeader()">
+                Speichern
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="detail-row">
+            <span>Ausgestellt</span>
+            <span>{{ inv.issueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Fällig</span>
+            <span>{{ inv.dueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Zahlungsziel</span>
+            <span>{{ inv.paymentTermsDays ? inv.paymentTermsDays + ' Tage' : '–' }}</span>
+          </div>
+          @if (inv.buyerReference) {
+            <div class="detail-row">
+              <span>Referenz</span>
+              <span>{{ inv.buyerReference }}</span>
+            </div>
+          }
+        }
+      </div>
+
+      @if (isDraft()) {
+        <button
+          class="delete-draft-button"
+          [disabled]="deletingDraft()"
+          (click)="deleteDraftInvoice()"
+        >
+          <span class="material-symbols-rounded">delete</span>
+          <span>Entwurf löschen</span>
+        </button>
+      }
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rechnung wird geladen...</p>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.ts">
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { InvoiceApi } from '../../core/invoices/invoice-api';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectStore } from '../../core/projects/project-store';
+import { Toast } from '../../core/toast/toast';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
+import {
+  Address,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  Money,
+  UpdateInvoiceHeaderRequest,
+} from '../../model/invoice';
+import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+
+@Component({
+  selector: 'app-invoice-detail',
+  imports: [MatDialogModule],
+  templateUrl: './invoice-details.html',
+  styleUrl: './invoice-details.scss',
+})
+export class InvoiceDetail {
+  readonly id = input.required<string>();
+
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly invoiceApi = inject(InvoiceApi);
+  private readonly invoiceStore = inject(InvoiceStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+
+  readonly editingHeader = signal(false);
+  readonly headerBuyerReference = signal('');
+  readonly headerPaymentTermsDays = signal('');
+  readonly savingHeader = signal(false);
+
+  readonly deletingDraft = signal(false);
+
+  private readonly invoiceResource = httpResource<Invoice>(
+    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
+  );
+
+  readonly invoice = computed(() => this.invoiceResource.value());
+  readonly loading = computed(() => this.invoiceResource.isLoading());
+
+  readonly statusLabels: Record<InvoiceStatus, string> = {
+    DRAFT: 'Entwurf',
+    ISSUED: 'Ausgestellt',
+    SENT: 'Versendet',
+    PAID: 'Bezahlt',
+    OVERDUE: 'Überfällig',
+    CANCELLED: 'Storniert',
+  };
+
+  readonly tenantName = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return '';
+    return (
+      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
+    );
+  });
+
+  readonly projectName = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.projectId) return '';
+    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
+  });
+
+  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
+
+  readonly issuing = signal(false);
+
+  private refreshEverywhere(): void {
+    this.invoiceResource.reload();
+    this.invoiceStore.reload();
+  }
+
+  back(): void {
+    this.router.navigate(['/invoices']);
+  }
+
+  itemNet(item: InvoiceLineItem): Money {
+    return item.netAmount;
+  }
+
+  formatMoney(money?: Money): string {
+    if (!money) return '–';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
+  }
+
+  formatAddress(address?: Address): string {
+    if (!address) return '–';
+    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
+    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
+    return [line1, line2].filter(Boolean).join(', ');
+  }
+
+  openAddLineItemDialog(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(AddLineItemDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        invoiceId: inv.id,
+        tenantId: inv.tenantId,
+        projectId: inv.projectId,
+        existingMilestoneIds: inv.lineItems
+          .map((i) => i.milestoneId)
+          .filter((id): id is string => !!id),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position hinzugefügt');
+      }
+    });
+  }
+
+  async removeLineItem(item: InvoiceLineItem): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Position entfernen?',
+        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
+        confirmLabel: 'Entfernen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      try {
+        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
+        this.refreshEverywhere();
+        this.toast.success('Position entfernt');
+      } catch {
+        this.toast.error('Position konnte nicht entfernt werden');
+      }
+    }
+  }
+
+  async issueInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnung ausstellen?',
+        message:
+          'Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können danach nicht mehr geändert werden.',
+        confirmLabel: 'Ausstellen',
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.issuing.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.issue(inv.id));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung ausgestellt');
+    } catch {
+      this.toast.error('Rechnung konnte nicht ausgestellt werden');
+    } finally {
+      this.issuing.set(false);
+    }
+  }
+
+  async openDocument(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+    try {
+      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+      window.open(url, '_blank');
+    } catch {
+      this.toast.error('Dokument konnte nicht geladen werden');
+    }
+  }
+
+  startEditHeader(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+    this.headerBuyerReference.set(inv.buyerReference ?? '');
+    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
+    this.editingHeader.set(true);
+  }
+
+  cancelEditHeader(): void {
+    this.editingHeader.set(false);
+  }
+
+  async saveHeader(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.savingHeader.set(true);
+    const request: UpdateInvoiceHeaderRequest = {
+      buyerReference: this.headerBuyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
+    };
+
+    try {
+      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
+      this.editingHeader.set(false);
+      this.refreshEverywhere();
+      this.toast.success('Rechnungsdaten aktualisiert');
+    } catch {
+      this.toast.error('Aktualisierung fehlgeschlagen');
+    } finally {
+      this.savingHeader.set(false);
+    }
+  }
+
+  openEditLineItemDialog(item: InvoiceLineItem): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(EditLineItemDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { invoiceId: inv.id, item },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position aktualisiert');
+      }
+    });
+  }
+
+  async deleteDraftInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '46rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnungsentwurf löschen?',
+        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
+        confirmLabel: 'Löschen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.deletingDraft.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
+      this.invoiceStore.reload();
+      this.toast.success('Entwurf gelöscht');
+      this.router.navigate(['/invoices']);
+    } catch {
+      this.toast.error('Löschen fehlgeschlagen');
+      this.deletingDraft.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html">
 <div class="dialog-header">
-  <h2>Neues Projekt</h2>
+  <h2>Neue Rechnung</h2>
   <button class="close-button" (click)="close()">
     <span class="material-symbols-rounded">close</span>
   </button>
 </div>
 
 <div class="dialog-body">
-  <div class="field">
-    <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
-    <select [value]="tenantId()" (change)="tenantId.set($any($event.target).value)">
-      <option value="" disabled selected>Mandant auswählen...</option>
-      @for (tenant of tenantStore.tenants(); track tenant.id) {
-        <option [value]="tenant.id">{{ tenant.companyName }}</option>
-      }
-    </select>
-  </div>
-
-  <div class="field">
-    <label>Status</label>
-    <select (change)="status.set($any($event.target).value)">
-      @for (option of statusOptions; track option.value) {
-        <option [value]="option.value" [selected]="option.value === status()">
-          {{ option.label }}
-        </option>
-      }
-    </select>
-  </div>
-
-  <div class="field">
-    <label [class.warning]="showWarning() && !title()">Projekttitel *</label>
-    <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" />
-  </div>
-
-  <div class="field">
-    <label>Kurzbeschreibung</label>
-    <input
-      type="text"
-      [value]="description()"
-      (input)="description.set($any($event.target).value)"
-    />
-  </div>
-
-  <div class="field">
-    <label>Ausführliche Beschreibung</label>
-    <textarea
-      rows="3"
-      [value]="fullDescription()"
-      (input)="fullDescription.set($any($event.target).value)"
-    ></textarea>
-  </div>
-
-  <div class="field-row">
-    <div class="field">
-      <label>Startdatum</label>
-      <input type="date" [value]="startDate()" (input)="startDate.set($any($event.target).value)" />
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
     </div>
-    <div class="field">
-      <label>Enddatum</label>
-      <input type="date" [value]="endDate()" (input)="endDate.set($any($event.target).value)" />
-    </div>
-  </div>
-
-  <div class="field-group">
-    <p class="section-title">Highlights</p>
-    @if (highlights().length > 0) {
-      <div class="chip-list">
-        @for (highlight of highlights(); track highlight; let i = $index) {
-          <span class="chip">
-            {{ highlight }}
-            <button (click)="removeHighlight(i)">
-              <span class="material-symbols-rounded">close</span>
-            </button>
-          </span>
-        }
+  } @else {
+    <div class="field-row">
+      <div class="field">
+        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
+            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+            @for (tenant of tenantStore.tenants(); track tenant.id) {
+              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+                {{ tenant.companyName }}
+              </option>
+            }
+          </select>
+        </div>
       </div>
-    }
-    <div class="add-row">
-      <input
-        type="text"
-        placeholder="Highlight hinzufügen und Enter drücken..."
-        [value]="newHighlight()"
-        (input)="newHighlight.set($any($event.target).value)"
-        (keydown.enter)="addHighlight()"
-      />
-      <button class="add-button" (click)="addHighlight()">
-        <span class="material-symbols-rounded">add</span>
-      </button>
-    </div>
-  </div>
 
-  <div class="field-group">
-    <p class="section-title">Tags</p>
-    @if (tags().length > 0) {
-      <div class="chip-list">
-        @for (tag of tags(); track tag.value; let i = $index) {
-          <span
-            class="chip"
-            [style.background-color]="tag.colorHex"
-            [style.color]="getContrastTextColor(tag.colorHex)"
+      <div class="field">
+        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
+        <select [disabled]="!tenantId()" (change)="onProjectChange($any($event.target).value)">
+          <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
+          @for (project of tenantProjects(); track project.id) {
+            <option [value]="project.id" [selected]="project.id === projectId()">
+              {{ project.title }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Auftrags-Referenz</label>
+        <input
+          type="text"
+          placeholder="Automatisch (z. B. MBS.5)"
+          [value]="buyerReference()"
+          (input)="buyerReference.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Zahlungsziel (Tage)</label>
+        <input
+          type="text"
+          [value]="paymentTermsDays()"
+          (input)="paymentTermsDays.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (tenantId() && projectId()) {
+      <div class="section-title">Positionen</div>
+
+      @if (prefillLoading()) {
+        <div class="prefill-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+          <span>Meilensteine werden geladen...</span>
+        </div>
+      } @else if (prefill(); as p) {
+        @if (p.availableMilestones.length > 0) {
+          <div class="milestone-grid">
+            @for (milestone of p.availableMilestones; track milestone.id) {
+              <button
+                type="button"
+                class="milestone-tile"
+                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+                [disabled]="milestone.alreadyInvoiced"
+                (click)="toggleMilestone(milestone)"
+              >
+                <div class="milestone-tile-icon">
+                  <span class="material-symbols-rounded">
+                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+                  </span>
+                </div>
+                <div class="milestone-tile-body">
+                  <p class="milestone-tile-title">{{ milestone.title }}</p>
+                  @if (milestone.price) {
+                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+                  }
+
+                  @if (milestone.alreadyInvoiced) {
+                    <div class="milestone-tile-tags">
+                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                        <span class="material-symbols-rounded">lock</span>
+                        Abgerechnet
+                      </span>
+                    </div>
+                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                    <div class="milestone-tile-tags">
+                      @if (milestone.inDraftInvoice) {
+                        <span class="milestone-tile-tag milestone-tile-tag--draft">
+                          <span class="material-symbols-rounded">edit_note</span>
+                          In Rechnungsentwurf
+                        </span>
+                      }
+                      @if (milestone.milestoneStatus !== 'DONE') {
+                        <span class="milestone-tile-tag milestone-tile-tag--pending">
+                          <span class="material-symbols-rounded">hourglass_empty</span>
+                          Nicht abgeschlossen
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
+        }
+
+        <div class="free-position-row">
+          <input
+            type="text"
+            class="free-description"
+            placeholder="Freie Position, z. B. Gerät (Hardware)"
+            [value]="freeDescription()"
+            (input)="freeDescription.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-quantity"
+            placeholder="Menge"
+            [value]="freeQuantity()"
+            (input)="freeQuantity.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-price"
+            placeholder="Preis netto"
+            [value]="freeUnitPrice()"
+            (input)="freeUnitPrice.set($any($event.target).value)"
+          />
+          <select
+            class="free-tax"
+            [value]="freeTaxRate()"
+            (change)="freeTaxRate.set(+$any($event.target).value)"
           >
-            {{ tag.value }}
-            <button (click)="removeTag(i)">
-              <span class="material-symbols-rounded">close</span>
-            </button>
-          </span>
+            @for (rate of taxRateOptions; track rate) {
+              <option [value]="rate">{{ rate }} %</option>
+            }
+          </select>
+          <button type="button" class="free-add-button" (click)="addFreePosition()">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @if (lineItems().length > 0) {
+          <div class="positions-list">
+            @for (item of lineItems(); track item.key) {
+              <div class="position-row">
+                <div class="position-main">
+                  <span class="position-source-icon material-symbols-rounded">
+                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+                  </span>
+                  <div>
+                    <p class="position-description">{{ item.description }}</p>
+                    <p class="position-meta">
+                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
+                    </p>
+                  </div>
+                </div>
+
+                <select
+                  class="position-tax-select"
+                  [value]="item.taxRatePercentage"
+                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+                >
+                  @for (rate of taxRateOptions; track rate) {
+                    <option [value]="rate">{{ rate }} % USt</option>
+                  }
+                </select>
+
+                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
+
+                <button
+                  type="button"
+                  class="position-remove-button"
+                  (click)="removeLineItem(item.key)"
+                >
+                  <span class="material-symbols-rounded">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <span>Netto</span>
+              <span>{{ formatMoney(totals().net) }}</span>
+            </div>
+            @for (group of taxBreakdown(); track group.rate) {
+              <div class="summary-row summary-row--muted">
+                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
+                <span>{{ formatMoney(group.tax) }}</span>
+              </div>
+            }
+            <div class="summary-row summary-row--total">
+              <span>Rechnungsbetrag</span>
+              <span>{{ formatMoney(totals().gross) }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="no-positions-hint">
+            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
+          </p>
         }
-      </div>
+      }
     }
-    <div class="add-row">
-      <input
-        type="text"
-        placeholder="Tag-Name..."
-        [value]="newTagName()"
-        (input)="newTagName.set($any($event.target).value)"
-        (keydown.enter)="addTag()"
-      />
-      <div class="color-picker">
-        @for (color of tagPalette; track color.value) {
-          <button
-            class="color-swatch"
-            [style.background-color]="color.value"
-            [style.border-color]="
-              getContrastTextColor(color.value) === '#ffffff'
-                ? 'rgba(255,255,255,0.4)'
-                : 'rgba(13,20,36,0.3)'
-            "
-            [class.color-swatch--active]="newTagColor() === color.value"
-            (click)="newTagColor.set(color.value)"
-          ></button>
-        }
-      </div>
-      <button class="add-button" (click)="addTag()">
-        <span class="material-symbols-rounded">add</span>
-      </button>
-    </div>
-  </div>
+  }
 </div>
 
 <div class="dialog-footer">
   <button class="cancel-button" (click)="close()">Abbrechen</button>
-  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
     @if (!submitting()) {
-      <span>Projekt anlegen</span>
+      <span>Rechnung anlegen</span>
     } @else {
       <span class="material-symbols-rounded spin">progress_activity</span>
     }
@@ -7220,119 +9124,269 @@ export interface UpdateMilestoneRequest extends AddMilestoneRequest {
 </div>
 </file>
 
-<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.ts">
-import { Component, computed, inject, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ProjectStore } from '../../../core/projects/project-store';
-import { TenantStore } from '../../../core/tenants/tenant-store';
-import { getContrastTextColor } from '../../../util/color-contrast';
-import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
+<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.scss">
+@use '../../../../styles' as *;
 
-export interface CreateProjectDialogData {
-  initialStatus?: ProjectStatus;
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
 }
 
-@Component({
-  selector: 'app-create-project-dialog',
-  imports: [],
-  templateUrl: './create-project-dialog.html',
-  styleUrl: './create-project-dialog.scss',
-})
-export class CreateProjectDialog {
-  private readonly dialogRef = inject(MatDialogRef<CreateProjectDialog>);
-  private readonly projectStore = inject(ProjectStore);
-  protected readonly tenantStore = inject(TenantStore);
-  private readonly dialogData = inject<CreateProjectDialogData | null>(MAT_DIALOG_DATA, {
-    optional: true,
-  });
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
 
-  protected readonly getContrastTextColor = getContrastTextColor;
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
 
-  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'LEAD', label: 'Interessent' },
-    { value: 'IN_PROGRESS', label: 'In Arbeit' },
-    { value: 'ON_HOLD', label: 'Pausiert' },
-    { value: 'COMPLETED', label: 'Abgeschlossen' },
-    { value: 'CANCELLED', label: 'Abgebrochen' },
-  ];
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 64vh;
+  overflow-y: auto;
+  @include flex-col(1.8rem);
+}
 
-  readonly tenantId = signal('');
-  readonly title = signal('');
-  readonly description = signal('');
-  readonly fullDescription = signal('');
-  readonly startDate = signal('');
-  readonly endDate = signal('');
-  readonly status = signal<ProjectStatus>(this.dialogData?.initialStatus ?? 'LEAD');
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
 
-  readonly highlights = signal<string[]>([]);
-  readonly newHighlight = signal('');
+.field,
+.field-group {
+  @include flex-col(0.6rem);
 
-  readonly tagPalette = [
-    { label: 'Cyan', value: '#03dbff' },
-    { label: 'Pink', value: '#fc03d5' },
-    { label: 'Navy', value: '#0d1424' },
-  ];
-  readonly tags = signal<{ value: string; colorHex: string }[]>([]);
-  readonly newTagName = signal('');
-  readonly newTagColor = signal('#03dbff');
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
 
-  readonly submitting = signal(false);
-  readonly showWarning = signal(false);
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+}
 
-  readonly isValid = computed(() => this.tenantId() !== '' && this.title().trim().length > 0);
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
 
-  addHighlight(): void {
-    const value = this.newHighlight().trim();
-    if (!value) return;
-    this.highlights.update((list) => [...list, value]);
-    this.newHighlight.set('');
+.field input,
+.field textarea,
+.field select,
+.add-row input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  transition: all 0.2s;
+
+  &::placeholder {
+    color: var(--text-muted);
   }
 
-  removeHighlight(index: number): void {
-    this.highlights.update((list) => list.filter((_, i) => i !== index));
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 7rem;
+}
+
+.field select {
+  cursor: pointer;
+
+  option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
   }
 
-  addTag(): void {
-    const value = this.newTagName().trim();
-    if (!value) return;
-    this.tags.update((list) => [...list, { value, colorHex: this.newTagColor() }]);
-    this.newTagName.set('');
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
+}
 
-  removeTag(index: number): void {
-    this.tags.update((list) => list.filter((_, i) => i !== index));
-  }
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
 
-  close(): void {
-    this.dialogRef.close();
-  }
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--main-navy); // Basis-Farbe zurück - gilt für Highlights (fester Cyan-Hintergrund)
+  background-color: var(
+    --accent-cyan
+  ); // Highlights haben keine eigene Farbe, nutzen diesen Default
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.5rem 0.5rem 0.5rem 1.2rem;
+  border-radius: 50rem;
 
-  async submit(): Promise<void> {
-    if (!this.isValid()) {
-      this.showWarning.set(true);
-      return;
+  button {
+    display: flex;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+
+    .material-symbols-rounded {
+      font-size: 1.6rem;
     }
 
-    this.submitting.set(true);
-
-    const request: CreateProjectRequest = {
-      tenantId: this.tenantId(),
-      title: this.title().trim(),
-      description: this.description().trim() || undefined,
-      fullDescription: this.fullDescription().trim() || undefined,
-      highlights: this.highlights(),
-      tags: this.tags(),
-      startDate: this.startDate() || undefined,
-      endDate: this.endDate() || undefined,
-      status: this.status(),
-    };
-
-    try {
-      const project = await this.projectStore.create(request);
-      this.dialogRef.close(project);
-    } finally {
-      this.submitting.set(false);
+    &:hover {
+      opacity: 1;
     }
+  }
+}
+
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+
+  input {
+    flex: 1;
+  }
+}
+
+.color-picker {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.color-swatch {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border-width: 2px;
+  border-style: solid;
+  // border-color kommt jetzt dynamisch per [style.border-color]
+  cursor: pointer;
+
+  &--active {
+    border-color: var(--text-light) !important;
+  }
+}
+
+.add-button {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
+  cursor: pointer;
+  @include flex-center;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.select-lock {
+  position: relative;
+
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
   }
 }
 </file>
@@ -7804,171 +9858,604 @@ export class CreateProjectDialog {
 }
 </file>
 
-<file path="src/app/pages/tenant-detail/tenant-detail.ts">
-import { Component, computed, inject, input } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { Avatar } from '../../util/avatar/avatar';
-import { environment } from '../../../environments/environment';
-import { TenantStore } from '../../core/tenants/tenant-store';
-import { TenantApi } from '../../core/tenants/tenant-api';
-import { Toast } from '../../core/toast/toast';
-import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
-import { EditTenantDialog } from '../tenants/edit-tenant-dialog/edit-tenant-dialog';
-import { EditCoreDetailsDialog } from '../tenants/edit-core-details-dialog/edit-core-details-dialog';
-import { PartnerDialog } from '../tenants/partner-dialog/partner-dialog';
-import { Tenant, Partner } from '../../model/tenant';
-import { Project } from '../../model/project';
+<file path="src/app/pages/tenant-detail/tenant-detail.html">
+@if (tenant(); as t) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Mandanten</span>
+      </button>
+
+      <div class="hero-main">
+        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
+        <div>
+          <h1 class="hero-title">{{ t.companyName }}</h1>
+          @if (t.legalName && t.legalName !== t.companyName) {
+            <p class="hero-legal">{{ t.legalName }}</p>
+          }
+          <span class="status-badge" [class]="'status-badge--' + t.status.toLowerCase()">
+            {{ statusLabels[t.status] }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <p class="info-card-title">Kontaktdaten</p>
+        <div class="info-row">
+          <span class="material-symbols-rounded">mail</span>
+          <span>{{ t.contactEmail || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">call</span>
+          <span>{{ t.contactPhone || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">location_on</span>
+          <span>
+            @if (t.address; as a) {
+              {{ a.street }} {{ a.houseNumber }}, {{ a.postalCode }} {{ a.city }}
+            } @else {
+              -
+            }
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>{{ t.vatId || 'Keine USt-ID hinterlegt' }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Ansprechpartner</p>
+          <div class="header-actions">
+            <span class="count-badge">{{ partners().length }}</span>
+            <button
+              class="add-icon-button"
+              (click)="openAddPartnerDialog()"
+              title="Ansprechpartner hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          </div>
+        </div>
+
+        @for (partner of partners(); track partner.id) {
+          <div class="partner-row">
+            <app-avatar
+              [name]="partner.firstName + ' ' + partner.lastName"
+              [size]="'3.6rem'"
+            ></app-avatar>
+            <div class="partner-info">
+              <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
+              <p class="partner-role">
+                {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
+              </p>
+            </div>
+            <div class="partner-actions">
+              <button
+                class="icon-button"
+                (click)="openEditPartnerDialog(partner)"
+                title="Bearbeiten"
+              >
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+              <button
+                class="icon-button icon-button--danger"
+                (click)="deletePartner(partner)"
+                title="Entfernen"
+              >
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Ansprechpartner hinterlegt.</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Projekte</p>
+          <span class="count-badge">{{ projects().length }}</span>
+        </div>
+        @for (project of projects(); track project.id) {
+          <div class="project-row">
+            <div>
+              <p class="project-title">{{ project.title }}</p>
+              <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
+            </div>
+            <span
+              class="status-badge status-badge--project"
+              [class]="'status-badge--' + project.status.toLowerCase()"
+            >
+              {{ projectStatusLabels[project.status] }}
+            </span>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      <div class="sidebar-card">
+        <p class="sidebar-label">Website-Sichtbarkeit</p>
+        <div class="website-status" [class.website-status--active]="t.visibleOnWebsite">
+          <span class="material-symbols-rounded">
+            {{ t.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+          <span>{{ t.visibleOnWebsite ? 'Sichtbar' : 'Nicht sichtbar' }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
+        <button class="sidebar-action" (click)="openEditCoreDetails()">
+          <span class="material-symbols-rounded">business_center</span>
+          <span>Stammdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openEditDialog()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>Kontaktdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateProjectDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Projekt anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Mandant wird geladen...</p>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.html">
+<div class="dialog-header">
+  <h2>Neuer Mandant</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-group">
+    <p class="section-title">Stammdaten</p>
+
+    <div class="field" [class.field--full]="true">
+      <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
+      <input
+        type="text"
+        placeholder="z. B. Musterfirma GmbH"
+        [value]="companyName()"
+        (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
+        (blur)="onCompanyNameBlur()"
+      />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Rechtsform / Vollständiger Name</label>
+        <input
+          type="text"
+          [value]="legalName()"
+          (input)="legalName.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>USt-ID</label>
+        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Kürzel (für Rechnungsreferenzen)</label>
+        <input
+          type="text"
+          placeholder="z. B. MBS"
+          [value]="referenceCode()"
+          (input)="referenceCode.set($any($event.target).value.toUpperCase())"
+        />
+      </div>
+      <div class="field"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Kontakt-Email</label>
+        <input
+          type="email"
+          [value]="contactEmail()"
+          (input)="contactEmail.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input
+          type="text"
+          [value]="contactPhone()"
+          (input)="contactPhone.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field field--full">
+        <label>Straße</label>
+        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-row field-row--three">
+      <div class="field field--small">
+        <label>Nr.</label>
+        <input
+          type="text"
+          [value]="houseNumber()"
+          (input)="houseNumber.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field field--small">
+        <label>PLZ</label>
+        <input
+          type="text"
+          [value]="postalCode()"
+          (input)="postalCode.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Ort</label>
+        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="section-title-row">
+      <p class="section-title">Ansprechpartner (optional)</p>
+      <label class="toggle">
+        <input
+          type="checkbox"
+          [checked]="includePartner()"
+          (change)="includePartner.set($any($event.target).checked)"
+        />
+        <span>Direkt anlegen</span>
+      </label>
+    </div>
+
+    @if (includePartner()) {
+      <div class="field-row">
+        <div class="field">
+          <label>Vorname</label>
+          <input
+            type="text"
+            [value]="partnerFirstName()"
+            (input)="partnerFirstName.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Nachname</label>
+          <input
+            type="text"
+            [value]="partnerLastName()"
+            (input)="partnerLastName.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Rolle</label>
+          <input
+            type="text"
+            placeholder="z. B. Geschäftsführer"
+            [value]="partnerRole()"
+            (input)="partnerRole.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input
+            type="email"
+            [value]="partnerEmail()"
+            (input)="partnerEmail.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label>Telefon</label>
+          <input
+            type="text"
+            [value]="partnerPhone()"
+            (input)="partnerPhone.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Mandant anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import { CreateTenantRequest, CreatePartnerRequest } from '../../../model/tenant';
 
 @Component({
-  selector: 'app-tenant-detail',
-  imports: [Avatar, MatDialogModule],
-  templateUrl: './tenant-detail.html',
-  styleUrl: './tenant-detail.scss',
+  selector: 'app-create-tenant-dialog',
+  imports: [],
+  templateUrl: './create-tenant-dialog.html',
+  styleUrl: './create-tenant-dialog.scss',
 })
-export class TenantDetail {
-  readonly id = input.required<string>();
-
-  private readonly router = inject(Router);
-  private readonly dialog = inject(MatDialog);
+export class CreateTenantDialog {
+  private readonly dialogRef = inject(MatDialogRef<CreateTenantDialog>);
   private readonly tenantStore = inject(TenantStore);
-  private readonly tenantApi = inject(TenantApi);
-  private readonly toast = inject(Toast);
 
-  private readonly tenantResource = httpResource<Tenant>(
-    () => `${environment.apiBaseUrl}/tenants/${this.id()}`,
-  );
+  // Tenant-Felder
+  readonly companyName = signal('');
+  readonly legalName = signal('');
+  readonly vatId = signal('');
+  readonly referenceCode = signal('');
+  readonly contactEmail = signal('');
+  readonly contactPhone = signal('');
+  readonly street = signal('');
+  readonly houseNumber = signal('');
+  readonly postalCode = signal('');
+  readonly city = signal('');
 
-  private readonly partnersResource = httpResource<Partner[]>(
-    () => `${environment.apiBaseUrl}/tenants/${this.id()}/partners`,
-    { defaultValue: [] },
-  );
+  // Optionaler erster Partner
+  readonly includePartner = signal(true);
+  readonly partnerFirstName = signal('');
+  readonly partnerLastName = signal('');
+  readonly partnerRole = signal('');
+  readonly partnerEmail = signal('');
+  readonly partnerPhone = signal('');
 
-  private readonly projectsResource = httpResource<Project[]>(
-    () => `${environment.apiBaseUrl}/projects?tenantId=${this.id()}`,
-    { defaultValue: [] },
-  );
+  readonly submitting = signal(false);
+  readonly showCompanyNameWarning = signal(false);
 
-  readonly tenant = computed(() => this.tenantResource.value());
-  readonly loading = computed(() => this.tenantResource.isLoading());
-  readonly partners = computed(() => this.partnersResource.value() ?? []);
-  readonly projects = computed(() => this.projectsResource.value() ?? []);
+  readonly isValid = computed(() => this.companyName().trim().length > 0);
 
-  readonly statusLabels: Record<Tenant['status'], string> = {
-    PROSPECT: 'Interessent',
-    ACTIVE: 'Aktiv',
-    INACTIVE: 'Inaktiv',
-    ARCHIVED: 'Archiviert',
-  };
-
-  readonly projectStatusLabels: Record<Project['status'], string> = {
-    LEAD: 'Interessent',
-    IN_PROGRESS: 'In Arbeit',
-    ON_HOLD: 'Pausiert',
-    COMPLETED: 'Abgeschlossen',
-    CANCELLED: 'Abgebrochen',
-  };
-
-  // Aktualisiert sowohl diese Detail-Seite als auch die Tenants-Übersicht
-  // (gleiches Zwei-Ressourcen-Problem wie bei Projects)
-  private refreshEverywhere(): void {
-    this.tenantResource.reload();
-    this.tenantStore.reload();
+  close(): void {
+    this.dialogRef.close();
   }
 
-  back(): void {
-    this.router.navigate(['/tenants']);
+  onCompanyNameBlur(): void {
+    // Nur vorschlagen, wenn User das Kürzel noch nicht selbst editiert hat
+    if (this.referenceCode().trim()) return;
+    const initials = this.companyName()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 4);
+    this.referenceCode.set(initials);
   }
 
-  openEditDialog(): void {
-    const currentTenant = this.tenant();
-    if (!currentTenant) return;
+  async submit(): Promise<void> {
+    if (!this.isValid()) {
+      this.showCompanyNameWarning.set(true);
+      return;
+    }
 
-    const dialogRef = this.dialog.open(EditTenantDialog, {
-      width: '56rem',
-      panelClass: 'app-dialog-panel',
-      data: currentTenant,
-    });
+    this.submitting.set(true);
 
-    dialogRef.afterClosed().subscribe((updated) => {
-      if (updated) {
-        this.refreshEverywhere();
-        this.toast.success('Kontaktdaten aktualisiert');
+    const request: CreateTenantRequest = {
+      companyName: this.companyName().trim(),
+      legalName: this.legalName().trim() || undefined,
+      vatId: this.vatId().trim() || undefined,
+      referenceCode: this.referenceCode().trim().toUpperCase() || undefined,
+      contactEmail: this.contactEmail().trim() || undefined,
+      contactPhone: this.contactPhone().trim() || undefined,
+      address:
+        this.street() || this.city()
+          ? {
+              street: this.street().trim() || undefined,
+              houseNumber: this.houseNumber().trim() || undefined,
+              postalCode: this.postalCode().trim() || undefined,
+              city: this.city().trim() || undefined,
+              countryCode: 'DE',
+            }
+          : undefined,
+    };
+
+    let partner: CreatePartnerRequest | undefined;
+    if (this.includePartner() && this.partnerFirstName().trim() && this.partnerLastName().trim()) {
+      partner = {
+        firstName: this.partnerFirstName().trim(),
+        lastName: this.partnerLastName().trim(),
+        role: this.partnerRole().trim() || undefined,
+        email: this.partnerEmail().trim() || undefined,
+        phone: this.partnerPhone().trim() || undefined,
+      };
+    }
+
+    try {
+      const tenant = await this.tenantStore.create(request, partner);
+      this.dialogRef.close(tenant);
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.html">
+<div class="dialog-header dialog-header--warning">
+  <div>
+    <p class="dialog-eyebrow">Stammdaten</p>
+    <h2>{{ tenant.companyName }}</h2>
+  </div>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="warning-banner">
+    <span class="material-symbols-rounded">warning</span>
+    <p>
+      Diese Angaben wirken sich auf zukünftige Rechnungen und die Darstellung auf der Website aus.
+      Bereits ausgestellte Rechnungen bleiben unverändert.
+    </p>
+  </div>
+
+  @if (!unlocked()) {
+    <div class="locked-fields">
+      <div class="locked-row">
+        <span class="locked-label">Firmenname</span>
+        <span class="locked-value">{{ companyName() }}</span>
+      </div>
+      <div class="locked-row">
+        <span class="locked-label">Rechtsform / Vollständiger Name</span>
+        <span class="locked-value">{{ legalName() || '-' }}</span>
+      </div>
+      <div class="locked-row">
+        <span class="locked-label">USt-ID</span>
+        <span class="locked-value">{{ vatId() || '-' }}</span>
+      </div>
+      <div class="locked-row">
+        <span class="locked-label">Kürzel (Rechnungsreferenzen)</span>
+        <span class="locked-value">{{ referenceCode() || '-' }}</span>
+      </div>
+    </div>
+
+    <button class="unlock-button" (click)="unlock()">
+      <span class="material-symbols-rounded">lock_open</span>
+      <span>Bearbeiten freischalten</span>
+    </button>
+  } @else {
+    <div class="field-group">
+      <div class="field">
+        <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
+        <input
+          type="text"
+          [value]="companyName()"
+          (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
+        />
+      </div>
+
+      <div class="field">
+        <label>Rechtsform / Vollständiger Name</label>
+        <input
+          type="text"
+          [value]="legalName()"
+          (input)="legalName.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="field">
+        <label>USt-ID</label>
+        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
+      </div>
+
+      <div class="field">
+        <label>Kürzel (für Rechnungsreferenzen)</label>
+        <input
+          type="text"
+          placeholder="z. B. MBS"
+          [value]="referenceCode()"
+          (input)="referenceCode.set($any($event.target).value.toUpperCase())"
+        />
+      </div>
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  @if (unlocked()) {
+    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+      @if (!submitting()) {
+        <span>Speichern</span>
+      } @else {
+        <span class="material-symbols-rounded spin">progress_activity</span>
       }
-    });
+    </button>
+  }
+</div>
+</file>
+
+<file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.ts">
+import { Component, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import { Tenant } from '../../../model/tenant';
+
+@Component({
+  selector: 'app-edit-core-details-dialog',
+  imports: [],
+  templateUrl: './edit-core-details-dialog.html',
+  styleUrl: './edit-core-details-dialog.scss',
+})
+export class EditCoreDetailsDialog {
+  private readonly dialogRef = inject(MatDialogRef<EditCoreDetailsDialog>);
+  private readonly tenantStore = inject(TenantStore);
+
+  readonly tenant = inject<Tenant>(MAT_DIALOG_DATA);
+  readonly companyName = signal(this.tenant.companyName);
+  readonly legalName = signal(this.tenant.legalName ?? '');
+  readonly vatId = signal(this.tenant.vatId ?? '');
+  readonly referenceCode = signal(this.tenant.referenceCode ?? '');
+
+  // Felder starten gesperrt - verhindert Versehens-Änderungen
+  readonly unlocked = signal(false);
+  readonly submitting = signal(false);
+  readonly showCompanyNameWarning = signal(false);
+
+  unlock(): void {
+    this.unlocked.set(true);
   }
 
-  openEditCoreDetails(): void {
-    const currentTenant = this.tenant();
-    if (!currentTenant) return;
-
-    const dialogRef = this.dialog.open(EditCoreDetailsDialog, {
-      width: '52rem',
-      panelClass: 'app-dialog-panel',
-      data: currentTenant,
-    });
-
-    dialogRef.afterClosed().subscribe((updated) => {
-      if (updated) {
-        this.refreshEverywhere();
-        this.toast.success('Stammdaten aktualisiert');
-      }
-    });
+  close(): void {
+    this.dialogRef.close();
   }
 
-  openAddPartnerDialog(): void {
-    const dialogRef = this.dialog.open(PartnerDialog, {
-      width: '52rem',
-      panelClass: 'app-dialog-panel',
-      data: { tenantId: this.id() },
-    });
+  async submit(): Promise<void> {
+    if (!this.companyName().trim()) {
+      this.showCompanyNameWarning.set(true);
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.partnersResource.reload();
-        this.toast.success('Ansprechpartner hinzugefügt');
-      }
-    });
-  }
+    this.submitting.set(true);
 
-  openEditPartnerDialog(partner: Partner): void {
-    const dialogRef = this.dialog.open(PartnerDialog, {
-      width: '52rem',
-      panelClass: 'app-dialog-panel',
-      data: { tenantId: this.id(), partner },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.partnersResource.reload();
-        this.toast.success('Ansprechpartner aktualisiert');
-      }
-    });
-  }
-
-  async deletePartner(partner: Partner): Promise<void> {
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '44rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Ansprechpartner entfernen?',
-        message: `${partner.firstName} ${partner.lastName} wird unwiderruflich aus diesem Mandanten entfernt.`,
-        confirmLabel: 'Entfernen',
-        danger: true,
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (confirmed) {
-      try {
-        await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
-        this.partnersResource.reload();
-        this.toast.success('Ansprechpartner entfernt');
-      } catch {
-        this.toast.error('Ansprechpartner konnte nicht entfernt werden');
-      }
+    try {
+      const updated = await this.tenantStore.updateCoreDetails(this.tenant.id, {
+        companyName: this.companyName().trim(),
+        legalName: this.legalName().trim() || undefined,
+        vatId: this.vatId().trim() || undefined,
+        referenceCode: this.referenceCode().trim().toUpperCase() || undefined,
+      });
+      this.dialogRef.close(updated);
+    } finally {
+      this.submitting.set(false);
     }
   }
 }
@@ -8402,6 +10889,555 @@ body {
 }
 </file>
 
+<file path="src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { Tenants } from './pages/tenants/tenants';
+import { TenantDetail } from './pages/tenant-detail/tenant-detail';
+import { Projects } from './pages/projects/projects';
+import { Invoices } from './pages/invoices/invoices';
+import { Testimonials } from './pages/testimonials/testimonials';
+import { Welcome } from './pages/welcome/welcome';
+import { Login } from './pages/login/login';
+import { SessionExpired } from './pages/session-expired/session-expired';
+import { authGuard } from './core/auth/auth.guard';
+import { ProjectDetail } from './pages/project-details/project-details';
+import { InvoiceDetail } from './pages/invoice-details/invoice-details';
+
+export const routes: Routes = [
+  { path: '', component: Welcome },
+  { path: 'login', component: Login },
+  { path: 'session-expired', component: SessionExpired },
+  { path: 'callback', redirectTo: 'tenants', pathMatch: 'full' },
+  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
+  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
+  { path: 'projects', component: Projects, canActivate: [authGuard] },
+  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
+  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
+  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
+];
+</file>
+
+<file path="src/app/core/invoices/invoice-api.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  CreateInvoiceRequest,
+  Invoice,
+  InvoicePrefill,
+  IssueInvoiceRequest,
+  LineItemRequest,
+  UpdateInvoiceHeaderRequest,
+  UpdateLineItemRequest,
+} from '../../model/invoice';
+
+@Injectable({ providedIn: 'root' })
+export class InvoiceApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/invoices`;
+
+  findById(id: string): Observable<Invoice> {
+    return this.http.get<Invoice>(`${this.baseUrl}/${id}`);
+  }
+
+  // projectId ist bei uns Pflicht (siehe Roadmap-Entscheidung), aber am
+  // Endpunkt weiterhin optional übergeben - Backend erlaubt beides
+  prefill(tenantId: string, projectId?: string): Observable<InvoicePrefill> {
+    let url = `${this.baseUrl}/prefill?tenantId=${tenantId}`;
+    if (projectId) url += `&projectId=${projectId}`;
+    return this.http.get<InvoicePrefill>(url);
+  }
+
+  create(request: CreateInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(this.baseUrl, request);
+  }
+
+  addLineItem(invoiceId: string, request: LineItemRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/line-items`, request);
+  }
+
+  removeLineItem(invoiceId: string, lineItemId: string): Observable<Invoice> {
+    return this.http.delete<Invoice>(`${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`);
+  }
+
+  issue(invoiceId: string, request?: IssueInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/issue`, request ?? {});
+  }
+
+  updateHeader(invoiceId: string, request: UpdateInvoiceHeaderRequest): Observable<Invoice> {
+    return this.http.patch<Invoice>(`${this.baseUrl}/${invoiceId}`, request);
+  }
+
+  updateLineItem(
+    invoiceId: string,
+    lineItemId: string,
+    request: UpdateLineItemRequest,
+  ): Observable<Invoice> {
+    return this.http.patch<Invoice>(
+      `${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`,
+      request,
+    );
+  }
+
+  deleteDraft(invoiceId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${invoiceId}`);
+  }
+
+  getDocumentUrl(invoiceId: string): Observable<{ url: string }> {
+    return this.http.get<{ url: string }>(`${this.baseUrl}/${invoiceId}/document`);
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/invoices.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Rechnungen</h1>
+    <p class="page-subtitle">{{ invoiceStore.invoices().length }} Rechnungen insgesamt</p>
+  </div>
+  <button class="add-button" (click)="openCreateDialog()">
+    <span class="material-symbols-rounded">add</span>
+    <span>Neue Rechnung</span>
+  </button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="material-symbols-rounded">payments</span>
+    <div>
+      <p class="stat-value">{{ openAmount() | number: '1.2-2' : 'de' }} €</p>
+      <p class="stat-label">Offener Betrag</p>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card--warning">
+    <span class="material-symbols-rounded">warning</span>
+    <div>
+      <p class="stat-value">{{ overdueCount() }}</p>
+      <p class="stat-label">Überfällig</p>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card--muted">
+    <span class="material-symbols-rounded">edit_note</span>
+    <div>
+      <p class="stat-value">{{ draftCount() }}</p>
+      <p class="stat-label">Entwürfe</p>
+    </div>
+  </div>
+</div>
+
+@if (invoiceStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rechnungen werden geladen...</p>
+  </div>
+} @else {
+  <div class="invoices-table">
+    <div class="table-row table-row--header">
+      <span>Nummer</span>
+      <span>Mandant</span>
+      <span>Ausgestellt</span>
+      <span>Fällig</span>
+      <span>Betrag</span>
+      <span>Status</span>
+    </div>
+
+    @for (invoice of invoiceStore.invoices(); track invoice.id) {
+      <div class="table-row" (click)="openInvoice(invoice.id)">
+        <span class="invoice-number">{{ invoice.invoiceNumber || '- (Entwurf)' }}</span>
+        <span>{{ tenantName(invoice.tenantId) }}</span>
+        <span>{{ invoice.issueDate || '-' }}</span>
+        <span>{{ invoice.dueDate || '-' }}</span>
+        <span class="amount-cell">{{ formatAmount(invoice) }}</span>
+        <span
+          class="status-badge"
+          [class]="'status-badge--invoice-' + invoice.status.toLowerCase()"
+        >
+          {{ statusLabels[invoice.status] }}
+        </span>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">receipt_long</span>
+        <p>Noch keine Rechnungen vorhanden</p>
+      </div>
+    }
+  </div>
+}
+</file>
+
+<file path="src/app/pages/invoices/invoices.ts">
+import { Component, computed, inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { Invoice, InvoiceStatus } from '../../model/invoice';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Toast } from '../../core/toast/toast';
+import { CreateInvoiceDialog } from './create-invoice-dialog/create-invoice-dialog';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-invoices',
+  imports: [DecimalPipe],
+  templateUrl: './invoices.html',
+  styleUrl: './invoices.scss',
+})
+export class Invoices {
+  protected readonly invoiceStore = inject(InvoiceStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
+  private readonly router = inject(Router);
+
+  readonly statusLabels: Record<InvoiceStatus, string> = {
+    DRAFT: 'Entwurf',
+    ISSUED: 'Ausgestellt',
+    SENT: 'Versendet',
+    PAID: 'Bezahlt',
+    OVERDUE: 'Überfällig',
+    CANCELLED: 'Storniert',
+  };
+
+  private readonly tenantNameById = computed(() => {
+    const map = new Map<string, string>();
+    this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
+    return map;
+  });
+
+  readonly openAmount = computed(() =>
+    this.invoiceStore
+      .invoices()
+      .filter((i) => ['ISSUED', 'SENT', 'OVERDUE'].includes(i.status))
+      .reduce((sum, i) => sum + i.grossTotal.amount, 0),
+  );
+
+  readonly overdueCount = computed(
+    () => this.invoiceStore.invoices().filter((i) => i.status === 'OVERDUE').length,
+  );
+
+  readonly draftCount = computed(
+    () => this.invoiceStore.invoices().filter((i) => i.status === 'DRAFT').length,
+  );
+
+  tenantName(tenantId: string): string {
+    return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
+  }
+
+  formatAmount(invoice: Pick<Invoice, 'grossTotal'>): string {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: invoice.grossTotal.currencyCode,
+    }).format(invoice.grossTotal.amount);
+  }
+
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Rechnung angelegt');
+    });
+  }
+
+  openInvoice(invoiceId: string): void {
+    this.router.navigate(['/invoices', invoiceId]);
+  }
+}
+</file>
+
+<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.html">
+<div class="dialog-header">
+  <h2>Neues Projekt</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
+    </div>
+  } @else {
+    <div class="field">
+      <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+      <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+        <select [disabled]="tenantLocked()" (change)="tenantId.set($any($event.target).value)">
+          <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+          @for (tenant of tenantStore.tenants(); track tenant.id) {
+            <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+              {{ tenant.companyName }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Status</label>
+      <select (change)="status.set($any($event.target).value)">
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === status()">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label [class.warning]="showWarning() && !title()">Projekttitel *</label>
+      <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" />
+    </div>
+
+    <div class="field">
+      <label>Kurzbeschreibung</label>
+      <input
+        type="text"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="field">
+      <label>Ausführliche Beschreibung</label>
+      <textarea
+        rows="3"
+        [value]="fullDescription()"
+        (input)="fullDescription.set($any($event.target).value)"
+      ></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Startdatum</label>
+        <input
+          type="date"
+          [value]="startDate()"
+          (input)="startDate.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Enddatum</label>
+        <input type="date" [value]="endDate()" (input)="endDate.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="section-title">Highlights</p>
+      @if (highlights().length > 0) {
+        <div class="chip-list">
+          @for (highlight of highlights(); track highlight; let i = $index) {
+            <span class="chip">
+              {{ highlight }}
+              <button (click)="removeHighlight(i)">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </span>
+          }
+        </div>
+      }
+      <div class="add-row">
+        <input
+          type="text"
+          placeholder="Highlight hinzufügen und Enter drücken..."
+          [value]="newHighlight()"
+          (input)="newHighlight.set($any($event.target).value)"
+          (keydown.enter)="addHighlight()"
+        />
+        <button class="add-button" (click)="addHighlight()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="section-title">Tags</p>
+      @if (tags().length > 0) {
+        <div class="chip-list">
+          @for (tag of tags(); track tag.value; let i = $index) {
+            <span
+              class="chip"
+              [style.background-color]="tag.colorHex"
+              [style.color]="getContrastTextColor(tag.colorHex)"
+            >
+              {{ tag.value }}
+              <button (click)="removeTag(i)">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </span>
+          }
+        </div>
+      }
+      <div class="add-row">
+        <input
+          type="text"
+          placeholder="Tag-Name..."
+          [value]="newTagName()"
+          (input)="newTagName.set($any($event.target).value)"
+          (keydown.enter)="addTag()"
+        />
+        <div class="color-picker">
+          @for (color of tagPalette; track color.value) {
+            <button
+              class="color-swatch"
+              [style.background-color]="color.value"
+              [style.border-color]="
+                getContrastTextColor(color.value) === '#ffffff'
+                  ? 'rgba(255,255,255,0.4)'
+                  : 'rgba(13,20,36,0.3)'
+              "
+              [class.color-swatch--active]="newTagColor() === color.value"
+              (click)="newTagColor.set(color.value)"
+            ></button>
+          }
+        </div>
+        <button class="add-button" (click)="addTag()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Projekt anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/projects/create-project-dialog/create-project-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ProjectStore } from '../../../core/projects/project-store';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import { getContrastTextColor } from '../../../util/color-contrast';
+import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
+
+export interface CreateProjectDialogData {
+  initialStatus?: ProjectStatus;
+  tenantId?: string;
+}
+
+@Component({
+  selector: 'app-create-project-dialog',
+  imports: [],
+  templateUrl: './create-project-dialog.html',
+  styleUrl: './create-project-dialog.scss',
+})
+export class CreateProjectDialog {
+  private readonly dialogRef = inject(MatDialogRef<CreateProjectDialog>);
+  private readonly projectStore = inject(ProjectStore);
+  protected readonly tenantStore = inject(TenantStore);
+  private readonly dialogData = inject<CreateProjectDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
+
+  protected readonly getContrastTextColor = getContrastTextColor;
+
+  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
+    { value: 'LEAD', label: 'Interessent' },
+    { value: 'IN_PROGRESS', label: 'In Arbeit' },
+    { value: 'ON_HOLD', label: 'Pausiert' },
+    { value: 'COMPLETED', label: 'Abgeschlossen' },
+    { value: 'CANCELLED', label: 'Abgebrochen' },
+  ];
+
+  readonly title = signal('');
+  readonly description = signal('');
+  readonly fullDescription = signal('');
+  readonly startDate = signal('');
+  readonly endDate = signal('');
+  readonly status = signal<ProjectStatus>(this.dialogData?.initialStatus ?? 'LEAD');
+  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
+  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly dataLoading = computed(() => this.tenantStore.loading());
+
+  readonly highlights = signal<string[]>([]);
+  readonly newHighlight = signal('');
+
+  readonly tagPalette = [
+    { label: 'Cyan', value: '#03dbff' },
+    { label: 'Pink', value: '#fc03d5' },
+    { label: 'Navy', value: '#0d1424' },
+  ];
+  readonly tags = signal<{ value: string; colorHex: string }[]>([]);
+  readonly newTagName = signal('');
+  readonly newTagColor = signal('#03dbff');
+
+  readonly submitting = signal(false);
+  readonly showWarning = signal(false);
+
+  readonly isValid = computed(() => this.tenantId() !== '' && this.title().trim().length > 0);
+
+  addHighlight(): void {
+    const value = this.newHighlight().trim();
+    if (!value) return;
+    this.highlights.update((list) => [...list, value]);
+    this.newHighlight.set('');
+  }
+
+  removeHighlight(index: number): void {
+    this.highlights.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  addTag(): void {
+    const value = this.newTagName().trim();
+    if (!value) return;
+    this.tags.update((list) => [...list, { value, colorHex: this.newTagColor() }]);
+    this.newTagName.set('');
+  }
+
+  removeTag(index: number): void {
+    this.tags.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    if (!this.isValid()) {
+      this.showWarning.set(true);
+      return;
+    }
+
+    this.submitting.set(true);
+
+    const request: CreateProjectRequest = {
+      tenantId: this.tenantId(),
+      title: this.title().trim(),
+      description: this.description().trim() || undefined,
+      fullDescription: this.fullDescription().trim() || undefined,
+      highlights: this.highlights(),
+      tags: this.tags(),
+      startDate: this.startDate() || undefined,
+      endDate: this.endDate() || undefined,
+      status: this.status(),
+    };
+
+    try {
+      const project = await this.projectStore.create(request);
+      this.dialogRef.close(project);
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+}
+</file>
+
 <file path="src/app/pages/projects/projects.html">
 <div class="page-header">
   <div>
@@ -8742,6 +11778,326 @@ export class Projects {
       }
     }
   }
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/tenant-detail.ts">
+import { Component, computed, inject, input } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { Avatar } from '../../util/avatar/avatar';
+import { environment } from '../../../environments/environment';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { TenantApi } from '../../core/tenants/tenant-api';
+import { Toast } from '../../core/toast/toast';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { EditTenantDialog } from '../tenants/edit-tenant-dialog/edit-tenant-dialog';
+import { EditCoreDetailsDialog } from '../tenants/edit-core-details-dialog/edit-core-details-dialog';
+import { PartnerDialog } from '../tenants/partner-dialog/partner-dialog';
+import { Tenant, Partner } from '../../model/tenant';
+import { Project } from '../../model/project';
+import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
+import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
+
+@Component({
+  selector: 'app-tenant-detail',
+  imports: [Avatar, MatDialogModule],
+  templateUrl: './tenant-detail.html',
+  styleUrl: './tenant-detail.scss',
+})
+export class TenantDetail {
+  readonly id = input.required<string>();
+
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly tenantApi = inject(TenantApi);
+  private readonly toast = inject(Toast);
+
+  private readonly tenantResource = httpResource<Tenant>(
+    () => `${environment.apiBaseUrl}/tenants/${this.id()}`,
+  );
+
+  private readonly partnersResource = httpResource<Partner[]>(
+    () => `${environment.apiBaseUrl}/tenants/${this.id()}/partners`,
+    { defaultValue: [] },
+  );
+
+  private readonly projectsResource = httpResource<Project[]>(
+    () => `${environment.apiBaseUrl}/projects?tenantId=${this.id()}`,
+    { defaultValue: [] },
+  );
+
+  readonly tenant = computed(() => this.tenantResource.value());
+  readonly loading = computed(() => this.tenantResource.isLoading());
+  readonly partners = computed(() => this.partnersResource.value() ?? []);
+  readonly projects = computed(() => this.projectsResource.value() ?? []);
+
+  readonly statusLabels: Record<Tenant['status'], string> = {
+    PROSPECT: 'Interessent',
+    ACTIVE: 'Aktiv',
+    INACTIVE: 'Inaktiv',
+    ARCHIVED: 'Archiviert',
+  };
+
+  readonly projectStatusLabels: Record<Project['status'], string> = {
+    LEAD: 'Interessent',
+    IN_PROGRESS: 'In Arbeit',
+    ON_HOLD: 'Pausiert',
+    COMPLETED: 'Abgeschlossen',
+    CANCELLED: 'Abgebrochen',
+  };
+
+  // Aktualisiert sowohl diese Detail-Seite als auch die Tenants-Übersicht
+  // (gleiches Zwei-Ressourcen-Problem wie bei Projects)
+  private refreshEverywhere(): void {
+    this.tenantResource.reload();
+    this.tenantStore.reload();
+  }
+
+  back(): void {
+    this.router.navigate(['/tenants']);
+  }
+
+  openEditDialog(): void {
+    const currentTenant = this.tenant();
+    if (!currentTenant) return;
+
+    const dialogRef = this.dialog.open(EditTenantDialog, {
+      width: '56rem',
+      panelClass: 'app-dialog-panel',
+      data: currentTenant,
+    });
+
+    dialogRef.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.refreshEverywhere();
+        this.toast.success('Kontaktdaten aktualisiert');
+      }
+    });
+  }
+
+  openEditCoreDetails(): void {
+    const currentTenant = this.tenant();
+    if (!currentTenant) return;
+
+    const dialogRef = this.dialog.open(EditCoreDetailsDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: currentTenant,
+    });
+
+    dialogRef.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.refreshEverywhere();
+        this.toast.success('Stammdaten aktualisiert');
+      }
+    });
+  }
+
+  openAddPartnerDialog(): void {
+    const dialogRef = this.dialog.open(PartnerDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner hinzugefügt');
+      }
+    });
+  }
+
+  openEditPartnerDialog(partner: Partner): void {
+    const dialogRef = this.dialog.open(PartnerDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id(), partner },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner aktualisiert');
+      }
+    });
+  }
+
+  openCreateProjectDialog(): void {
+    const dialogRef = this.dialog.open(CreateProjectDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.projectsResource.reload();
+        this.toast.success('Projekt angelegt');
+      }
+    });
+  }
+
+  openCreateInvoiceDialog(): void {
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: this.id() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Rechnung angelegt');
+    });
+  }
+
+  async deletePartner(partner: Partner): Promise<void> {
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Ansprechpartner entfernen?',
+        message: `${partner.firstName} ${partner.lastName} wird unwiderruflich aus diesem Mandanten entfernt.`,
+        confirmLabel: 'Entfernen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      try {
+        await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
+        this.partnersResource.reload();
+        this.toast.success('Ansprechpartner entfernt');
+      } catch {
+        this.toast.error('Ansprechpartner konnte nicht entfernt werden');
+      }
+    }
+  }
+}
+</file>
+
+<file path="src/app/model/invoice.ts">
+import { MilestoneStatus } from './project';
+
+export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export type LineItemSource = 'MILESTONE' | 'CUSTOM';
+
+export interface Money {
+  amount: number;
+  currencyCode: string;
+}
+
+export interface Address {
+  street?: string;
+  houseNumber?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+}
+
+export interface BillingParty {
+  name: string;
+  vatId?: string;
+  address?: Address;
+  email?: string;
+  iban?: string;
+  bic?: string;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  positionNumber: number;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+  netAmount: Money;
+  taxAmount: Money;
+  grossAmount: Money;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string;
+  tenantId: string;
+  projectId?: string;
+  status: InvoiceStatus;
+  currencyCode: string;
+  issueDate?: string;
+  dueDate?: string;
+  paymentTermsDays?: number;
+  buyerReference?: string;
+  seller?: BillingParty;
+  buyer?: BillingParty;
+  lineItems: InvoiceLineItem[];
+  netTotal: Money;
+  taxTotal: Money;
+  grossTotal: Money;
+  documentKey?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---- Requests ----
+
+export interface LineItemRequest {
+  source: LineItemSource;
+  milestoneId?: string;
+  description?: string;
+  quantity?: number;
+  unitCode?: string;
+  unitPrice?: Money;
+  taxRatePercentage?: number;
+}
+
+export interface CreateInvoiceRequest {
+  tenantId: string;
+  projectId?: string;
+  buyerReference?: string;
+  paymentTermsDays?: number;
+  lineItems: LineItemRequest[];
+}
+
+export interface IssueInvoiceRequest {
+  issueDate?: string;
+}
+
+// ---- Prefill ----
+
+export interface MilestoneOption {
+  id: string;
+  title: string;
+  dueDate?: string;
+  price?: Money;
+  alreadyInvoiced: boolean;
+  inDraftInvoice: boolean;
+  milestoneStatus: MilestoneStatus;
+}
+
+export interface InvoicePrefill {
+  suggestedSeller: BillingParty;
+  suggestedBuyer: BillingParty;
+  availableMilestones: MilestoneOption[];
+}
+
+export interface UpdateInvoiceHeaderRequest {
+  buyerReference?: string;
+  paymentTermsDays?: number;
+}
+
+export interface UpdateLineItemRequest {
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
 }
 </file>
 

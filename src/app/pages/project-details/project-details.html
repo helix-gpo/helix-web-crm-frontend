@@ -110,11 +110,6 @@
     </div>
 
     <aside class="detail-sidebar">
-      <button class="edit-project-button" (click)="openEditDialog()">
-        <span class="material-symbols-rounded">edit</span>
-        <span>Projekt bearbeiten</span>
-      </button>
-
       <div class="sidebar-card">
         <p class="sidebar-label">Status</p>
         <select
@@ -146,6 +141,18 @@
               ? 'Sichtbar - klicken zum Verbergen'
               : 'Nicht sichtbar - klicken zum Veröffentlichen'
           }}</span>
+        </button>
+      </div>
+
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
+        <button class="sidebar-action" (click)="openEditDialog()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>Projekt bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
         </button>
       </div>
     </aside>
