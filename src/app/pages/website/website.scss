@@ -1,0 +1,245 @@
+@use '../../../styles' as *;
+
+.page-header {
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.section-card {
+  @include card-surface;
+  padding: 2.4rem;
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.section-count {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+}
+
+.slots-grid {
+  display: grid;
+  // auto-fit statt fixer Spaltenzahl - erzeugt auf breiten Screens von
+  // selbst mehr, schmalere Spalten statt 3 riesige zu strecken
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  gap: 1.6rem;
+}
+
+// =====================
+// EMPTY SLOT
+// =====================
+
+.slot-card--empty {
+  min-height: 22rem;
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--border-color);
+  background-color: transparent;
+  @include flex-col(0.6rem);
+  align-items: center;
+  justify-content: center;
+  color: var(--text-grey);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-symbols-rounded {
+    font-size: 2.4rem;
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    border-color: var(--accent-cyan);
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+}
+
+// =====================
+// GEMEINSAM: Remove-Button, Fußzeile mit Datum
+// =====================
+
+.card-remove {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--text-grey);
+  cursor: pointer;
+  z-index: 1;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.7rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--danger);
+    color: var(--text-light);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-light);
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+    color: var(--text-grey);
+  }
+}
+
+.card-date {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-grey);
+}
+
+// =====================
+// PROJEKT-KARTE (nachgebaut nach helix-gpo.de)
+// =====================
+
+.project-card {
+  position: relative;
+  @include card-surface;
+  overflow: hidden;
+  @include flex-col(0);
+}
+
+.project-image-placeholder {
+  // aspect-ratio statt fixer Höhe - bleibt proportional zur Kartenbreite,
+  // egal ob 3 oder 6 Spalten gerade Platz haben
+  aspect-ratio: 2 / 1;
+  background-color: var(--main-navy);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px);
+  background-size: 1.6rem 1.6rem;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 3.2rem;
+    color: var(--text-light);
+    opacity: 0.9;
+  }
+}
+
+.project-card-body {
+  padding: 1.6rem;
+}
+
+.project-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.3rem;
+}
+
+.project-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+  margin-bottom: 1rem;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-tag {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.3rem 0.9rem;
+  border-radius: 50rem;
+}
+
+// =====================
+// REFERENZ-KARTE (nachgebaut nach helix-gpo.de)
+// =====================
+
+.testimonial-card {
+  position: relative;
+  @include card-surface;
+  padding: 1.8rem;
+}
+
+.testimonial-card-header {
+  @include flex-between;
+  margin-bottom: 1.4rem;
+  padding-right: 2rem; // Platz für den Remove-Button oben rechts
+}
+
+.testimonial-stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: var(--border-color);
+
+  &--filled {
+    color: var(--accent-pink);
+  }
+}
+
+.testimonial-quote {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+
+  // Lange Zitate abschneiden, damit alle Karten gleich hoch bleiben
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.testimonial-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.testimonial-role {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}

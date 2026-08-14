@@ -42,6 +42,18 @@
           </div>
         </div>
 
+        <div class="testimonial-tags">
+          <span class="status-tag" [class]="'status-tag--' + testimonial.status.toLowerCase()">
+            {{ statusLabels[testimonial.status] }}
+          </span>
+          <span class="website-tag" [class.website-tag--active]="testimonial.visibleOnWebsite">
+            <span class="material-symbols-rounded">
+              {{ testimonial.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+            </span>
+            {{ testimonial.visibleOnWebsite ? 'Auf Website' : 'Nicht auf Website' }}
+          </span>
+        </div>
+
         <p class="testimonial-description">"{{ testimonial.description }}"</p>
 
         <div class="testimonial-footer">
@@ -53,14 +65,44 @@
 
         @if (testimonial.status === 'PENDING_REVIEW') {
           <div class="testimonial-actions">
-            <button class="action-button action-button--approve" (click)="approve(testimonial.id)">
+            <button
+              class="action-button action-button--approve"
+              [disabled]="processingId() === testimonial.id"
+              (click)="approve(testimonial.id)"
+            >
               <span class="material-symbols-rounded">check</span>
               <span>Freigeben</span>
             </button>
-            <button class="action-button action-button--reject" (click)="reject(testimonial.id)">
+            <button
+              class="action-button action-button--reject"
+              [disabled]="processingId() === testimonial.id"
+              (click)="reject(testimonial.id)"
+            >
               <span class="material-symbols-rounded">close</span>
               <span>Ablehnen</span>
             </button>
+          </div>
+        } @else if (testimonial.status === 'APPROVED') {
+          <div class="testimonial-actions">
+            @if (testimonial.visibleOnWebsite) {
+              <button
+                class="action-button action-button--reject"
+                [disabled]="processingId() === testimonial.id"
+                (click)="unpublish(testimonial.id)"
+              >
+                <span class="material-symbols-rounded">visibility_off</span>
+                <span>Von Website entfernen</span>
+              </button>
+            } @else {
+              <button
+                class="action-button action-button--approve"
+                [disabled]="processingId() === testimonial.id"
+                (click)="publish(testimonial.id)"
+              >
+                <span class="material-symbols-rounded">visibility</span>
+                <span>Auf Website veröffentlichen</span>
+              </button>
+            }
           </div>
         }
       </div>

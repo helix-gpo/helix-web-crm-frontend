@@ -1,0 +1,37 @@
+<div class="dialog-header">
+  <h2>Projekt zur Website hinzufügen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (slotsFull()) {
+    <p class="limit-hint">
+      Alle {{ 6 }} Plätze sind belegt - entferne erst ein Projekt, um Platz zu machen.
+    </p>
+  }
+
+  @for (project of eligibleProjects(); track project.id) {
+    <div class="pick-row">
+      <div class="pick-main">
+        <p class="pick-title">{{ project.title }}</p>
+        <p class="pick-meta">{{ tenantName(project.tenantId) }}</p>
+      </div>
+      <button
+        class="pick-button"
+        [disabled]="slotsFull() || processingId() === project.id"
+        (click)="add(project.id)"
+      >
+        <span class="material-symbols-rounded">add</span>
+        <span>Hinzufügen</span>
+      </button>
+    </div>
+  } @empty {
+    <p class="empty-hint">Alle Projekte sind bereits auf der Website oder es gibt noch keine.</p>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Fertig</button>
+</div>

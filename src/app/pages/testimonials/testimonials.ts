@@ -1,7 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Avatar } from '../../util/avatar/avatar';
 import { TestimonialStore } from '../../core/testimonials/testimonial-store';
+import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
 import { TestimonialStatus } from '../../model/testimonial';
+
+type TabFilter = TestimonialStatus | 'ALL';
 
 @Component({
   selector: 'app-testimonials',
@@ -11,29 +15,80 @@ import { TestimonialStatus } from '../../model/testimonial';
 })
 export class Testimonials {
   protected readonly testimonialStore = inject(TestimonialStore);
+  private readonly toast = inject(Toast);
 
-  readonly activeTab = signal<TestimonialStatus>('PENDING_REVIEW');
+  readonly activeTab = signal<TabFilter>('ALL');
   readonly ratingArray = [1, 2, 3, 4, 5];
+  readonly processingId = signal<string | null>(null);
 
-  readonly tabs: { status: TestimonialStatus; label: string }[] = [
+  readonly tabs: { status: TabFilter; label: string }[] = [
+    { status: 'ALL', label: 'Alle' },
     { status: 'PENDING_REVIEW', label: 'Zur Prüfung' },
     { status: 'APPROVED', label: 'Freigegeben' },
     { status: 'REJECTED', label: 'Abgelehnt' },
   ];
 
-  readonly filteredTestimonials = computed(() =>
-    this.testimonialStore.testimonials().filter((t) => t.status === this.activeTab()),
-  );
+  readonly statusLabels: Record<TestimonialStatus, string> = {
+    PENDING_REVIEW: 'Zur Prüfung',
+    APPROVED: 'Freigegeben',
+    REJECTED: 'Abgelehnt',
+  };
+
+  readonly filteredTestimonials = computed(() => {
+    const tab = this.activeTab();
+    const all = this.testimonialStore.testimonials();
+    return tab === 'ALL' ? all : all.filter((t) => t.status === tab);
+  });
 
   readonly pendingCount = computed(
     () => this.testimonialStore.testimonials().filter((t) => t.status === 'PENDING_REVIEW').length,
   );
 
   async approve(id: string): Promise<void> {
-    await this.testimonialStore.approve(id);
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.approve(id);
+      this.toast.success('Referenz freigegeben');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Freigabe fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
   }
 
   async reject(id: string): Promise<void> {
-    await this.testimonialStore.reject(id);
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.reject(id);
+      this.toast.success('Referenz abgelehnt');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Ablehnung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async publish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.publish(id);
+      this.toast.success('Referenz auf der Website veröffentlicht');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async unpublish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.unpublish(id);
+      this.toast.success('Referenz von der Website entfernt');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
   }
 }

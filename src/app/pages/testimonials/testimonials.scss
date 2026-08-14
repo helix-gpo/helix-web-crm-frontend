@@ -89,6 +89,57 @@
   }
 }
 
+.testimonial-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: -0.6rem;
+}
+
+.status-tag {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem;
+  border-radius: 50rem;
+
+  &--pending_review {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  &--approved {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &--rejected {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.website-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem;
+  border-radius: 50rem;
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 1.4rem;
+  }
+
+  &--active {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+}
+
 .testimonial-description {
   font-size: 1.4rem;
   color: var(--text-dark);
@@ -124,11 +175,16 @@
   font-size: 1.3rem;
   padding: 0.8rem 1.2rem;
 
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   &--approve {
     background-color: var(--success-light);
     color: var(--success);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: var(--success);
       color: var(--text-light);
     }
@@ -138,7 +194,7 @@
     background-color: var(--danger-light);
     color: var(--danger);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: var(--danger);
       color: var(--text-light);
     }

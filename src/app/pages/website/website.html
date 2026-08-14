@@ -1,0 +1,122 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Website</h1>
+    <p class="page-subtitle">
+      Was aktuell live auf der öffentlichen Seite zu sehen ist - jeweils maximal
+      {{ maxOnWebsite }} Plätze
+    </p>
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <p class="section-title">Projekte</p>
+    <p class="section-count">{{ publishedProjects().length }}/{{ maxOnWebsite }} Plätze belegt</p>
+  </div>
+
+  <div class="slots-grid">
+    @for (project of projectSlots(); track $index) {
+      @if (project) {
+        <div class="project-card">
+          <button
+            class="card-remove"
+            [disabled]="processingProjectId() === project.id"
+            title="Von Website entfernen"
+            (click)="unpublishProject(project)"
+          >
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+          <div class="project-image-placeholder">
+            <span class="material-symbols-rounded">work</span>
+          </div>
+
+          <div class="project-card-body">
+            <p class="project-title">{{ project.title }}</p>
+            <p class="project-meta">{{ tenantName(project.tenantId) }}</p>
+
+            @if (project.tags.length > 0) {
+              <div class="card-tags">
+                @for (tag of project.tags; track tag.value) {
+                  <span
+                    class="card-tag"
+                    [style.background-color]="tag.colorHex"
+                    [style.color]="getContrastTextColor(tag.colorHex)"
+                    >{{ tag.value }}</span
+                  >
+                }
+              </div>
+            }
+
+            <div class="card-footer">
+              <span class="material-symbols-rounded">event_upcoming</span>
+              <span class="card-date">{{ formatMonthYear(project.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button class="slot-card--empty" (click)="openAddProjectDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Hinzufügen</span>
+        </button>
+      }
+    }
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <p class="section-title">Referenzen</p>
+    <p class="section-count">
+      {{ publishedTestimonials().length }}/{{ maxOnWebsite }} Plätze belegt
+    </p>
+  </div>
+
+  <div class="slots-grid">
+    @for (testimonial of testimonialSlots(); track $index) {
+      @if (testimonial) {
+        <div class="testimonial-card">
+          <button
+            class="card-remove"
+            [disabled]="processingTestimonialId() === testimonial.id"
+            title="Von Website entfernen"
+            (click)="unpublishTestimonial(testimonial)"
+          >
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+          <div class="testimonial-card-header">
+            <app-avatar [name]="testimonial.partnerName"></app-avatar>
+            <div class="testimonial-stars">
+              @for (i of ratingArray; track i) {
+                <span
+                  class="material-symbols-rounded star"
+                  [class.star--filled]="i <= testimonial.rating"
+                  >star</span
+                >
+              }
+            </div>
+          </div>
+
+          <p class="testimonial-quote">"{{ testimonial.description }}"</p>
+
+          <div class="testimonial-card-footer">
+            <p class="testimonial-name">{{ testimonial.partnerName }}</p>
+            <p class="testimonial-role">
+              {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
+            </p>
+            <div class="card-footer">
+              <span class="material-symbols-rounded">event_upcoming</span>
+              <span class="card-date">{{ formatMonthYear(testimonial.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button class="slot-card--empty" (click)="openAddTestimonialDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Hinzufügen</span>
+        </button>
+      }
+    }
+  </div>
+</div>

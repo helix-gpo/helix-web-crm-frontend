@@ -12,6 +12,8 @@ import {
   Money,
   MilestoneOption,
 } from '../../../model/invoice';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
 
 export interface CreateInvoiceDialogData {
   tenantId?: string;
@@ -40,6 +42,7 @@ export class CreateInvoiceDialog {
   private readonly invoiceStore = inject(InvoiceStore);
   protected readonly tenantStore = inject(TenantStore);
   protected readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
   private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
     optional: true,
   });
@@ -234,6 +237,8 @@ export class CreateInvoiceDialog {
     try {
       const invoice = await this.invoiceStore.create(request);
       this.dialogRef.close(invoice);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht angelegt werden'));
     } finally {
       this.submitting.set(false);
     }

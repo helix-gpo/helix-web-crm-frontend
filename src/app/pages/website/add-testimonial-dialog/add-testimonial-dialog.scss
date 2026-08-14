@@ -1,0 +1,121 @@
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 48rem;
+  overflow-y: auto;
+  @include flex-col(0);
+}
+
+.limit-hint {
+  font-size: 1.3rem;
+  color: var(--warning);
+  background-color: rgba(245, 166, 35, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.pick-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.pick-meta {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.pick-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 1.2rem 0;
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+  width: 100%;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}

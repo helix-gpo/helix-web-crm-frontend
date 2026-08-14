@@ -30,4 +30,14 @@ export class TestimonialStore {
     await firstValueFrom(this.testimonialApi.reject(id));
     this.reload();
   }
+
+  async publish(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.publish(id));
+    this.reload();
+  }
+
+  async unpublish(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.unpublish(id));
+    this.reload();
+  }
 }

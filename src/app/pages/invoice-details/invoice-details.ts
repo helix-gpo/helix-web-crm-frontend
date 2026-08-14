@@ -9,6 +9,7 @@ import { InvoiceStore } from '../../core/invoices/invoice-store';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { ProjectStore } from '../../core/projects/project-store';
 import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
 import {
@@ -153,8 +154,8 @@ export class InvoiceDetail {
         await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
         this.refreshEverywhere();
         this.toast.success('Position entfernt');
-      } catch {
-        this.toast.error('Position konnte nicht entfernt werden');
+      } catch (err) {
+        this.toast.error(extractErrorMessage(err, 'Position konnte nicht entfernt werden'));
       }
     }
   }
@@ -182,8 +183,8 @@ export class InvoiceDetail {
       await firstValueFrom(this.invoiceApi.issue(inv.id));
       this.refreshEverywhere();
       this.toast.success('Rechnung ausgestellt');
-    } catch {
-      this.toast.error('Rechnung konnte nicht ausgestellt werden');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
     } finally {
       this.issuing.set(false);
     }
@@ -195,8 +196,8 @@ export class InvoiceDetail {
     try {
       const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
       window.open(url, '_blank');
-    } catch {
-      this.toast.error('Dokument konnte nicht geladen werden');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Dokument konnte nicht geladen werden'));
     }
   }
 
@@ -227,8 +228,8 @@ export class InvoiceDetail {
       this.editingHeader.set(false);
       this.refreshEverywhere();
       this.toast.success('Rechnungsdaten aktualisiert');
-    } catch {
-      this.toast.error('Aktualisierung fehlgeschlagen');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Aktualisierung fehlgeschlagen'));
     } finally {
       this.savingHeader.set(false);
     }
@@ -276,8 +277,8 @@ export class InvoiceDetail {
       this.invoiceStore.reload();
       this.toast.success('Entwurf gelöscht');
       this.router.navigate(['/invoices']);
-    } catch {
-      this.toast.error('Löschen fehlgeschlagen');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Löschen fehlgeschlagen'));
       this.deletingDraft.set(false);
     }
   }
