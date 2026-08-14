@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiBaseUrl: 'http://localhost:8081/api/crm',
+  websiteBaseUrl: 'http://localhost:4201',
   auth: {
     issuer: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_mWfiv7VVv',
     clientId: '3k9vr6j2nv6po6djjvp42bg97m',

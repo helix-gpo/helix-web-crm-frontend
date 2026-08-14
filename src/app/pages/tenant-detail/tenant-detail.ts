@@ -16,6 +16,7 @@ import { Tenant, Partner } from '../../model/tenant';
 import { Project } from '../../model/project';
 import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
 import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
+import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -167,6 +168,20 @@ export class TenantDetail {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) this.toast.success('Rechnung angelegt');
+    });
+  }
+
+  openRequestTestimonialDialog(partner: Partner): void {
+    const dialogRef = this.dialog.open(RequestTestimonialDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { partner, projects: this.projects() },
+    });
+
+    dialogRef.afterClosed().subscribe((created) => {
+      if (created) {
+        this.toast.success('Einladung erzeugt');
+      }
     });
   }
 

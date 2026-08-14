@@ -14,3 +14,15 @@ export interface Testimonial {
   visibleOnWebsite: boolean;
   createdAt: string;
 }
+
+export interface CreateInvitationRequest {
+  partnerId: string;
+  projectId?: string;
+  expiresInDays?: number;
+}
+
+export interface InvitationResponse {
+  invitationId: string;
+  rawToken: string;
+  expiresAt: string;
+}

@@ -1,0 +1,60 @@
+<div class="dialog-header">
+  <h2>Referenz anfragen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+@if (!generatedLink()) {
+  <div class="dialog-body">
+    <p class="dialog-intro">
+      Für <strong>{{ data.partner.firstName }} {{ data.partner.lastName }}</strong> wird ein
+      einmaliger Link erzeugt, über den eine Referenz abgegeben werden kann.
+    </p>
+
+    <div class="field">
+      <label>Projekt (optional)</label>
+      <select [value]="projectId()" (change)="projectId.set($any($event.target).value)">
+        <option value="">Kein bestimmtes Projekt</option>
+        @for (project of data.projects; track project.id) {
+          <option [value]="project.id">{{ project.title }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Gültig für (Tage)</label>
+      <input
+        type="number"
+        min="1"
+        [value]="expiresInDays()"
+        (input)="expiresInDays.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Abbrechen</button>
+    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+      {{ submitting() ? 'Wird erzeugt...' : 'Link erzeugen' }}
+    </button>
+  </div>
+} @else {
+  <div class="dialog-body">
+    <p class="dialog-intro">
+      Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
+      {{ data.partner.firstName }} senden.
+    </p>
+
+    <div class="link-box">
+      <span class="link-text">{{ generatedLink() }}</span>
+      <button class="copy-button" (click)="copyLink()">
+        <span class="material-symbols-rounded">{{ copied() ? 'check' : 'content_copy' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Fertig</button>
+  </div>
+}

@@ -80,6 +80,13 @@
             <div class="partner-actions">
               <button
                 class="icon-button"
+                (click)="openRequestTestimonialDialog(partner)"
+                title="Referenz anfragen"
+              >
+                <span class="material-symbols-rounded">rate_review</span>
+              </button>
+              <button
+                class="icon-button"
                 (click)="openEditPartnerDialog(partner)"
                 title="Bearbeiten"
               >
