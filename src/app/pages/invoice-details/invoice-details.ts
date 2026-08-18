@@ -21,10 +21,16 @@ import {
   UpdateInvoiceHeaderRequest,
 } from '../../model/invoice';
 import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+import {
+  IssueInvoiceDialog,
+  IssueInvoiceDialogResult,
+} from './issue-invoice-dialog/issue-invoice-dialog';
+import { SendInvoiceDialog } from './send-invoice-dialog/send-invoice-dialog';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-invoice-detail',
-  imports: [MatDialogModule],
+  imports: [MatDialogModule, DatePipe],
   templateUrl: './invoice-details.html',
   styleUrl: './invoice-details.scss',
 })
@@ -52,6 +58,13 @@ export class InvoiceDetail {
 
   readonly invoice = computed(() => this.invoiceResource.value());
   readonly loading = computed(() => this.invoiceResource.isLoading());
+
+  readonly canSend = computed(() => {
+    const status = this.invoice()?.status;
+    return !!status && status !== 'DRAFT' && status !== 'CANCELLED';
+  });
+  readonly alreadySent = computed(() => this.invoice()?.status === 'SENT');
+  readonly sending = signal(false);
 
   readonly statusLabels: Record<InvoiceStatus, string> = {
     DRAFT: 'Entwurf',
@@ -164,29 +177,57 @@ export class InvoiceDetail {
     const inv = this.invoice();
     if (!inv) return;
 
-    const dialogRef = this.dialog.open(ConfirmDialog, {
+    const dialogRef = this.dialog.open(IssueInvoiceDialog, {
       width: '48rem',
       panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Rechnung ausstellen?',
-        message:
-          'Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können danach nicht mehr geändert werden.',
-        confirmLabel: 'Ausstellen',
-      },
+      data: { buyerEmail: inv.buyer?.email },
     });
 
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (!confirmed) return;
+    const result = (await firstValueFrom(dialogRef.afterClosed())) as
+      IssueInvoiceDialogResult | false;
+    if (!result) return;
 
     this.issuing.set(true);
     try {
-      await firstValueFrom(this.invoiceApi.issue(inv.id));
+      await firstValueFrom(
+        this.invoiceApi.issue(inv.id, {
+          sendEmailDirectly: result.sendEmail,
+          invoiceEmail: result.email,
+        }),
+      );
       this.refreshEverywhere();
-      this.toast.success('Rechnung ausgestellt');
+      this.toast.success(
+        result.sendEmail ? 'Rechnung ausgestellt und versendet' : 'Rechnung ausgestellt',
+      );
     } catch (err) {
       this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
     } finally {
       this.issuing.set(false);
+    }
+  }
+
+  async sendInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv || this.alreadySent()) return;
+
+    const dialogRef = this.dialog.open(SendInvoiceDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { buyerEmail: inv.sentToEmail ?? inv.buyer?.email },
+    });
+
+    const email = await firstValueFrom(dialogRef.afterClosed());
+    if (!email) return;
+
+    this.sending.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.send(inv.id, { email }));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung versendet');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht versendet werden'));
+    } finally {
+      this.sending.set(false);
     }
   }
 

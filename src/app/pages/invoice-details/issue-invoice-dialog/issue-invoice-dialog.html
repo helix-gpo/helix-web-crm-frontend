@@ -1,0 +1,34 @@
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper">
+    <span class="material-symbols-rounded">task_alt</span>
+  </div>
+  <h2 class="confirm-title">Rechnung ausstellen?</h2>
+  <p class="confirm-message">
+    Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können
+    danach nicht mehr geändert werden.
+  </p>
+
+  <label class="send-checkbox-row">
+    <input type="checkbox" [checked]="sendEmail()" (change)="toggleSendEmail()" />
+    <span>Direkt per E-Mail an den Mandanten versenden</span>
+  </label>
+
+  @if (sendEmail()) {
+    <div class="email-field">
+      <label>Rechnungs-E-Mail-Adresse</label>
+      <input
+        type="email"
+        placeholder="rechnung@mandant.de"
+        [value]="email()"
+        (input)="email.set($any($event.target).value)"
+      />
+    </div>
+  }
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [disabled]="!canConfirm()" (click)="confirm()">
+      Ausstellen
+    </button>
+  </div>
+</div>

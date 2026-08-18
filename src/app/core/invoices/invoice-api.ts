@@ -8,6 +8,7 @@ import {
   InvoicePrefill,
   IssueInvoiceRequest,
   LineItemRequest,
+  SendInvoiceRequest,
   UpdateInvoiceHeaderRequest,
   UpdateLineItemRequest,
 } from '../../model/invoice';
@@ -43,6 +44,10 @@ export class InvoiceApi {
 
   issue(invoiceId: string, request?: IssueInvoiceRequest): Observable<Invoice> {
     return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/issue`, request ?? {});
+  }
+
+  send(invoiceId: string, request?: SendInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/send`, request ?? {});
   }
 
   updateHeader(invoiceId: string, request: UpdateInvoiceHeaderRequest): Observable<Invoice> {

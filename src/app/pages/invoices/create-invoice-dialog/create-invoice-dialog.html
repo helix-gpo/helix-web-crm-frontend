@@ -50,7 +50,7 @@
         <label>Auftrags-Referenz</label>
         <input
           type="text"
-          placeholder="Automatisch (z. B. MBS.5)"
+          [placeholder]="buyerReferencePlaceholder()"
           [value]="buyerReference()"
           (input)="buyerReference.set($any($event.target).value)"
         />

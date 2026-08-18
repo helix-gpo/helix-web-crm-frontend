@@ -73,6 +73,15 @@ export class CreateInvoiceDialog {
     this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
   );
 
+  readonly suggestedBuyerReference = computed(
+    () => this.prefill()?.suggestedBuyerReference ?? null,
+  );
+  readonly buyerReferencePlaceholder = computed(() =>
+    this.suggestedBuyerReference()
+      ? `Automatisch (${this.suggestedBuyerReference()})`
+      : 'Automatisch',
+  );
+
   private readonly prefillResource = httpResource<InvoicePrefill>(() => {
     const tenantId = this.tenantId();
     const projectId = this.projectId();

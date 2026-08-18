@@ -62,6 +62,7 @@ src/app/core/auth/auth-config.ts
 src/app/core/auth/auth.guard.ts
 src/app/core/auth/auth.interceptor.ts
 src/app/core/auth/auth.ts
+src/app/core/errors/error-message.ts
 src/app/core/invoices/invoice-api.ts
 src/app/core/invoices/invoice-store.ts
 src/app/core/projects/project-api.ts
@@ -78,6 +79,9 @@ src/app/model/invoice.ts
 src/app/model/project.ts
 src/app/model/tenant.ts
 src/app/model/testimonial.ts
+src/app/pages/dashboard/dashboard.html
+src/app/pages/dashboard/dashboard.scss
+src/app/pages/dashboard/dashboard.ts
 src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.html
 src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.scss
 src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.ts
@@ -114,6 +118,9 @@ src/app/pages/projects/projects.ts
 src/app/pages/session-expired/session-expired.html
 src/app/pages/session-expired/session-expired.scss
 src/app/pages/session-expired/session-expired.ts
+src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.html
+src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.scss
+src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.ts
 src/app/pages/tenant-detail/tenant-detail.html
 src/app/pages/tenant-detail/tenant-detail.scss
 src/app/pages/tenant-detail/tenant-detail.ts
@@ -135,6 +142,15 @@ src/app/pages/tenants/tenants.ts
 src/app/pages/testimonials/testimonials.html
 src/app/pages/testimonials/testimonials.scss
 src/app/pages/testimonials/testimonials.ts
+src/app/pages/website/add-project-dialog/add-project-dialog.html
+src/app/pages/website/add-project-dialog/add-project-dialog.scss
+src/app/pages/website/add-project-dialog/add-project-dialog.ts
+src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.html
+src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.scss
+src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.ts
+src/app/pages/website/website.html
+src/app/pages/website/website.scss
+src/app/pages/website/website.ts
 src/app/pages/welcome/welcome.html
 src/app/pages/welcome/welcome.scss
 src/app/pages/welcome/welcome.ts
@@ -547,6 +563,24 @@ export class Auth {
 }
 </file>
 
+<file path="src/app/core/errors/error-message.ts">
+import { HttpErrorResponse } from '@angular/common/http';
+
+// Liest die "detail"-Nachricht aus einem RFC-7807-ProblemDetail-Response
+// des Backends (GlobalExceptionHandler) - fällt auf einen generischen
+// Text zurück, falls das Backend (noch) kein ProblemDetail liefert
+// (z.B. bei Netzwerkfehlern oder unerwarteten Response-Formaten)
+export function extractErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse) {
+    const detail = err.error?.detail;
+    if (typeof detail === 'string' && detail.trim().length > 0) {
+      return detail;
+    }
+  }
+  return fallback;
+}
+</file>
+
 <file path="src/app/core/projects/project-api.ts">
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -800,64 +834,6 @@ export class TenantStore {
 }
 </file>
 
-<file path="src/app/core/testimonials/testimonial-api.ts">
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Testimonial } from '../../model/testimonial';
-
-@Injectable({ providedIn: 'root' })
-export class TestimonialApi {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/testimonials`;
-
-  approve(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/approve`, {});
-  }
-
-  reject(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/reject`, {});
-  }
-}
-</file>
-
-<file path="src/app/core/testimonials/testimonial-store.ts">
-import { Injectable, computed, inject } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Testimonial } from '../../model/testimonial';
-import { TestimonialApi } from './testimonial-api';
-
-@Injectable({ providedIn: 'root' })
-export class TestimonialStore {
-  private readonly testimonialApi = inject(TestimonialApi);
-
-  private readonly testimonialsResource = httpResource<Testimonial[]>(
-    () => `${environment.apiBaseUrl}/testimonials`,
-    { defaultValue: [] },
-  );
-
-  readonly testimonials = computed(() => this.testimonialsResource.value() ?? []);
-  readonly loading = computed(() => this.testimonialsResource.isLoading());
-
-  reload(): void {
-    this.testimonialsResource.reload();
-  }
-
-  async approve(id: string): Promise<void> {
-    await firstValueFrom(this.testimonialApi.approve(id));
-    this.reload();
-  }
-
-  async reject(id: string): Promise<void> {
-    await firstValueFrom(this.testimonialApi.reject(id));
-    this.reload();
-  }
-}
-</file>
-
 <file path="src/app/core/toast/toast-message.ts">
 import { Component, inject } from '@angular/core';
 import { MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
@@ -940,22 +916,643 @@ export class Toast {
 }
 </file>
 
-<file path="src/app/model/testimonial.ts">
-export type TestimonialStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+<file path="src/app/pages/dashboard/dashboard.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">
+      Schön, dass du da bist{{ auth.userName() ? ', ' + auth.userName() : '' }} - hier der Überblick
+      über Mandanten, Projekte und Rechnungen.
+    </p>
+  </div>
+</div>
 
-export interface Testimonial {
-  id: string;
-  tenantId: string;
-  partnerId: string;
-  projectId?: string;
-  partnerName: string;
-  partnerRole?: string;
-  companyName: string;
-  description: string;
-  rating: number;
-  status: TestimonialStatus;
-  visibleOnWebsite: boolean;
-  createdAt: string;
+@if (!loading()) {
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="material-symbols-rounded">payments</span>
+      <div>
+        <p class="stat-value">{{ formatAmount(openAmount()) }}</p>
+        <p class="stat-label">Offener Betrag</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--warning">
+      <span class="material-symbols-rounded">warning</span>
+      <div>
+        <p class="stat-value">{{ overdueCount() }}</p>
+        <p class="stat-label">Überfällige Rechnungen</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--muted">
+      <span class="material-symbols-rounded">work</span>
+      <div>
+        <p class="stat-value">{{ activeProjectsCount() }}</p>
+        <p class="stat-label">Aktive Projekte</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--muted">
+      <span class="material-symbols-rounded">apartment</span>
+      <div>
+        <p class="stat-value">{{ activeTenantsCount() }}</p>
+        <p class="stat-label">Aktive Mandanten</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <div class="dashboard-main">
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Anstehende & überfällige Rechnungen</p>
+          <a class="text-link" routerLink="/invoices">Alle ansehen</a>
+        </div>
+
+        @for (invoice of upcomingInvoices(); track invoice.id) {
+          <div class="invoice-row" (click)="openInvoice(invoice.id)">
+            <div class="invoice-row-main">
+              <span
+                class="invoice-status-dot"
+                [class.invoice-status-dot--overdue]="invoice.status === 'OVERDUE'"
+              ></span>
+              <div>
+                <p class="invoice-row-title">{{ invoice.invoiceNumber }}</p>
+                <p class="invoice-row-meta">
+                  {{ tenantName(invoice.tenantId) }}
+                  @if (projectName(invoice.projectId)) {
+                    · {{ projectName(invoice.projectId) }}
+                  }
+                </p>
+              </div>
+            </div>
+            <div class="invoice-row-end">
+              <span
+                class="invoice-row-due"
+                [class.invoice-row-due--overdue]="invoice.status === 'OVERDUE'"
+              >
+                Fällig {{ invoice.dueDate }}
+              </span>
+              <span class="invoice-row-amount">{{ formatMoney(invoice.grossTotal) }}</span>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Keine offenen Rechnungen - alles erledigt.</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <p class="info-card-title">Projekte nach Status</p>
+
+        @for (item of projectsByStatus(); track item.status) {
+          <div class="status-distribution-row">
+            <div class="status-distribution-label">
+              <span>{{ item.label }}</span>
+              <span>{{ item.count }}</span>
+            </div>
+            <div class="status-distribution-track">
+              <div
+                class="status-distribution-bar"
+                [class]="'status-distribution-bar--' + item.status.toLowerCase()"
+                [style.width.%]="item.percentage"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellzugriff</p>
+        <button class="sidebar-action" (click)="openCreateTenantDialog()">
+          <span class="material-symbols-rounded">apartment</span>
+          <span>Mandant anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateProjectDialog()">
+          <span class="material-symbols-rounded">work</span>
+          <span>Projekt anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Dashboard wird geladen...</p>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/dashboard/dashboard.scss">
+@use '../../../styles' as *;
+
+.page-header {
+  @include flex-between;
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.6rem;
+  margin-bottom: 2.4rem;
+
+  @include respond(lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include respond(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  border-radius: var(--radius-md);
+  padding: 2rem 2.4rem;
+  box-shadow: var(--shadow-md);
+
+  .material-symbols-rounded {
+    font-size: 2.8rem;
+    color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.12);
+    border-radius: 50%;
+    padding: 1rem;
+  }
+
+  &--warning .material-symbols-rounded {
+    color: var(--warning);
+    background-color: rgba(245, 166, 35, 0.15);
+  }
+
+  &--muted .material-symbols-rounded {
+    color: var(--text-muted);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.stat-label {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 28rem;
+  gap: 2.4rem;
+
+  @include respond(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-main {
+  @include flex-col(2rem);
+}
+
+.dashboard-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.text-link {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--accent-cyan-hover);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.invoice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+  cursor: pointer;
+
+  &:first-of-type {
+    border-top: none;
+  }
+
+  &:hover {
+    background-color: var(--bg-light);
+    margin: 0 -1rem;
+    padding: 1.2rem 1rem;
+    border-radius: var(--radius-sm);
+  }
+}
+
+.invoice-row-main {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+.invoice-status-dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: var(--accent-cyan);
+  flex-shrink: 0;
+
+  &--overdue {
+    background-color: var(--danger);
+  }
+}
+
+.invoice-row-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.invoice-row-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.invoice-row-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.invoice-row-due {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+
+  &--overdue {
+    color: var(--danger);
+    font-weight: 600;
+  }
+}
+
+.invoice-row-amount {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.status-distribution-row {
+  padding: 1rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+.status-distribution-label {
+  @include flex-between;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.6rem;
+}
+
+.status-distribution-track {
+  width: 100%;
+  height: 0.8rem;
+  background-color: var(--bg-light);
+  border-radius: 50rem;
+  overflow: hidden;
+}
+
+.status-distribution-bar {
+  height: 100%;
+  border-radius: 50rem;
+  transition: width 0.3s;
+
+  &--lead {
+    background-color: var(--accent-cyan);
+  }
+  &--in_progress {
+    background-color: var(--warning);
+  }
+  &--on_hold {
+    background-color: var(--text-muted);
+  }
+  &--completed {
+    background-color: var(--success);
+  }
+  &--cancelled {
+    background-color: var(--danger);
+  }
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 2rem;
+
+  &--dark {
+    background-color: var(--main-navy);
+    border: none;
+  }
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+
+  &--light {
+    color: var(--text-muted);
+  }
+}
+
+.sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1rem 0.8rem;
+  color: var(--text-light);
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/dashboard/dashboard.ts">
+import { Component, computed, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectStore } from '../../core/projects/project-store';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { Toast } from '../../core/toast/toast';
+import { Auth } from '../../core/auth/auth';
+import { CreateTenantDialog } from '../tenants/create-tenant-dialog/create-tenant-dialog';
+import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
+import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
+import { ProjectStatus } from '../../model/project';
+import { Money } from '../../model/invoice';
+
+@Component({
+  selector: 'app-dashboard',
+  imports: [RouterLink],
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.scss',
+})
+export class Dashboard {
+  protected readonly auth = inject(Auth);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
+
+  protected readonly tenantStore = inject(TenantStore);
+  protected readonly projectStore = inject(ProjectStore);
+  protected readonly invoiceStore = inject(InvoiceStore);
+
+  readonly loading = computed(
+    () => this.tenantStore.loading() || this.projectStore.loading() || this.invoiceStore.loading(),
+  );
+
+  private readonly openInvoiceStatuses = ['ISSUED', 'SENT', 'OVERDUE'];
+
+  private readonly tenantNameById = computed(() => {
+    const map = new Map<string, string>();
+    this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
+    return map;
+  });
+
+  private readonly projectNameById = computed(() => {
+    const map = new Map<string, string>();
+    this.projectStore.projects().forEach((p) => map.set(p.id, p.title));
+    return map;
+  });
+
+  tenantName(tenantId: string): string {
+    return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
+  }
+
+  projectName(projectId?: string): string {
+    if (!projectId) return '';
+    return this.projectNameById().get(projectId) ?? '';
+  }
+
+  // ---- KPIs ----
+
+  readonly openAmount = computed(() =>
+    this.invoiceStore
+      .invoices()
+      .filter((i) => this.openInvoiceStatuses.includes(i.status))
+      .reduce((sum, i) => sum + i.grossTotal.amount, 0),
+  );
+
+  readonly overdueCount = computed(
+    () => this.invoiceStore.invoices().filter((i) => i.status === 'OVERDUE').length,
+  );
+
+  readonly activeProjectsCount = computed(
+    () => this.projectStore.projects().filter((p) => p.status === 'IN_PROGRESS').length,
+  );
+
+  readonly activeTenantsCount = computed(
+    () => this.tenantStore.tenants().filter((t) => t.status === 'ACTIVE').length,
+  );
+
+  // ---- Anstehende & überfällige Rechnungen ----
+
+  // Nur offene Rechnungen mit Fälligkeitsdatum, aufsteigend sortiert -
+  // die dringendsten (überfällig oder bald fällig) landen ganz oben
+  readonly upcomingInvoices = computed(() =>
+    this.invoiceStore
+      .invoices()
+      .filter((i) => this.openInvoiceStatuses.includes(i.status) && !!i.dueDate)
+      .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : a.dueDate! > b.dueDate! ? 1 : 0))
+      .slice(0, 5),
+  );
+
+  // ---- Projekte nach Status ----
+
+  private readonly projectStatusOrder: ProjectStatus[] = [
+    'LEAD',
+    'IN_PROGRESS',
+    'ON_HOLD',
+    'COMPLETED',
+    'CANCELLED',
+  ];
+
+  readonly projectStatusLabels: Record<ProjectStatus, string> = {
+    LEAD: 'Interessent',
+    IN_PROGRESS: 'In Arbeit',
+    ON_HOLD: 'Pausiert',
+    COMPLETED: 'Abgeschlossen',
+    CANCELLED: 'Abgebrochen',
+  };
+
+  readonly projectsByStatus = computed(() => {
+    const all = this.projectStore.projects();
+    const total = all.length;
+
+    return this.projectStatusOrder.map((status) => {
+      const count = all.filter((p) => p.status === status).length;
+      return {
+        status,
+        label: this.projectStatusLabels[status],
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      };
+    });
+  });
+
+  // ---- Formatierung ----
+
+  formatMoney(money: Money): string {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
+  }
+
+  formatAmount(amount: number, currencyCode = 'EUR'): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
+      amount,
+    );
+  }
+
+  // ---- Navigation ----
+
+  openInvoice(invoiceId: string): void {
+    this.router.navigate(['/invoices', invoiceId]);
+  }
+
+  // ---- Schnellzugriff ----
+
+  openCreateTenantDialog(): void {
+    const dialogRef = this.dialog.open(CreateTenantDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Mandant angelegt');
+    });
+  }
+
+  openCreateProjectDialog(): void {
+    const dialogRef = this.dialog.open(CreateProjectDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Projekt angelegt');
+    });
+  }
+
+  openCreateInvoiceDialog(): void {
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.toast.success('Rechnung angelegt');
+        this.router.navigate(['/invoices', result.id]);
+      }
+    });
+  }
 }
 </file>
 
@@ -2991,249 +3588,6 @@ export class EditLineItemDialog {
 }
 </file>
 
-<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts">
-import { Component, computed, inject, signal } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { environment } from '../../../../environments/environment';
-import { InvoiceStore } from '../../../core/invoices/invoice-store';
-import { ProjectStore } from '../../../core/projects/project-store';
-import { TenantStore } from '../../../core/tenants/tenant-store';
-import {
-  CreateInvoiceRequest,
-  InvoicePrefill,
-  LineItemSource,
-  Money,
-  MilestoneOption,
-} from '../../../model/invoice';
-
-export interface CreateInvoiceDialogData {
-  tenantId?: string;
-  projectId?: string;
-}
-
-interface DraftLineItem {
-  key: string;
-  source: LineItemSource;
-  milestoneId?: string;
-  description: string;
-  quantity: number;
-  unitCode: string;
-  unitPrice: Money;
-  taxRatePercentage: number;
-}
-
-@Component({
-  selector: 'app-create-invoice-dialog',
-  imports: [],
-  templateUrl: './create-invoice-dialog.html',
-  styleUrl: './create-invoice-dialog.scss',
-})
-export class CreateInvoiceDialog {
-  private readonly dialogRef = inject(MatDialogRef<CreateInvoiceDialog>);
-  private readonly invoiceStore = inject(InvoiceStore);
-  protected readonly tenantStore = inject(TenantStore);
-  protected readonly projectStore = inject(ProjectStore);
-  private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
-    optional: true,
-  });
-
-  readonly taxRateOptions = [19, 7, 0];
-
-  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
-  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
-  readonly projectId = signal(this.dialogData?.projectId ?? '');
-  readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
-
-  readonly buyerReference = signal('');
-  readonly paymentTermsDays = signal('14');
-
-  readonly lineItems = signal<DraftLineItem[]>([]);
-
-  readonly freeDescription = signal('');
-  readonly freeQuantity = signal('1');
-  readonly freeUnitPrice = signal('');
-  readonly freeTaxRate = signal(19);
-
-  readonly submitting = signal(false);
-  readonly showWarning = signal(false);
-
-  // Nur Projekte des gewählten Mandanten - Projekt ist bei uns Pflichtfeld
-  readonly tenantProjects = computed(() =>
-    this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
-  );
-
-  private readonly prefillResource = httpResource<InvoicePrefill>(() => {
-    const tenantId = this.tenantId();
-    const projectId = this.projectId();
-    return tenantId && projectId
-      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${tenantId}&projectId=${projectId}`
-      : undefined;
-  });
-
-  readonly prefill = computed(() => this.prefillResource.value());
-  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
-
-  readonly totals = computed(() => {
-    const items = this.lineItems();
-    return {
-      net: items.reduce((sum, i) => sum + this.itemNet(i), 0),
-      tax: items.reduce((sum, i) => sum + this.itemTax(i), 0),
-      gross: items.reduce((sum, i) => sum + this.itemGross(i), 0),
-    };
-  });
-
-  // Aufschlüsselung pro Steuersatz - genau das, was auf der Rechnung als
-  // eigene USt-Zeile je Satz ausgewiesen werden muss
-  readonly taxBreakdown = computed(() => {
-    const map = new Map<number, { net: number; tax: number }>();
-    for (const item of this.lineItems()) {
-      const net = this.itemNet(item);
-      const tax = this.itemTax(item);
-      const entry = map.get(item.taxRatePercentage) ?? { net: 0, tax: 0 };
-      entry.net += net;
-      entry.tax += tax;
-      map.set(item.taxRatePercentage, entry);
-    }
-    return [...map.entries()]
-      .map(([rate, values]) => ({ rate, ...values }))
-      .sort((a, b) => b.rate - a.rate);
-  });
-
-  readonly isValid = computed(
-    () => !!this.tenantId() && !!this.projectId() && this.lineItems().length > 0,
-  );
-
-  itemNet(item: DraftLineItem): number {
-    return item.unitPrice.amount * item.quantity;
-  }
-
-  itemTax(item: DraftLineItem): number {
-    return this.itemNet(item) * (item.taxRatePercentage / 100);
-  }
-
-  itemGross(item: DraftLineItem): number {
-    return this.itemNet(item) + this.itemTax(item);
-  }
-
-  onTenantChange(value: string): void {
-    this.tenantId.set(value);
-    this.projectId.set('');
-    this.lineItems.set([]);
-  }
-
-  onProjectChange(value: string): void {
-    this.projectId.set(value);
-    this.lineItems.set([]);
-  }
-
-  isMilestoneAdded(milestoneId: string): boolean {
-    return this.lineItems().some((i) => i.milestoneId === milestoneId);
-  }
-
-  toggleMilestone(milestone: MilestoneOption): void {
-    if (milestone.alreadyInvoiced) return;
-
-    if (this.isMilestoneAdded(milestone.id)) {
-      this.lineItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
-      return;
-    }
-
-    this.lineItems.update((list) => [
-      ...list,
-      {
-        key: crypto.randomUUID(),
-        source: 'MILESTONE',
-        milestoneId: milestone.id,
-        description: milestone.title,
-        quantity: 1,
-        unitCode: 'C62',
-        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
-        taxRatePercentage: 19,
-      },
-    ]);
-  }
-
-  addFreePosition(): void {
-    const description = this.freeDescription().trim();
-    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
-    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
-
-    if (!description || isNaN(amount) || amount <= 0) return;
-
-    this.lineItems.update((list) => [
-      ...list,
-      {
-        key: crypto.randomUUID(),
-        source: 'CUSTOM',
-        description,
-        quantity,
-        unitCode: 'C62',
-        unitPrice: { amount, currencyCode: 'EUR' },
-        taxRatePercentage: this.freeTaxRate(),
-      },
-    ]);
-
-    this.freeDescription.set('');
-    this.freeQuantity.set('1');
-    this.freeUnitPrice.set('');
-    this.freeTaxRate.set(19);
-  }
-
-  removeLineItem(key: string): void {
-    this.lineItems.update((list) => list.filter((i) => i.key !== key));
-  }
-
-  updateItemTaxRate(key: string, rate: number): void {
-    this.lineItems.update((list) =>
-      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
-    );
-  }
-
-  formatMoney(amount: number, currencyCode = 'EUR'): string {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
-      amount,
-    );
-  }
-
-  close(): void {
-    this.dialogRef.close();
-  }
-
-  async submit(): Promise<void> {
-    if (!this.isValid()) {
-      this.showWarning.set(true);
-      return;
-    }
-
-    this.submitting.set(true);
-
-    const request: CreateInvoiceRequest = {
-      tenantId: this.tenantId(),
-      projectId: this.projectId(),
-      buyerReference: this.buyerReference().trim() || undefined,
-      paymentTermsDays: parseInt(this.paymentTermsDays(), 10) || undefined,
-      lineItems: this.lineItems().map((i) => ({
-        source: i.source,
-        milestoneId: i.milestoneId,
-        description: i.description,
-        quantity: i.quantity,
-        unitCode: i.unitCode,
-        unitPrice: i.unitPrice,
-        taxRatePercentage: i.taxRatePercentage,
-      })),
-    };
-
-    try {
-      const invoice = await this.invoiceStore.create(request);
-      this.dialogRef.close(invoice);
-    } finally {
-      this.submitting.set(false);
-    }
-  }
-}
-</file>
-
 <file path="src/app/pages/invoices/invoices.scss">
 @use '../../../styles' as *;
 
@@ -4421,716 +4775,6 @@ export class MilestoneDialog {
 }
 </file>
 
-<file path="src/app/pages/project-details/project-details.html">
-@if (project(); as p) {
-  <div class="detail-hero">
-    <div class="detail-hero-pattern"></div>
-    <div class="detail-hero-content">
-      <button class="back-button" (click)="back()">
-        <span class="material-symbols-rounded">arrow_back</span>
-        <span>Alle Projekte</span>
-      </button>
-
-      <p class="hero-tenant">{{ tenantName() }}</p>
-      <h1 class="hero-title">{{ p.title }}</h1>
-
-      @if (p.tags.length > 0) {
-        <div class="hero-tags">
-          @for (tag of p.tags; track tag.value) {
-            <span
-              class="hero-tag"
-              [style.background-color]="tag.colorHex"
-              [style.color]="getContrastTextColor(tag.colorHex)"
-              >{{ tag.value }}</span
-            >
-          }
-        </div>
-      }
-    </div>
-  </div>
-
-  <div class="detail-body">
-    <div class="detail-main">
-      @if (p.description || p.fullDescription) {
-        <div class="info-card">
-          @if (p.description) {
-            <p class="project-intro">{{ p.description }}</p>
-          }
-          @if (p.fullDescription) {
-            <p class="project-full">{{ p.fullDescription }}</p>
-          }
-        </div>
-      }
-
-      @if (p.highlights.length > 0) {
-        <div class="info-card">
-          <p class="info-card-title">Highlights</p>
-          <ul class="highlight-list">
-            @for (highlight of p.highlights; track highlight) {
-              <li>
-                <span class="material-symbols-rounded">check_circle</span>
-                <span>{{ highlight }}</span>
-              </li>
-            }
-          </ul>
-        </div>
-      }
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Meilensteine</p>
-          <button
-            class="add-icon-button"
-            (click)="openAddMilestoneDialog()"
-            title="Meilenstein hinzufügen"
-          >
-            <span class="material-symbols-rounded">add</span>
-          </button>
-        </div>
-
-        @for (milestone of p.milestones; track milestone.id) {
-          <div class="milestone-row" [class.milestone-row--done]="milestone.status === 'DONE'">
-            <div class="milestone-status-icon">
-              <span class="material-symbols-rounded">
-                {{ milestone.status === 'DONE' ? 'check_circle' : 'radio_button_unchecked' }}
-              </span>
-            </div>
-            <div class="milestone-info">
-              <p class="milestone-title">{{ milestone.title }}</p>
-              <p class="milestone-meta">
-                {{ milestone.dueDate || 'Kein Datum' }} · {{ formatMoney(milestone.price) }}
-              </p>
-            </div>
-            <div class="milestone-actions">
-              <button
-                class="icon-button"
-                (click)="toggleMilestoneStatus(milestone)"
-                [title]="milestone.status === 'DONE' ? 'Als offen markieren' : 'Abschließen'"
-              >
-                <span class="material-symbols-rounded">
-                  {{ milestone.status === 'DONE' ? 'replay' : 'done' }}
-                </span>
-              </button>
-              <button
-                class="icon-button"
-                (click)="openEditMilestoneDialog(milestone)"
-                title="Bearbeiten"
-              >
-                <span class="material-symbols-rounded">edit</span>
-              </button>
-              <button
-                class="icon-button icon-button--danger"
-                (click)="deleteMilestone(milestone)"
-                title="Entfernen"
-              >
-                <span class="material-symbols-rounded">delete</span>
-              </button>
-            </div>
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Meilensteine angelegt.</p>
-        }
-      </div>
-    </div>
-
-    <aside class="detail-sidebar">
-      <button class="edit-project-button" (click)="openEditDialog()">
-        <span class="material-symbols-rounded">edit</span>
-        <span>Projekt bearbeiten</span>
-      </button>
-
-      <div class="sidebar-card">
-        <p class="sidebar-label">Status</p>
-        <select
-          class="status-select"
-          [disabled]="changingStatus()"
-          (change)="changeStatus($any($event.target).value)"
-        >
-          @for (option of statusOptions; track option.value) {
-            <option [value]="option.value" [selected]="option.value === p.status">
-              {{ option.label }}
-            </option>
-          }
-        </select>
-      </div>
-
-      <div class="sidebar-card">
-        <p class="sidebar-label">Website-Sichtbarkeit</p>
-        <button
-          class="website-toggle"
-          [class.website-toggle--active]="p.visibleOnWebsite"
-          [disabled]="togglingPublish()"
-          (click)="togglePublish()"
-        >
-          <span class="material-symbols-rounded">
-            {{ p.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
-          </span>
-          <span>{{
-            p.visibleOnWebsite
-              ? 'Sichtbar - klicken zum Verbergen'
-              : 'Nicht sichtbar - klicken zum Veröffentlichen'
-          }}</span>
-        </button>
-      </div>
-    </aside>
-  </div>
-} @else if (loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Projekt wird geladen...</p>
-  </div>
-}
-</file>
-
-<file path="src/app/pages/project-details/project-details.scss">
-@use '../../../styles' as *;
-
-.detail-hero {
-  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
-  padding: 4rem 3.2rem 5.6rem;
-  position: relative;
-  overflow: hidden;
-  margin: -3.2rem -3.2rem 0;
-}
-
-.detail-hero-pattern {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
-  background-size: 2.4rem 2.4rem;
-  mask-image: linear-gradient(180deg, black, transparent);
-}
-
-.detail-hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 100rem;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: none;
-  border-radius: 50rem;
-  padding: 0.8rem 1.6rem 0.8rem 1.2rem;
-  color: var(--text-light);
-  font-size: 1.3rem;
-  cursor: pointer;
-  margin-bottom: 2.4rem;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.hero-tenant {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--accent-cyan);
-  text-transform: uppercase;
-  letter-spacing: 0.04rem;
-  margin-bottom: 0.8rem;
-}
-
-.hero-title {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--text-light);
-  margin-bottom: 1.6rem;
-}
-
-.hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.hero-tag {
-  font-size: 1.2rem;
-  font-weight: 600;
-  padding: 0.4rem 1.2rem;
-  border-radius: 50rem;
-  border: 1px solid rgba(255, 255, 255, 0.15); // verhindert das "Verschmelzen" mit dem Hero-Hintergrund
-}
-
-.detail-body {
-  max-width: 100rem;
-  margin: -3.2rem auto 0;
-  display: grid;
-  grid-template-columns: 1fr 28rem;
-  gap: 2.4rem;
-  position: relative;
-  z-index: 1;
-  padding-bottom: 3.2rem;
-
-  @include respond(md) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.detail-main {
-  @include flex-col(2rem);
-}
-
-.project-intro {
-  font-size: 1.7rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  line-height: 1.5;
-  margin-bottom: 1.2rem;
-}
-
-.project-full {
-  font-size: 1.5rem;
-  color: var(--text-grey);
-  line-height: 1.7;
-}
-
-.info-card {
-  @include card-surface;
-  padding: 2.4rem;
-}
-
-.info-card-header {
-  @include flex-between;
-  margin-bottom: 1.6rem;
-}
-
-.info-card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 1.6rem;
-}
-
-.info-card-header .info-card-title {
-  margin-bottom: 0;
-}
-
-.add-icon-button {
-  width: 2.8rem;
-  height: 2.8rem;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--accent-cyan-light);
-  color: var(--accent-cyan-hover);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: var(--accent-cyan);
-    color: var(--text-light);
-  }
-}
-
-.highlight-list {
-  list-style: none;
-  @include flex-col(1rem);
-
-  li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: 1.4rem;
-    color: var(--text-dark);
-
-    .material-symbols-rounded {
-      color: var(--accent-cyan);
-      font-size: 1.8rem;
-    }
-  }
-}
-
-.milestone-row {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.2rem 0;
-  border-top: 1px solid var(--bg-light);
-
-  &:first-of-type {
-    border-top: none;
-  }
-
-  &--done {
-    opacity: 0.6;
-
-    .milestone-title {
-      text-decoration: line-through;
-    }
-  }
-}
-
-.milestone-status-icon {
-  .material-symbols-rounded {
-    font-size: 2.2rem;
-    color: var(--success);
-  }
-}
-
-.milestone-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.milestone-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.milestone-meta {
-  font-size: 1.2rem;
-  color: var(--text-grey);
-}
-
-.milestone-actions {
-  display: flex;
-  gap: 0.2rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.milestone-row:hover .milestone-actions {
-  opacity: 1;
-}
-
-.icon-button {
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  color: var(--text-grey);
-  cursor: pointer;
-  outline: none;
-  @include flex-center;
-
-  .material-symbols-rounded {
-    font-size: 1.8rem;
-  }
-
-  &:hover,
-  &:focus-visible {
-    background-color: var(--bg-light) !important;
-  }
-
-  &--danger {
-    &:hover,
-    &:focus-visible,
-    &:active {
-      background-color: var(--danger) !important;
-      color: var(--text-light) !important;
-    }
-  }
-}
-
-.empty-hint {
-  font-size: 1.3rem;
-  color: var(--text-grey);
-  padding: 1.2rem 0;
-}
-
-.detail-sidebar {
-  @include flex-col(1.6rem);
-}
-
-.sidebar-card {
-  @include card-surface;
-  padding: 2rem;
-}
-
-.sidebar-label {
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04rem;
-  color: var(--text-grey);
-  margin-bottom: 1.2rem;
-}
-
-.status-select {
-  width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  background-color: var(--bg-light);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-  }
-}
-
-.website-toggle {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  background-color: var(--bg-light);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 1.2rem;
-  font-size: 1.3rem;
-  color: var(--text-grey);
-  cursor: pointer;
-  text-align: left;
-
-  .material-symbols-rounded {
-    font-size: 2rem;
-    flex-shrink: 0;
-  }
-
-  &--active {
-    background-color: var(--accent-cyan-light);
-    border-color: var(--accent-cyan);
-    color: var(--accent-cyan-hover);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.state-panel {
-  @include flex-col(1.2rem);
-  align-items: center;
-  padding: 6.4rem 2rem;
-  color: var(--text-grey);
-
-  .material-symbols-rounded {
-    font-size: 3.6rem;
-    color: var(--accent-cyan);
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.edit-project-button {
-  @include button-base;
-  width: 100%;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-color);
-  color: var(--text-dark);
-  box-shadow: var(--shadow-sm);
-
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
-}
-</file>
-
-<file path="src/app/pages/project-details/project-details.ts">
-import { Component, computed, inject, input, signal } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { ProjectApi } from '../../core/projects/project-api';
-import { ProjectStore } from '../../core/projects/project-store';
-import { TenantStore } from '../../core/tenants/tenant-store';
-import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
-import { MilestoneDialog } from './milestone-dialog/milestone-dialog';
-import { EditProjectDialog } from './edit-project-dialog/edit-project-dialog';
-import { Toast } from '../../core/toast/toast';
-import { Project, ProjectStatus, Milestone } from '../../model/project';
-import { getContrastTextColor } from '../../util/color-contrast';
-
-@Component({
-  selector: 'app-project-detail',
-  imports: [MatDialogModule],
-  templateUrl: './project-details.html',
-  styleUrl: './project-details.scss',
-})
-export class ProjectDetail {
-  readonly id = input.required<string>();
-
-  private readonly router = inject(Router);
-  private readonly dialog = inject(MatDialog);
-  private readonly projectApi = inject(ProjectApi);
-  private readonly projectStore = inject(ProjectStore);
-  private readonly tenantStore = inject(TenantStore);
-  private readonly toast = inject(Toast);
-  protected readonly getContrastTextColor = getContrastTextColor;
-
-  private readonly projectResource = httpResource<Project>(
-    () => `${environment.apiBaseUrl}/projects/${this.id()}`,
-  );
-
-  readonly project = computed(() => this.projectResource.value());
-  readonly loading = computed(() => this.projectResource.isLoading());
-
-  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'LEAD', label: 'Interessent' },
-    { value: 'IN_PROGRESS', label: 'In Arbeit' },
-    { value: 'ON_HOLD', label: 'Pausiert' },
-    { value: 'COMPLETED', label: 'Abgeschlossen' },
-    { value: 'CANCELLED', label: 'Abgebrochen' },
-  ];
-
-  readonly tenantName = computed(() => {
-    const p = this.project();
-    if (!p) return '';
-    return this.tenantStore.tenants().find((t) => t.id === p.tenantId)?.companyName ?? 'Unbekannt';
-  });
-
-  readonly togglingPublish = signal(false);
-  readonly changingStatus = signal(false);
-
-  // Zieht die Änderung sowohl in die eigene (Detail-)Ressource als auch
-  // in den geteilten ProjectStore, den Kanban/Liste nutzen - sonst
-  // sieht man Änderungen erst nach hartem Reload wieder in der Übersicht
-  private refreshEverywhere(): void {
-    this.projectResource.reload();
-    this.projectStore.reload();
-  }
-
-  back(): void {
-    this.router.navigate(['/projects']);
-  }
-
-  async changeStatus(status: string): Promise<void> {
-    this.changingStatus.set(true);
-    try {
-      await firstValueFrom(this.projectApi.changeStatus(this.id(), status));
-      this.refreshEverywhere();
-      this.toast.success('Status aktualisiert');
-    } catch {
-      this.toast.error('Status konnte nicht aktualisiert werden');
-    } finally {
-      this.changingStatus.set(false);
-    }
-  }
-
-  async togglePublish(): Promise<void> {
-    const p = this.project();
-    if (!p) return;
-
-    this.togglingPublish.set(true);
-    try {
-      const call = p.visibleOnWebsite
-        ? this.projectApi.unpublish(this.id())
-        : this.projectApi.publish(this.id());
-      await firstValueFrom(call);
-      this.refreshEverywhere();
-      this.toast.success(
-        p.visibleOnWebsite ? 'Projekt von Website entfernt' : 'Projekt auf Website veröffentlicht',
-      );
-    } catch {
-      this.toast.error('Aktion fehlgeschlagen');
-    } finally {
-      this.togglingPublish.set(false);
-    }
-  }
-
-  openEditDialog(): void {
-    const p = this.project();
-    if (!p) return;
-
-    const dialogRef = this.dialog.open(EditProjectDialog, {
-      width: '64rem',
-      panelClass: 'app-dialog-panel',
-      data: p,
-    });
-
-    dialogRef.afterClosed().subscribe((updated) => {
-      if (updated) {
-        this.refreshEverywhere();
-        this.toast.success('Projekt aktualisiert');
-      }
-    });
-  }
-
-  openAddMilestoneDialog(): void {
-    const dialogRef = this.dialog.open(MilestoneDialog, {
-      width: '52rem',
-      panelClass: 'app-dialog-panel',
-      data: { projectId: this.id() },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshEverywhere();
-        this.toast.success('Meilenstein hinzugefügt');
-      }
-    });
-  }
-
-  openEditMilestoneDialog(milestone: Milestone): void {
-    const dialogRef = this.dialog.open(MilestoneDialog, {
-      width: '52rem',
-      panelClass: 'app-dialog-panel',
-      data: { projectId: this.id(), milestone },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshEverywhere();
-        this.toast.success('Meilenstein aktualisiert');
-      }
-    });
-  }
-
-  async toggleMilestoneStatus(milestone: Milestone): Promise<void> {
-    const newStatus = milestone.status === 'DONE' ? 'PLANNED' : 'DONE';
-    await firstValueFrom(this.projectApi.changeMilestoneStatus(this.id(), milestone.id, newStatus));
-    this.refreshEverywhere();
-    this.toast.success(
-      newStatus === 'DONE' ? 'Meilenstein abgeschlossen' : 'Meilenstein wieder geöffnet',
-    );
-  }
-
-  async deleteMilestone(milestone: Milestone): Promise<void> {
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '44rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Meilenstein entfernen?',
-        message: `"${milestone.title}" wird unwiderruflich entfernt.`,
-        confirmLabel: 'Entfernen',
-        danger: true,
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (confirmed) {
-      await firstValueFrom(this.projectApi.removeMilestone(this.id(), milestone.id));
-      this.refreshEverywhere();
-      this.toast.success('Meilenstein entfernt');
-    }
-  }
-
-  formatMoney(money?: { amount: number; currencyCode: string }): string {
-    if (!money) return '–';
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: money.currencyCode,
-    }).format(money.amount);
-  }
-}
-</file>
-
 <file path="src/app/pages/session-expired/session-expired.html">
 <div class="session-page">
   <div class="session-blob session-blob--cyan"></div>
@@ -5268,6 +4912,292 @@ export class SessionExpired {
 
   backToStart(): void {
     this.router.navigate(['/']);
+  }
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.html">
+<div class="dialog-header">
+  <h2>Referenz anfragen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+@if (!generatedLink()) {
+  <div class="dialog-body">
+    <p class="dialog-intro">
+      Für <strong>{{ data.partner.firstName }} {{ data.partner.lastName }}</strong> wird ein
+      einmaliger Link erzeugt, über den eine Referenz abgegeben werden kann.
+    </p>
+
+    <div class="field">
+      <label>Projekt (optional)</label>
+      <select [value]="projectId()" (change)="projectId.set($any($event.target).value)">
+        <option value="">Kein bestimmtes Projekt</option>
+        @for (project of data.projects; track project.id) {
+          <option [value]="project.id">{{ project.title }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Gültig für (Tage)</label>
+      <input
+        type="number"
+        min="1"
+        [value]="expiresInDays()"
+        (input)="expiresInDays.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Abbrechen</button>
+    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+      {{ submitting() ? 'Wird erzeugt...' : 'Link erzeugen' }}
+    </button>
+  </div>
+} @else {
+  <div class="dialog-body">
+    <p class="dialog-intro">
+      Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
+      {{ data.partner.firstName }} senden.
+    </p>
+
+    <div class="link-box">
+      <span class="link-text">{{ generatedLink() }}</span>
+      <button class="copy-button" (click)="copyLink()">
+        <span class="material-symbols-rounded">{{ copied() ? 'check' : 'content_copy' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Fertig</button>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  @include flex-col(1.6rem);
+}
+
+.dialog-intro {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+
+  strong {
+    color: var(--text-light);
+  }
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  input,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+  }
+
+  select {
+    cursor: pointer;
+
+    option {
+      background-color: var(--main-navy);
+      color: var(--text-light);
+    }
+  }
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem 1.4rem;
+}
+
+.link-text {
+  flex: 1;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  word-break: break-all;
+}
+
+.copy-button {
+  flex-shrink: 0;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 12rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.ts">
+import { Component, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { TestimonialApi } from '../../../core/testimonials/testimonial-api';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+import { Partner } from '../../../model/tenant';
+import { Project } from '../../../model/project';
+
+export interface RequestTestimonialDialogData {
+  partner: Partner;
+  projects: Project[]; // Projekte dieses Mandanten, zur optionalen Auswahl
+}
+
+@Component({
+  selector: 'app-request-testimonial-dialog',
+  imports: [],
+  templateUrl: './request-testimonial-dialog.html',
+  styleUrl: './request-testimonial-dialog.scss',
+})
+export class RequestTestimonialDialog {
+  private readonly dialogRef = inject(MatDialogRef<RequestTestimonialDialog>);
+  private readonly testimonialApi = inject(TestimonialApi);
+  private readonly toast = inject(Toast);
+  protected readonly data = inject<RequestTestimonialDialogData>(MAT_DIALOG_DATA);
+
+  readonly projectId = signal('');
+  readonly expiresInDays = signal('30');
+  readonly submitting = signal(false);
+
+  // Sobald gesetzt, zeigt der Dialog den fertigen Link statt des Formulars -
+  // der Token kommt nur EINMAL vom Backend zurück (nur der Hash landet in
+  // der DB), muss also sofort sichtbar gemacht werden
+  readonly generatedLink = signal<string | null>(null);
+  readonly copied = signal(false);
+
+  close(): void {
+    // true = es wurde tatsächlich eine Einladung erzeugt (für Toast im
+    // Aufrufer), egal ob der Link schon kopiert wurde oder nicht
+    this.dialogRef.close(!!this.generatedLink());
+  }
+
+  async submit(): Promise<void> {
+    this.submitting.set(true);
+    try {
+      const response = await firstValueFrom(
+        this.testimonialApi.createInvitation({
+          partnerId: this.data.partner.id,
+          projectId: this.projectId() || undefined,
+          expiresInDays: parseInt(this.expiresInDays(), 10) || undefined,
+        }),
+      );
+      this.generatedLink.set(`${environment.websiteBaseUrl}/feedback?token=${response.rawToken}`);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Einladung konnte nicht erzeugt werden'));
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
+  async copyLink(): Promise<void> {
+    const link = this.generatedLink();
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    this.copied.set(true);
+    setTimeout(() => this.copied.set(false), 2000);
   }
 }
 </file>
@@ -6959,84 +6889,578 @@ export class PartnerDialog {
 }
 </file>
 
-<file path="src/app/pages/testimonials/testimonials.html">
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Referenzen</h1>
-    <p class="page-subtitle">{{ testimonialStore.testimonials().length }} Referenzen insgesamt</p>
-  </div>
+<file path="src/app/pages/website/add-project-dialog/add-project-dialog.html">
+<div class="dialog-header">
+  <h2>Projekt zur Website hinzufügen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
 </div>
 
-<div class="tabs">
-  @for (tab of tabs; track tab.status) {
-    <button
-      class="tab"
-      [class.tab--active]="activeTab() === tab.status"
-      (click)="activeTab.set(tab.status)"
-    >
-      {{ tab.label }}
-      @if (tab.status === 'PENDING_REVIEW' && pendingCount() > 0) {
-        <span class="tab-badge">{{ pendingCount() }}</span>
-      }
-    </button>
+<div class="dialog-body">
+  @if (slotsFull()) {
+    <p class="limit-hint">
+      Alle {{ 6 }} Plätze sind belegt - entferne erst ein Projekt, um Platz zu machen.
+    </p>
+  }
+
+  @for (project of eligibleProjects(); track project.id) {
+    <div class="pick-row">
+      <div class="pick-main">
+        <p class="pick-title">{{ project.title }}</p>
+        <p class="pick-meta">{{ tenantName(project.tenantId) }}</p>
+      </div>
+      <button
+        class="pick-button"
+        [disabled]="slotsFull() || processingId() === project.id"
+        (click)="add(project.id)"
+      >
+        <span class="material-symbols-rounded">add</span>
+        <span>Hinzufügen</span>
+      </button>
+    </div>
+  } @empty {
+    <p class="empty-hint">Alle Projekte sind bereits auf der Website oder es gibt noch keine.</p>
   }
 </div>
 
-@if (testimonialStore.loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Referenzen werden geladen...</p>
-  </div>
-} @else {
-  <div class="testimonials-grid">
-    @for (testimonial of filteredTestimonials(); track testimonial.id) {
-      <div class="testimonial-card">
-        <div class="testimonial-header">
-          <app-avatar [name]="testimonial.partnerName"></app-avatar>
-          <div class="testimonial-stars">
-            @for (i of ratingArray; track i) {
-              <span
-                class="material-symbols-rounded star"
-                [class.star--filled]="i <= testimonial.rating"
-                >star</span
-              >
-            }
-          </div>
-        </div>
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Fertig</button>
+</div>
+</file>
 
-        <p class="testimonial-description">"{{ testimonial.description }}"</p>
+<file path="src/app/pages/website/add-project-dialog/add-project-dialog.scss">
+@use '../../../../styles' as *;
 
-        <div class="testimonial-footer">
-          <p class="testimonial-name">{{ testimonial.partnerName }}</p>
-          <p class="testimonial-role">
-            {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
-          </p>
-        </div>
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
 
-        @if (testimonial.status === 'PENDING_REVIEW') {
-          <div class="testimonial-actions">
-            <button class="action-button action-button--approve" (click)="approve(testimonial.id)">
-              <span class="material-symbols-rounded">check</span>
-              <span>Freigeben</span>
-            </button>
-            <button class="action-button action-button--reject" (click)="reject(testimonial.id)">
-              <span class="material-symbols-rounded">close</span>
-              <span>Ablehnen</span>
-            </button>
-          </div>
-        }
-      </div>
-    } @empty {
-      <div class="empty-state">
-        <span class="material-symbols-rounded">rate_review</span>
-        <p>Keine Referenzen in dieser Kategorie</p>
-      </div>
-    }
-  </div>
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 48rem;
+  overflow-y: auto;
+  @include flex-col(0);
+}
+
+.limit-hint {
+  font-size: 1.3rem;
+  color: var(--warning);
+  background-color: rgba(245, 166, 35, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.pick-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.pick-meta {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.pick-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 1.2rem 0;
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+  width: 100%;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
 }
 </file>
 
-<file path="src/app/pages/testimonials/testimonials.scss">
+<file path="src/app/pages/website/add-project-dialog/add-project-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { ProjectStore } from '../../../core/projects/project-store';
+import { ProjectApi } from '../../../core/projects/project-api';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+
+const MAX_ON_WEBSITE = 6;
+
+@Component({
+  selector: 'app-add-project-dialog',
+  imports: [],
+  templateUrl: './add-project-dialog.html',
+  styleUrl: './add-project-dialog.scss',
+})
+export class AddProjectDialog {
+  private readonly dialogRef = inject(MatDialogRef<AddProjectDialog>);
+  protected readonly projectStore = inject(ProjectStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectApi = inject(ProjectApi);
+  private readonly toast = inject(Toast);
+
+  readonly processingId = signal<string | null>(null);
+
+  private readonly tenantNameById = computed(() => {
+    const map = new Map<string, string>();
+    this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
+    return map;
+  });
+
+  tenantName(tenantId: string): string {
+    return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
+  }
+
+  readonly eligibleProjects = computed(() =>
+    this.projectStore.projects().filter((p) => !p.visibleOnWebsite),
+  );
+
+  readonly slotsFull = computed(
+    () => this.projectStore.projects().filter((p) => p.visibleOnWebsite).length >= MAX_ON_WEBSITE,
+  );
+
+  async add(projectId: string): Promise<void> {
+    this.processingId.set(projectId);
+    try {
+      await firstValueFrom(this.projectApi.publish(projectId));
+      this.projectStore.reload();
+      this.toast.success('Projekt auf der Website veröffentlicht');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+}
+</file>
+
+<file path="src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.html">
+<div class="dialog-header">
+  <h2>Referenz zur Website hinzufügen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (slotsFull()) {
+    <p class="limit-hint">
+      Alle {{ 6 }} Plätze sind belegt - entferne erst eine Referenz, um Platz zu machen.
+    </p>
+  }
+
+  @for (testimonial of eligibleTestimonials(); track testimonial.id) {
+    <div class="pick-row">
+      <div class="pick-main">
+        <p class="pick-title">{{ testimonial.partnerName }}</p>
+        <p class="pick-meta">{{ testimonial.partnerRole }} · {{ testimonial.companyName }}</p>
+      </div>
+      <button
+        class="pick-button"
+        [disabled]="slotsFull() || processingId() === testimonial.id"
+        (click)="add(testimonial.id)"
+      >
+        <span class="material-symbols-rounded">add</span>
+        <span>Hinzufügen</span>
+      </button>
+    </div>
+  } @empty {
+    <p class="empty-hint">Keine freigegebenen, noch nicht veröffentlichten Referenzen vorhanden.</p>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Fertig</button>
+</div>
+</file>
+
+<file path="src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 48rem;
+  overflow-y: auto;
+  @include flex-col(0);
+}
+
+.limit-hint {
+  font-size: 1.3rem;
+  color: var(--warning);
+  background-color: rgba(245, 166, 35, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.pick-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.pick-meta {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.pick-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 1.2rem 0;
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+  width: 100%;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+</file>
+
+<file path="src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { TestimonialStore } from '../../../core/testimonials/testimonial-store';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+
+const MAX_ON_WEBSITE = 6;
+
+@Component({
+  selector: 'app-add-testimonial-dialog',
+  imports: [],
+  templateUrl: './add-testimonial-dialog.html',
+  styleUrl: './add-testimonial-dialog.scss',
+})
+export class AddTestimonialDialog {
+  private readonly dialogRef = inject(MatDialogRef<AddTestimonialDialog>);
+  protected readonly testimonialStore = inject(TestimonialStore);
+  private readonly toast = inject(Toast);
+
+  readonly processingId = signal<string | null>(null);
+
+  // Nur freigegebene, noch nicht veröffentlichte Referenzen sind wählbar -
+  // Backend würde alles andere ohnehin ablehnen (siehe TestimonialService.publish)
+  readonly eligibleTestimonials = computed(() =>
+    this.testimonialStore
+      .testimonials()
+      .filter((t) => t.status === 'APPROVED' && !t.visibleOnWebsite),
+  );
+
+  readonly slotsFull = computed(
+    () =>
+      this.testimonialStore.testimonials().filter((t) => t.visibleOnWebsite).length >=
+      MAX_ON_WEBSITE,
+  );
+
+  async add(testimonialId: string): Promise<void> {
+    this.processingId.set(testimonialId);
+    try {
+      await this.testimonialStore.publish(testimonialId);
+      this.toast.success('Referenz auf der Website veröffentlicht');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+}
+</file>
+
+<file path="src/app/pages/website/website.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Website</h1>
+    <p class="page-subtitle">
+      Was aktuell live auf der öffentlichen Seite zu sehen ist - jeweils maximal
+      {{ maxOnWebsite }} Plätze
+    </p>
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <p class="section-title">Projekte</p>
+    <p class="section-count">{{ publishedProjects().length }}/{{ maxOnWebsite }} Plätze belegt</p>
+  </div>
+
+  <div class="slots-grid">
+    @for (project of projectSlots(); track $index) {
+      @if (project) {
+        <div class="project-card">
+          <button
+            class="card-remove"
+            [disabled]="processingProjectId() === project.id"
+            title="Von Website entfernen"
+            (click)="unpublishProject(project)"
+          >
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+          <div class="project-image-placeholder">
+            <span class="material-symbols-rounded">work</span>
+          </div>
+
+          <div class="project-card-body">
+            <p class="project-title">{{ project.title }}</p>
+            <p class="project-meta">{{ tenantName(project.tenantId) }}</p>
+
+            @if (project.tags.length > 0) {
+              <div class="card-tags">
+                @for (tag of project.tags; track tag.value) {
+                  <span
+                    class="card-tag"
+                    [style.background-color]="tag.colorHex"
+                    [style.color]="getContrastTextColor(tag.colorHex)"
+                    >{{ tag.value }}</span
+                  >
+                }
+              </div>
+            }
+
+            <div class="card-footer">
+              <span class="material-symbols-rounded">event_upcoming</span>
+              <span class="card-date">{{ formatMonthYear(project.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button class="slot-card--empty" (click)="openAddProjectDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Hinzufügen</span>
+        </button>
+      }
+    }
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <p class="section-title">Referenzen</p>
+    <p class="section-count">
+      {{ publishedTestimonials().length }}/{{ maxOnWebsite }} Plätze belegt
+    </p>
+  </div>
+
+  <div class="slots-grid">
+    @for (testimonial of testimonialSlots(); track $index) {
+      @if (testimonial) {
+        <div class="testimonial-card">
+          <button
+            class="card-remove"
+            [disabled]="processingTestimonialId() === testimonial.id"
+            title="Von Website entfernen"
+            (click)="unpublishTestimonial(testimonial)"
+          >
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+          <div class="testimonial-card-header">
+            <app-avatar [name]="testimonial.partnerName"></app-avatar>
+            <div class="testimonial-stars">
+              @for (i of ratingArray; track i) {
+                <span
+                  class="material-symbols-rounded star"
+                  [class.star--filled]="i <= testimonial.rating"
+                  >star</span
+                >
+              }
+            </div>
+          </div>
+
+          <p class="testimonial-quote">"{{ testimonial.description }}"</p>
+
+          <div class="testimonial-card-footer">
+            <p class="testimonial-name">{{ testimonial.partnerName }}</p>
+            <p class="testimonial-role">
+              {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
+            </p>
+            <div class="card-footer">
+              <span class="material-symbols-rounded">event_upcoming</span>
+              <span class="card-date">{{ formatMonthYear(testimonial.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button class="slot-card--empty" (click)="openAddTestimonialDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Hinzufügen</span>
+        </button>
+      }
+    }
+  </div>
+</div>
+</file>
+
+<file path="src/app/pages/website/website.scss">
 @use '../../../styles' as *;
 
 .page-header {
@@ -7055,63 +7479,193 @@ export class PartnerDialog {
   margin-top: 0.4rem;
 }
 
-.tabs {
-  display: flex;
-  gap: 0.4rem;
-  margin-bottom: 2.4rem;
-  border-bottom: 1px solid var(--border-color);
+.section-card {
+  @include card-surface;
+  padding: 2.4rem;
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
-.tab {
+.section-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.section-count {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+}
+
+.slots-grid {
+  display: grid;
+  // auto-fit statt fixer Spaltenzahl - erzeugt auf breiten Screens von
+  // selbst mehr, schmalere Spalten statt 3 riesige zu strecken
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  gap: 1.6rem;
+}
+
+// =====================
+// EMPTY SLOT
+// =====================
+
+.slot-card--empty {
+  min-height: 22rem;
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--border-color);
+  background-color: transparent;
+  @include flex-col(0.6rem);
+  align-items: center;
+  justify-content: center;
+  color: var(--text-grey);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-symbols-rounded {
+    font-size: 2.4rem;
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    border-color: var(--accent-cyan);
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+}
+
+// =====================
+// GEMEINSAM: Remove-Button, Fußzeile mit Datum
+// =====================
+
+.card-remove {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--text-grey);
+  cursor: pointer;
+  z-index: 1;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.7rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--danger);
+    color: var(--text-light);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.card-footer {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 1rem 0.4rem;
-  margin-right: 2rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-grey);
-  cursor: pointer;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-light);
 
-  &--active {
-    color: var(--main-navy);
-    border-bottom-color: var(--accent-cyan);
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+    color: var(--text-grey);
   }
 }
 
-.tab-badge {
-  background-color: var(--accent-pink);
-  color: var(--text-light);
+.card-date {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-grey);
+}
+
+// =====================
+// PROJEKT-KARTE (nachgebaut nach helix-gpo.de)
+// =====================
+
+.project-card {
+  position: relative;
+  @include card-surface;
+  overflow: hidden;
+  @include flex-col(0);
+}
+
+.project-image-placeholder {
+  // aspect-ratio statt fixer Höhe - bleibt proportional zur Kartenbreite,
+  // egal ob 3 oder 6 Spalten gerade Platz haben
+  aspect-ratio: 2 / 1;
+  background-color: var(--main-navy);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.2px, transparent 1.2px);
+  background-size: 1.6rem 1.6rem;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 3.2rem;
+    color: var(--text-light);
+    opacity: 0.9;
+  }
+}
+
+.project-card-body {
+  padding: 1.6rem;
+}
+
+.project-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.3rem;
+}
+
+.project-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+  margin-bottom: 1rem;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-tag {
   font-size: 1.1rem;
   font-weight: 700;
-  padding: 0.1rem 0.7rem;
+  padding: 0.3rem 0.9rem;
   border-radius: 50rem;
 }
 
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-
-  @include respond(lg) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @include respond(sm) {
-    grid-template-columns: 1fr;
-  }
-}
+// =====================
+// REFERENZ-KARTE (nachgebaut nach helix-gpo.de)
+// =====================
 
 .testimonial-card {
+  position: relative;
   @include card-surface;
-  padding: 2rem;
-  @include flex-col(1.4rem);
+  padding: 1.8rem;
 }
 
-.testimonial-header {
+.testimonial-card-header {
   @include flex-between;
+  margin-bottom: 1.4rem;
+  padding-right: 2rem; // Platz für den Remove-Button oben rechts
 }
 
 .testimonial-stars {
@@ -7120,7 +7674,7 @@ export class PartnerDialog {
 }
 
 .star {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: var(--border-color);
 
   &--filled {
@@ -7128,17 +7682,18 @@ export class PartnerDialog {
   }
 }
 
-.testimonial-description {
-  font-size: 1.4rem;
+.testimonial-quote {
+  font-size: 1.3rem;
   color: var(--text-dark);
   font-style: italic;
   line-height: 1.6;
-  flex: 1;
-}
+  margin-bottom: 1rem;
 
-.testimonial-footer {
-  padding-top: 1rem;
-  border-top: 1px solid var(--bg-light);
+  // Lange Zitate abschneiden, damit alle Karten gleich hoch bleiben
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .testimonial-name {
@@ -7151,115 +7706,122 @@ export class PartnerDialog {
   font-size: 1.2rem;
   color: var(--text-grey);
 }
-
-.testimonial-actions {
-  display: flex;
-  gap: 0.8rem;
-}
-
-.action-button {
-  flex: 1;
-  @include button-base;
-  font-size: 1.3rem;
-  padding: 0.8rem 1.2rem;
-
-  &--approve {
-    background-color: var(--success-light);
-    color: var(--success);
-
-    &:hover {
-      background-color: var(--success);
-      color: var(--text-light);
-    }
-  }
-
-  &--reject {
-    background-color: var(--danger-light);
-    color: var(--danger);
-
-    &:hover {
-      background-color: var(--danger);
-      color: var(--text-light);
-    }
-  }
-}
-
-.empty-state {
-  grid-column: 1 / -1;
-  @include flex-col(0.8rem);
-  align-items: center;
-  padding: 4.8rem 2rem;
-  color: var(--text-grey);
-
-  .material-symbols-rounded {
-    font-size: 4rem;
-  }
-}
-
-.state-panel {
-  @include flex-col(1.2rem);
-  align-items: center;
-  padding: 6.4rem 2rem;
-  color: var(--text-grey);
-
-  .material-symbols-rounded {
-    font-size: 3.6rem;
-    color: var(--accent-cyan);
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 </file>
 
-<file path="src/app/pages/testimonials/testimonials.ts">
+<file path="src/app/pages/website/website.ts">
 import { Component, computed, inject, signal } from '@angular/core';
-import { Avatar } from '../../util/avatar/avatar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { ProjectStore } from '../../core/projects/project-store';
+import { ProjectApi } from '../../core/projects/project-api';
+import { TenantStore } from '../../core/tenants/tenant-store';
 import { TestimonialStore } from '../../core/testimonials/testimonial-store';
-import { TestimonialStatus } from '../../model/testimonial';
+import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
+import { getContrastTextColor } from '../../util/color-contrast';
+import { AddProjectDialog } from './add-project-dialog/add-project-dialog';
+import { AddTestimonialDialog } from './add-testimonial-dialog/add-testimonial-dialog';
+import { Project } from '../../model/project';
+import { Testimonial } from '../../model/testimonial';
+import { Avatar } from '../../util/avatar/avatar';
+
+const MAX_ON_WEBSITE = 6;
 
 @Component({
-  selector: 'app-testimonials',
-  imports: [Avatar],
-  templateUrl: './testimonials.html',
-  styleUrl: './testimonials.scss',
+  selector: 'app-website',
+  imports: [MatDialogModule, Avatar],
+  templateUrl: './website.html',
+  styleUrl: './website.scss',
 })
-export class Testimonials {
+export class Website {
+  protected readonly projectStore = inject(ProjectStore);
   protected readonly testimonialStore = inject(TestimonialStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectApi = inject(ProjectApi);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
 
-  readonly activeTab = signal<TestimonialStatus>('PENDING_REVIEW');
+  protected readonly getContrastTextColor = getContrastTextColor;
   readonly ratingArray = [1, 2, 3, 4, 5];
+  readonly maxOnWebsite = MAX_ON_WEBSITE;
 
-  readonly tabs: { status: TestimonialStatus; label: string }[] = [
-    { status: 'PENDING_REVIEW', label: 'Zur Prüfung' },
-    { status: 'APPROVED', label: 'Freigegeben' },
-    { status: 'REJECTED', label: 'Abgelehnt' },
-  ];
+  readonly processingProjectId = signal<string | null>(null);
+  readonly processingTestimonialId = signal<string | null>(null);
 
-  readonly filteredTestimonials = computed(() =>
-    this.testimonialStore.testimonials().filter((t) => t.status === this.activeTab()),
-  );
+  private readonly tenantNameById = computed(() => {
+    const map = new Map<string, string>();
+    this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
+    return map;
+  });
 
-  readonly pendingCount = computed(
-    () => this.testimonialStore.testimonials().filter((t) => t.status === 'PENDING_REVIEW').length,
-  );
-
-  async approve(id: string): Promise<void> {
-    await this.testimonialStore.approve(id);
+  tenantName(tenantId: string): string {
+    return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
   }
 
-  async reject(id: string): Promise<void> {
-    await this.testimonialStore.reject(id);
+  formatMonthYear(dateString: string): string {
+    return new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(
+      new Date(dateString),
+    );
+  }
+
+  readonly publishedProjects = computed(() =>
+    [...this.projectStore.projects()]
+      .filter((p) => p.visibleOnWebsite)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+  );
+
+  readonly publishedTestimonials = computed(() =>
+    [...this.testimonialStore.testimonials()]
+      .filter((t) => t.visibleOnWebsite)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+  );
+
+  readonly projectSlots = computed(() => {
+    const published = this.publishedProjects();
+    return Array.from({ length: MAX_ON_WEBSITE }, (_, i) => published[i] ?? null);
+  });
+
+  readonly testimonialSlots = computed(() => {
+    const published = this.publishedTestimonials();
+    return Array.from({ length: MAX_ON_WEBSITE }, (_, i) => published[i] ?? null);
+  });
+
+  readonly projectSlotsFull = computed(() => this.publishedProjects().length >= MAX_ON_WEBSITE);
+  readonly testimonialSlotsFull = computed(
+    () => this.publishedTestimonials().length >= MAX_ON_WEBSITE,
+  );
+
+  openAddProjectDialog(): void {
+    this.dialog.open(AddProjectDialog, { width: '56rem', panelClass: 'app-dialog-panel' });
+  }
+
+  openAddTestimonialDialog(): void {
+    this.dialog.open(AddTestimonialDialog, { width: '56rem', panelClass: 'app-dialog-panel' });
+  }
+
+  async unpublishProject(project: Project): Promise<void> {
+    this.processingProjectId.set(project.id);
+    try {
+      await firstValueFrom(this.projectApi.unpublish(project.id));
+      this.projectStore.reload();
+      this.toast.success(`${project.title} von der Website entfernt`);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+    } finally {
+      this.processingProjectId.set(null);
+    }
+  }
+
+  async unpublishTestimonial(testimonial: Testimonial): Promise<void> {
+    this.processingTestimonialId.set(testimonial.id);
+    try {
+      await this.testimonialStore.unpublish(testimonial.id);
+      this.toast.success(`Referenz von ${testimonial.partnerName} von der Website entfernt`);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+    } finally {
+      this.processingTestimonialId.set(null);
+    }
   }
 }
 </file>
@@ -7711,21 +8273,6 @@ export class ConfirmDialog {
 }
 </file>
 
-<file path="src/environments/environment.ts">
-export const environment = {
-  production: false,
-  apiBaseUrl: 'http://localhost:8081/api/crm',
-  auth: {
-    issuer: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_mWfiv7VVv',
-    clientId: '3k9vr6j2nv6po6djjvp42bg97m',
-    redirectUri: `${window.location.origin}/callback`,
-    postLogoutRedirectUri: window.location.origin,
-    scope: 'openid email profile',
-    cognitoDomain: 'https://us-east-1mwfiv7vvv.auth.us-east-1.amazoncognito.com',
-  },
-};
-</file>
-
 <file path="src/main.ts">
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
@@ -7945,66 +8492,6 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'de' },
   ],
 };
-</file>
-
-<file path="src/app/app.html">
-@if (isPublicPage()) {
-  <router-outlet></router-outlet>
-} @else {
-  <div class="admin-layout">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="sidebar-logo" />
-        <span class="sidebar-title">CRM</span>
-      </div>
-
-      <nav class="sidebar-nav">
-        <a class="nav-item" routerLink="/dashboard">
-          <span class="material-symbols-rounded">dashboard</span>
-          <span>Dashboard</span>
-          <span class="soon-badge">bald</span>
-        </a>
-        <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
-          <span class="material-symbols-rounded">apartment</span>
-          <span>Mandanten</span>
-        </a>
-        <a class="nav-item" routerLink="/projects" routerLinkActive="active">
-          <span class="material-symbols-rounded">work</span>
-          <span>Projekte</span>
-        </a>
-        <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>Rechnungen</span>
-        </a>
-        <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
-          <span class="material-symbols-rounded">rate_review</span>
-          <span>Referenzen</span>
-        </a>
-      </nav>
-    </aside>
-
-    <div class="main-area">
-      <header class="topbar">
-        <div class="topbar-search">
-          <span class="material-symbols-rounded">search</span>
-          <input type="text" placeholder="Suchen..." />
-        </div>
-
-        <div class="topbar-user">
-          <app-avatar [name]="auth.userName() ?? '?'" [size]="'3.6rem'"></app-avatar>
-          <span class="user-name">{{ auth.userName() ?? 'Wird geladen...' }}</span>
-          <button class="logout-button" (click)="auth.logout()">
-            <span class="material-symbols-rounded">logout</span>
-          </button>
-        </div>
-      </header>
-
-      <main class="content">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
-  </div>
-}
 </file>
 
 <file path="src/app/app.scss">
@@ -8235,6 +8722,52 @@ export class InvoiceStore {
 }
 </file>
 
+<file path="src/app/core/testimonials/testimonial-store.ts">
+import { Injectable, computed, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { Testimonial } from '../../model/testimonial';
+import { TestimonialApi } from './testimonial-api';
+
+@Injectable({ providedIn: 'root' })
+export class TestimonialStore {
+  private readonly testimonialApi = inject(TestimonialApi);
+
+  private readonly testimonialsResource = httpResource<Testimonial[]>(
+    () => `${environment.apiBaseUrl}/testimonials`,
+    { defaultValue: [] },
+  );
+
+  readonly testimonials = computed(() => this.testimonialsResource.value() ?? []);
+  readonly loading = computed(() => this.testimonialsResource.isLoading());
+
+  reload(): void {
+    this.testimonialsResource.reload();
+  }
+
+  async approve(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.approve(id));
+    this.reload();
+  }
+
+  async reject(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.reject(id));
+    this.reload();
+  }
+
+  async publish(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.publish(id));
+    this.reload();
+  }
+
+  async unpublish(id: string): Promise<void> {
+    await firstValueFrom(this.testimonialApi.unpublish(id));
+    this.reload();
+  }
+}
+</file>
+
 <file path="src/app/model/project.ts">
 export type ProjectStatus = 'LEAD' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 export type MilestoneStatus = 'PLANNED' | 'IN_PROGRESS' | 'DONE';
@@ -8383,6 +8916,37 @@ export interface UpdatePartnerRequest {
   role?: string;
   email?: string;
   phone?: string;
+}
+</file>
+
+<file path="src/app/model/testimonial.ts">
+export type TestimonialStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+
+export interface Testimonial {
+  id: string;
+  tenantId: string;
+  partnerId: string;
+  projectId?: string;
+  partnerName: string;
+  partnerRole?: string;
+  companyName: string;
+  description: string;
+  rating: number;
+  status: TestimonialStatus;
+  visibleOnWebsite: boolean;
+  createdAt: string;
+}
+
+export interface CreateInvitationRequest {
+  partnerId: string;
+  projectId?: string;
+  expiresInDays?: number;
+}
+
+export interface InvitationResponse {
+  invitationId: string;
+  rawToken: string;
+  expiresAt: string;
 }
 </file>
 
@@ -8599,151 +9163,733 @@ export interface UpdatePartnerRequest {
 }
 </file>
 
-<file path="src/app/pages/invoice-details/invoice-details.ts">
+<file path="src/app/pages/project-details/project-details.html">
+@if (project(); as p) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Projekte</span>
+      </button>
+
+      <p class="hero-tenant">{{ tenantName() }}</p>
+      <h1 class="hero-title">{{ p.title }}</h1>
+
+      @if (p.tags.length > 0) {
+        <div class="hero-tags">
+          @for (tag of p.tags; track tag.value) {
+            <span
+              class="hero-tag"
+              [style.background-color]="tag.colorHex"
+              [style.color]="getContrastTextColor(tag.colorHex)"
+              >{{ tag.value }}</span
+            >
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      @if (p.description || p.fullDescription) {
+        <div class="info-card">
+          @if (p.description) {
+            <p class="project-intro">{{ p.description }}</p>
+          }
+          @if (p.fullDescription) {
+            <p class="project-full">{{ p.fullDescription }}</p>
+          }
+        </div>
+      }
+
+      @if (p.highlights.length > 0) {
+        <div class="info-card">
+          <p class="info-card-title">Highlights</p>
+          <ul class="highlight-list">
+            @for (highlight of p.highlights; track highlight) {
+              <li>
+                <span class="material-symbols-rounded">check_circle</span>
+                <span>{{ highlight }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Meilensteine</p>
+          <button
+            class="add-icon-button"
+            (click)="openAddMilestoneDialog()"
+            title="Meilenstein hinzufügen"
+          >
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @for (milestone of p.milestones; track milestone.id) {
+          <div class="milestone-row" [class.milestone-row--done]="milestone.status === 'DONE'">
+            <div class="milestone-status-icon">
+              <span class="material-symbols-rounded">
+                {{ milestone.status === 'DONE' ? 'check_circle' : 'radio_button_unchecked' }}
+              </span>
+            </div>
+            <div class="milestone-info">
+              <p class="milestone-title">{{ milestone.title }}</p>
+              <p class="milestone-meta">
+                {{ milestone.dueDate || 'Kein Datum' }} · {{ formatMoney(milestone.price) }}
+              </p>
+            </div>
+            <div class="milestone-actions">
+              <button
+                class="icon-button"
+                (click)="toggleMilestoneStatus(milestone)"
+                [title]="milestone.status === 'DONE' ? 'Als offen markieren' : 'Abschließen'"
+              >
+                <span class="material-symbols-rounded">
+                  {{ milestone.status === 'DONE' ? 'replay' : 'done' }}
+                </span>
+              </button>
+              <button
+                class="icon-button"
+                (click)="openEditMilestoneDialog(milestone)"
+                title="Bearbeiten"
+              >
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+              <button
+                class="icon-button icon-button--danger"
+                (click)="deleteMilestone(milestone)"
+                title="Entfernen"
+              >
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Meilensteine angelegt.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      <div class="sidebar-card">
+        <p class="sidebar-label">Status</p>
+        <select
+          class="status-select"
+          [disabled]="changingStatus()"
+          (change)="changeStatus($any($event.target).value)"
+        >
+          @for (option of statusOptions; track option.value) {
+            <option [value]="option.value" [selected]="option.value === p.status">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Website-Sichtbarkeit</p>
+        <button
+          class="website-toggle"
+          [class.website-toggle--active]="p.visibleOnWebsite"
+          [disabled]="togglingPublish()"
+          (click)="togglePublish()"
+        >
+          <span class="material-symbols-rounded">
+            {{ p.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+          <span>{{
+            p.visibleOnWebsite
+              ? 'Sichtbar - klicken zum Verbergen'
+              : 'Nicht sichtbar - klicken zum Veröffentlichen'
+          }}</span>
+        </button>
+      </div>
+
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
+        <button class="sidebar-action" (click)="openEditDialog()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>Projekt bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Projekt wird geladen...</p>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/project-details/project-details.scss">
+@use '../../../styles' as *;
+
+.detail-hero {
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  padding: 4rem 3.2rem 5.6rem;
+  position: relative;
+  overflow: hidden;
+  margin: -3.2rem -3.2rem 0;
+}
+
+.detail-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: linear-gradient(180deg, black, transparent);
+}
+
+.detail-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 100rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50rem;
+  padding: 0.8rem 1.6rem 0.8rem 1.2rem;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  cursor: pointer;
+  margin-bottom: 2.4rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.hero-tenant {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  margin-bottom: 0.8rem;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 1.6rem;
+}
+
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.hero-tag {
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 50rem;
+  border: 1px solid rgba(255, 255, 255, 0.15); // verhindert das "Verschmelzen" mit dem Hero-Hintergrund
+}
+
+.detail-body {
+  max-width: 100rem;
+  margin: -3.2rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr 28rem;
+  gap: 2.4rem;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 3.2rem;
+
+  @include respond(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-main {
+  @include flex-col(2rem);
+}
+
+.project-intro {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+}
+
+.project-full {
+  font-size: 1.5rem;
+  color: var(--text-grey);
+  line-height: 1.7;
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.6rem;
+}
+
+.info-card-header .info-card-title {
+  margin-bottom: 0;
+}
+
+.add-icon-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan-light);
+  color: var(--accent-cyan-hover);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan);
+    color: var(--text-light);
+  }
+}
+
+.highlight-list {
+  list-style: none;
+  @include flex-col(1rem);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.4rem;
+    color: var(--text-dark);
+
+    .material-symbols-rounded {
+      color: var(--accent-cyan);
+      font-size: 1.8rem;
+    }
+  }
+}
+
+.milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+  }
+
+  &--done {
+    opacity: 0.6;
+
+    .milestone-title {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.milestone-status-icon {
+  .material-symbols-rounded {
+    font-size: 2.2rem;
+    color: var(--success);
+  }
+}
+
+.milestone-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.milestone-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.milestone-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.milestone-actions {
+  display: flex;
+  gap: 0.2rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.milestone-row:hover .milestone-actions {
+  opacity: 1;
+}
+
+.icon-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  outline: none;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--bg-light) !important;
+  }
+
+  &--danger {
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--danger) !important;
+      color: var(--text-light) !important;
+    }
+  }
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.detail-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 2rem;
+
+  &--dark {
+    background-color: var(--main-navy);
+    border: none;
+  }
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+
+  &--light {
+    color: var(--text-muted);
+  }
+}
+
+.status-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+}
+
+.website-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem;
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  &--active {
+    background-color: var(--accent-cyan-light);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1rem 0.8rem;
+  color: var(--text-light);
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/project-details/project-details.ts">
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { InvoiceApi } from '../../core/invoices/invoice-api';
-import { InvoiceStore } from '../../core/invoices/invoice-store';
-import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectApi } from '../../core/projects/project-api';
 import { ProjectStore } from '../../core/projects/project-store';
-import { Toast } from '../../core/toast/toast';
+import { TenantStore } from '../../core/tenants/tenant-store';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
-import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
-import {
-  Address,
-  Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
-  Money,
-  UpdateInvoiceHeaderRequest,
-} from '../../model/invoice';
-import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+import { MilestoneDialog } from './milestone-dialog/milestone-dialog';
+import { EditProjectDialog } from './edit-project-dialog/edit-project-dialog';
+import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
+import { Toast } from '../../core/toast/toast';
+import { Project, ProjectStatus, Milestone } from '../../model/project';
+import { getContrastTextColor } from '../../util/color-contrast';
 
 @Component({
-  selector: 'app-invoice-detail',
+  selector: 'app-project-detail',
   imports: [MatDialogModule],
-  templateUrl: './invoice-details.html',
-  styleUrl: './invoice-details.scss',
+  templateUrl: './project-details.html',
+  styleUrl: './project-details.scss',
 })
-export class InvoiceDetail {
+export class ProjectDetail {
   readonly id = input.required<string>();
 
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly invoiceApi = inject(InvoiceApi);
-  private readonly invoiceStore = inject(InvoiceStore);
-  private readonly tenantStore = inject(TenantStore);
+  private readonly projectApi = inject(ProjectApi);
   private readonly projectStore = inject(ProjectStore);
+  private readonly tenantStore = inject(TenantStore);
   private readonly toast = inject(Toast);
+  protected readonly getContrastTextColor = getContrastTextColor;
 
-  readonly editingHeader = signal(false);
-  readonly headerBuyerReference = signal('');
-  readonly headerPaymentTermsDays = signal('');
-  readonly savingHeader = signal(false);
-
-  readonly deletingDraft = signal(false);
-
-  private readonly invoiceResource = httpResource<Invoice>(
-    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
+  private readonly projectResource = httpResource<Project>(
+    () => `${environment.apiBaseUrl}/projects/${this.id()}`,
   );
 
-  readonly invoice = computed(() => this.invoiceResource.value());
-  readonly loading = computed(() => this.invoiceResource.isLoading());
+  readonly project = computed(() => this.projectResource.value());
+  readonly loading = computed(() => this.projectResource.isLoading());
 
-  readonly statusLabels: Record<InvoiceStatus, string> = {
-    DRAFT: 'Entwurf',
-    ISSUED: 'Ausgestellt',
-    SENT: 'Versendet',
-    PAID: 'Bezahlt',
-    OVERDUE: 'Überfällig',
-    CANCELLED: 'Storniert',
-  };
+  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
+    { value: 'LEAD', label: 'Interessent' },
+    { value: 'IN_PROGRESS', label: 'In Arbeit' },
+    { value: 'ON_HOLD', label: 'Pausiert' },
+    { value: 'COMPLETED', label: 'Abgeschlossen' },
+    { value: 'CANCELLED', label: 'Abgebrochen' },
+  ];
 
   readonly tenantName = computed(() => {
-    const inv = this.invoice();
-    if (!inv) return '';
-    return (
-      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
-    );
+    const p = this.project();
+    if (!p) return '';
+    return this.tenantStore.tenants().find((t) => t.id === p.tenantId)?.companyName ?? 'Unbekannt';
   });
 
-  readonly projectName = computed(() => {
-    const inv = this.invoice();
-    if (!inv?.projectId) return '';
-    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
-  });
+  readonly togglingPublish = signal(false);
+  readonly changingStatus = signal(false);
 
-  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
-
-  readonly issuing = signal(false);
-
+  // Zieht die Änderung sowohl in die eigene (Detail-)Ressource als auch
+  // in den geteilten ProjectStore, den Kanban/Liste nutzen - sonst
+  // sieht man Änderungen erst nach hartem Reload wieder in der Übersicht
   private refreshEverywhere(): void {
-    this.invoiceResource.reload();
-    this.invoiceStore.reload();
+    this.projectResource.reload();
+    this.projectStore.reload();
   }
 
   back(): void {
-    this.router.navigate(['/invoices']);
+    this.router.navigate(['/projects']);
   }
 
-  itemNet(item: InvoiceLineItem): Money {
-    return item.netAmount;
+  async changeStatus(status: string): Promise<void> {
+    this.changingStatus.set(true);
+    try {
+      await firstValueFrom(this.projectApi.changeStatus(this.id(), status));
+      this.refreshEverywhere();
+      this.toast.success('Status aktualisiert');
+    } catch {
+      this.toast.error('Status konnte nicht aktualisiert werden');
+    } finally {
+      this.changingStatus.set(false);
+    }
   }
 
-  formatMoney(money?: Money): string {
-    if (!money) return '–';
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: money.currencyCode,
-    }).format(money.amount);
+  async togglePublish(): Promise<void> {
+    const p = this.project();
+    if (!p) return;
+
+    this.togglingPublish.set(true);
+    try {
+      const call = p.visibleOnWebsite
+        ? this.projectApi.unpublish(this.id())
+        : this.projectApi.publish(this.id());
+      await firstValueFrom(call);
+      this.refreshEverywhere();
+      this.toast.success(
+        p.visibleOnWebsite ? 'Projekt von Website entfernt' : 'Projekt auf Website veröffentlicht',
+      );
+    } catch {
+      this.toast.error('Aktion fehlgeschlagen');
+    } finally {
+      this.togglingPublish.set(false);
+    }
   }
 
-  formatAddress(address?: Address): string {
-    if (!address) return '–';
-    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
-    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
-    return [line1, line2].filter(Boolean).join(', ');
-  }
+  openEditDialog(): void {
+    const p = this.project();
+    if (!p) return;
 
-  openAddLineItemDialog(): void {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(AddLineItemDialog, {
+    const dialogRef = this.dialog.open(EditProjectDialog, {
       width: '64rem',
       panelClass: 'app-dialog-panel',
-      data: {
-        invoiceId: inv.id,
-        tenantId: inv.tenantId,
-        projectId: inv.projectId,
-        existingMilestoneIds: inv.lineItems
-          .map((i) => i.milestoneId)
-          .filter((id): id is string => !!id),
-      },
+      data: p,
+    });
+
+    dialogRef.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.refreshEverywhere();
+        this.toast.success('Projekt aktualisiert');
+      }
+    });
+  }
+
+  openCreateInvoiceDialog(): void {
+    const p = this.project();
+    if (!p) return;
+
+    const dialogRef = this.dialog.open(CreateInvoiceDialog, {
+      width: '68rem',
+      panelClass: 'app-dialog-panel',
+      data: { tenantId: p.tenantId, projectId: p.id },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.toast.success('Rechnung angelegt');
+        this.router.navigate(['/invoices', result.id]);
+      }
+    });
+  }
+
+  openAddMilestoneDialog(): void {
+    const dialogRef = this.dialog.open(MilestoneDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { projectId: this.id() },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.refreshEverywhere();
-        this.toast.success('Position hinzugefügt');
+        this.toast.success('Meilenstein hinzugefügt');
       }
     });
   }
 
-  async removeLineItem(item: InvoiceLineItem): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
+  openEditMilestoneDialog(milestone: Milestone): void {
+    const dialogRef = this.dialog.open(MilestoneDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { projectId: this.id(), milestone },
+    });
 
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Meilenstein aktualisiert');
+      }
+    });
+  }
+
+  async toggleMilestoneStatus(milestone: Milestone): Promise<void> {
+    const newStatus = milestone.status === 'DONE' ? 'PLANNED' : 'DONE';
+    await firstValueFrom(this.projectApi.changeMilestoneStatus(this.id(), milestone.id, newStatus));
+    this.refreshEverywhere();
+    this.toast.success(
+      newStatus === 'DONE' ? 'Meilenstein abgeschlossen' : 'Meilenstein wieder geöffnet',
+    );
+  }
+
+  async deleteMilestone(milestone: Milestone): Promise<void> {
     const dialogRef = this.dialog.open(ConfirmDialog, {
       width: '44rem',
       panelClass: 'app-dialog-panel',
       data: {
-        title: 'Position entfernen?',
-        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
+        title: 'Meilenstein entfernen?',
+        message: `"${milestone.title}" wird unwiderruflich entfernt.`,
         confirmLabel: 'Entfernen',
         danger: true,
       },
@@ -8751,377 +9897,20 @@ export class InvoiceDetail {
 
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (confirmed) {
-      try {
-        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
-        this.refreshEverywhere();
-        this.toast.success('Position entfernt');
-      } catch {
-        this.toast.error('Position konnte nicht entfernt werden');
-      }
-    }
-  }
-
-  async issueInvoice(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '48rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Rechnung ausstellen?',
-        message:
-          'Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können danach nicht mehr geändert werden.',
-        confirmLabel: 'Ausstellen',
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (!confirmed) return;
-
-    this.issuing.set(true);
-    try {
-      await firstValueFrom(this.invoiceApi.issue(inv.id));
+      await firstValueFrom(this.projectApi.removeMilestone(this.id(), milestone.id));
       this.refreshEverywhere();
-      this.toast.success('Rechnung ausgestellt');
-    } catch {
-      this.toast.error('Rechnung konnte nicht ausgestellt werden');
-    } finally {
-      this.issuing.set(false);
+      this.toast.success('Meilenstein entfernt');
     }
   }
 
-  async openDocument(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-    try {
-      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
-      window.open(url, '_blank');
-    } catch {
-      this.toast.error('Dokument konnte nicht geladen werden');
-    }
-  }
-
-  startEditHeader(): void {
-    const inv = this.invoice();
-    if (!inv) return;
-    this.headerBuyerReference.set(inv.buyerReference ?? '');
-    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
-    this.editingHeader.set(true);
-  }
-
-  cancelEditHeader(): void {
-    this.editingHeader.set(false);
-  }
-
-  async saveHeader(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    this.savingHeader.set(true);
-    const request: UpdateInvoiceHeaderRequest = {
-      buyerReference: this.headerBuyerReference().trim() || undefined,
-      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
-    };
-
-    try {
-      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
-      this.editingHeader.set(false);
-      this.refreshEverywhere();
-      this.toast.success('Rechnungsdaten aktualisiert');
-    } catch {
-      this.toast.error('Aktualisierung fehlgeschlagen');
-    } finally {
-      this.savingHeader.set(false);
-    }
-  }
-
-  openEditLineItemDialog(item: InvoiceLineItem): void {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(EditLineItemDialog, {
-      width: '48rem',
-      panelClass: 'app-dialog-panel',
-      data: { invoiceId: inv.id, item },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshEverywhere();
-        this.toast.success('Position aktualisiert');
-      }
-    });
-  }
-
-  async deleteDraftInvoice(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '46rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Rechnungsentwurf löschen?',
-        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
-        confirmLabel: 'Löschen',
-        danger: true,
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (!confirmed) return;
-
-    this.deletingDraft.set(true);
-    try {
-      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
-      this.invoiceStore.reload();
-      this.toast.success('Entwurf gelöscht');
-      this.router.navigate(['/invoices']);
-    } catch {
-      this.toast.error('Löschen fehlgeschlagen');
-      this.deletingDraft.set(false);
-    }
+  formatMoney(money?: { amount: number; currencyCode: string }): string {
+    if (!money) return '–';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
   }
 }
-</file>
-
-<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html">
-<div class="dialog-header">
-  <h2>Neue Rechnung</h2>
-  <button class="close-button" (click)="close()">
-    <span class="material-symbols-rounded">close</span>
-  </button>
-</div>
-
-<div class="dialog-body">
-  @if (dataLoading()) {
-    <div class="prefill-loading">
-      <span class="material-symbols-rounded spin">progress_activity</span>
-      <span>Daten werden geladen...</span>
-    </div>
-  } @else {
-    <div class="field-row">
-      <div class="field">
-        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
-        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
-          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
-            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
-            @for (tenant of tenantStore.tenants(); track tenant.id) {
-              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
-                {{ tenant.companyName }}
-              </option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
-        <select [disabled]="!tenantId()" (change)="onProjectChange($any($event.target).value)">
-          <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
-          @for (project of tenantProjects(); track project.id) {
-            <option [value]="project.id" [selected]="project.id === projectId()">
-              {{ project.title }}
-            </option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label>Auftrags-Referenz</label>
-        <input
-          type="text"
-          placeholder="Automatisch (z. B. MBS.5)"
-          [value]="buyerReference()"
-          (input)="buyerReference.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label>Zahlungsziel (Tage)</label>
-        <input
-          type="text"
-          [value]="paymentTermsDays()"
-          (input)="paymentTermsDays.set($any($event.target).value)"
-        />
-      </div>
-    </div>
-
-    @if (tenantId() && projectId()) {
-      <div class="section-title">Positionen</div>
-
-      @if (prefillLoading()) {
-        <div class="prefill-loading">
-          <span class="material-symbols-rounded spin">progress_activity</span>
-          <span>Meilensteine werden geladen...</span>
-        </div>
-      } @else if (prefill(); as p) {
-        @if (p.availableMilestones.length > 0) {
-          <div class="milestone-grid">
-            @for (milestone of p.availableMilestones; track milestone.id) {
-              <button
-                type="button"
-                class="milestone-tile"
-                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
-                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
-                [disabled]="milestone.alreadyInvoiced"
-                (click)="toggleMilestone(milestone)"
-              >
-                <div class="milestone-tile-icon">
-                  <span class="material-symbols-rounded">
-                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
-                  </span>
-                </div>
-                <div class="milestone-tile-body">
-                  <p class="milestone-tile-title">{{ milestone.title }}</p>
-                  @if (milestone.price) {
-                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
-                  }
-
-                  @if (milestone.alreadyInvoiced) {
-                    <div class="milestone-tile-tags">
-                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
-                        <span class="material-symbols-rounded">lock</span>
-                        Abgerechnet
-                      </span>
-                    </div>
-                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
-                    <div class="milestone-tile-tags">
-                      @if (milestone.inDraftInvoice) {
-                        <span class="milestone-tile-tag milestone-tile-tag--draft">
-                          <span class="material-symbols-rounded">edit_note</span>
-                          In Rechnungsentwurf
-                        </span>
-                      }
-                      @if (milestone.milestoneStatus !== 'DONE') {
-                        <span class="milestone-tile-tag milestone-tile-tag--pending">
-                          <span class="material-symbols-rounded">hourglass_empty</span>
-                          Nicht abgeschlossen
-                        </span>
-                      }
-                    </div>
-                  }
-                </div>
-              </button>
-            }
-          </div>
-        } @else {
-          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
-        }
-
-        <div class="free-position-row">
-          <input
-            type="text"
-            class="free-description"
-            placeholder="Freie Position, z. B. Gerät (Hardware)"
-            [value]="freeDescription()"
-            (input)="freeDescription.set($any($event.target).value)"
-          />
-          <input
-            type="text"
-            class="free-quantity"
-            placeholder="Menge"
-            [value]="freeQuantity()"
-            (input)="freeQuantity.set($any($event.target).value)"
-          />
-          <input
-            type="text"
-            class="free-price"
-            placeholder="Preis netto"
-            [value]="freeUnitPrice()"
-            (input)="freeUnitPrice.set($any($event.target).value)"
-          />
-          <select
-            class="free-tax"
-            [value]="freeTaxRate()"
-            (change)="freeTaxRate.set(+$any($event.target).value)"
-          >
-            @for (rate of taxRateOptions; track rate) {
-              <option [value]="rate">{{ rate }} %</option>
-            }
-          </select>
-          <button type="button" class="free-add-button" (click)="addFreePosition()">
-            <span class="material-symbols-rounded">add</span>
-          </button>
-        </div>
-
-        @if (lineItems().length > 0) {
-          <div class="positions-list">
-            @for (item of lineItems(); track item.key) {
-              <div class="position-row">
-                <div class="position-main">
-                  <span class="position-source-icon material-symbols-rounded">
-                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
-                  </span>
-                  <div>
-                    <p class="position-description">{{ item.description }}</p>
-                    <p class="position-meta">
-                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
-                    </p>
-                  </div>
-                </div>
-
-                <select
-                  class="position-tax-select"
-                  [value]="item.taxRatePercentage"
-                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
-                >
-                  @for (rate of taxRateOptions; track rate) {
-                    <option [value]="rate">{{ rate }} % USt</option>
-                  }
-                </select>
-
-                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
-
-                <button
-                  type="button"
-                  class="position-remove-button"
-                  (click)="removeLineItem(item.key)"
-                >
-                  <span class="material-symbols-rounded">close</span>
-                </button>
-              </div>
-            }
-          </div>
-
-          <div class="summary-card">
-            <div class="summary-row">
-              <span>Netto</span>
-              <span>{{ formatMoney(totals().net) }}</span>
-            </div>
-            @for (group of taxBreakdown(); track group.rate) {
-              <div class="summary-row summary-row--muted">
-                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
-                <span>{{ formatMoney(group.tax) }}</span>
-              </div>
-            }
-            <div class="summary-row summary-row--total">
-              <span>Rechnungsbetrag</span>
-              <span>{{ formatMoney(totals().gross) }}</span>
-            </div>
-          </div>
-        } @else {
-          <p class="no-positions-hint">
-            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
-          </p>
-        }
-      }
-    }
-  }
-</div>
-
-<div class="dialog-footer">
-  <button class="cancel-button" (click)="close()">Abbrechen</button>
-  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
-    @if (!submitting()) {
-      <span>Rechnung anlegen</span>
-    } @else {
-      <span class="material-symbols-rounded spin">progress_activity</span>
-    }
-  </button>
-</div>
 </file>
 
 <file path="src/app/pages/projects/create-project-dialog/create-project-dialog.scss">
@@ -9858,172 +10647,6 @@ export class InvoiceDetail {
 }
 </file>
 
-<file path="src/app/pages/tenant-detail/tenant-detail.html">
-@if (tenant(); as t) {
-  <div class="detail-hero">
-    <div class="detail-hero-pattern"></div>
-    <div class="detail-hero-content">
-      <button class="back-button" (click)="back()">
-        <span class="material-symbols-rounded">arrow_back</span>
-        <span>Alle Mandanten</span>
-      </button>
-
-      <div class="hero-main">
-        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
-        <div>
-          <h1 class="hero-title">{{ t.companyName }}</h1>
-          @if (t.legalName && t.legalName !== t.companyName) {
-            <p class="hero-legal">{{ t.legalName }}</p>
-          }
-          <span class="status-badge" [class]="'status-badge--' + t.status.toLowerCase()">
-            {{ statusLabels[t.status] }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="detail-body">
-    <div class="detail-main">
-      <div class="info-card">
-        <p class="info-card-title">Kontaktdaten</p>
-        <div class="info-row">
-          <span class="material-symbols-rounded">mail</span>
-          <span>{{ t.contactEmail || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">call</span>
-          <span>{{ t.contactPhone || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">location_on</span>
-          <span>
-            @if (t.address; as a) {
-              {{ a.street }} {{ a.houseNumber }}, {{ a.postalCode }} {{ a.city }}
-            } @else {
-              -
-            }
-          </span>
-        </div>
-        <div class="info-row">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>{{ t.vatId || 'Keine USt-ID hinterlegt' }}</span>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Ansprechpartner</p>
-          <div class="header-actions">
-            <span class="count-badge">{{ partners().length }}</span>
-            <button
-              class="add-icon-button"
-              (click)="openAddPartnerDialog()"
-              title="Ansprechpartner hinzufügen"
-            >
-              <span class="material-symbols-rounded">add</span>
-            </button>
-          </div>
-        </div>
-
-        @for (partner of partners(); track partner.id) {
-          <div class="partner-row">
-            <app-avatar
-              [name]="partner.firstName + ' ' + partner.lastName"
-              [size]="'3.6rem'"
-            ></app-avatar>
-            <div class="partner-info">
-              <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
-              <p class="partner-role">
-                {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
-              </p>
-            </div>
-            <div class="partner-actions">
-              <button
-                class="icon-button"
-                (click)="openEditPartnerDialog(partner)"
-                title="Bearbeiten"
-              >
-                <span class="material-symbols-rounded">edit</span>
-              </button>
-              <button
-                class="icon-button icon-button--danger"
-                (click)="deletePartner(partner)"
-                title="Entfernen"
-              >
-                <span class="material-symbols-rounded">delete</span>
-              </button>
-            </div>
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Ansprechpartner hinterlegt.</p>
-        }
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Projekte</p>
-          <span class="count-badge">{{ projects().length }}</span>
-        </div>
-        @for (project of projects(); track project.id) {
-          <div class="project-row">
-            <div>
-              <p class="project-title">{{ project.title }}</p>
-              <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
-            </div>
-            <span
-              class="status-badge status-badge--project"
-              [class]="'status-badge--' + project.status.toLowerCase()"
-            >
-              {{ projectStatusLabels[project.status] }}
-            </span>
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
-        }
-      </div>
-    </div>
-
-    <aside class="detail-sidebar">
-      <div class="sidebar-card">
-        <p class="sidebar-label">Website-Sichtbarkeit</p>
-        <div class="website-status" [class.website-status--active]="t.visibleOnWebsite">
-          <span class="material-symbols-rounded">
-            {{ t.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
-          </span>
-          <span>{{ t.visibleOnWebsite ? 'Sichtbar' : 'Nicht sichtbar' }}</span>
-        </div>
-      </div>
-
-      <div class="sidebar-card sidebar-card--dark">
-        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
-        <button class="sidebar-action" (click)="openEditCoreDetails()">
-          <span class="material-symbols-rounded">business_center</span>
-          <span>Stammdaten bearbeiten</span>
-        </button>
-        <button class="sidebar-action" (click)="openEditDialog()">
-          <span class="material-symbols-rounded">edit</span>
-          <span>Kontaktdaten bearbeiten</span>
-        </button>
-        <button class="sidebar-action" (click)="openCreateProjectDialog()">
-          <span class="material-symbols-rounded">add</span>
-          <span>Projekt anlegen</span>
-        </button>
-        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>Rechnung erstellen</span>
-        </button>
-      </div>
-    </aside>
-  </div>
-} @else if (loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Mandant wird geladen...</p>
-  </div>
-}
-</file>
-
 <file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.html">
 <div class="dialog-header">
   <h2>Neuer Mandant</h2>
@@ -10552,6 +11175,480 @@ export class Tenants {
 }
 </file>
 
+<file path="src/app/pages/testimonials/testimonials.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Referenzen</h1>
+    <p class="page-subtitle">{{ testimonialStore.testimonials().length }} Referenzen insgesamt</p>
+  </div>
+</div>
+
+<div class="tabs">
+  @for (tab of tabs; track tab.status) {
+    <button
+      class="tab"
+      [class.tab--active]="activeTab() === tab.status"
+      (click)="activeTab.set(tab.status)"
+    >
+      {{ tab.label }}
+      @if (tab.status === 'PENDING_REVIEW' && pendingCount() > 0) {
+        <span class="tab-badge">{{ pendingCount() }}</span>
+      }
+    </button>
+  }
+</div>
+
+@if (testimonialStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Referenzen werden geladen...</p>
+  </div>
+} @else {
+  <div class="testimonials-grid">
+    @for (testimonial of filteredTestimonials(); track testimonial.id) {
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <app-avatar [name]="testimonial.partnerName"></app-avatar>
+          <div class="testimonial-stars">
+            @for (i of ratingArray; track i) {
+              <span
+                class="material-symbols-rounded star"
+                [class.star--filled]="i <= testimonial.rating"
+                >star</span
+              >
+            }
+          </div>
+        </div>
+
+        <div class="testimonial-tags">
+          <span class="status-tag" [class]="'status-tag--' + testimonial.status.toLowerCase()">
+            {{ statusLabels[testimonial.status] }}
+          </span>
+          <span class="website-tag" [class.website-tag--active]="testimonial.visibleOnWebsite">
+            <span class="material-symbols-rounded">
+              {{ testimonial.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+            </span>
+            {{ testimonial.visibleOnWebsite ? 'Auf Website' : 'Nicht auf Website' }}
+          </span>
+        </div>
+
+        <p class="testimonial-description">"{{ testimonial.description }}"</p>
+
+        <div class="testimonial-footer">
+          <p class="testimonial-name">{{ testimonial.partnerName }}</p>
+          <p class="testimonial-role">
+            {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
+          </p>
+        </div>
+
+        @if (testimonial.status === 'PENDING_REVIEW') {
+          <div class="testimonial-actions">
+            <button
+              class="action-button action-button--approve"
+              [disabled]="processingId() === testimonial.id"
+              (click)="approve(testimonial.id)"
+            >
+              <span class="material-symbols-rounded">check</span>
+              <span>Freigeben</span>
+            </button>
+            <button
+              class="action-button action-button--reject"
+              [disabled]="processingId() === testimonial.id"
+              (click)="reject(testimonial.id)"
+            >
+              <span class="material-symbols-rounded">close</span>
+              <span>Ablehnen</span>
+            </button>
+          </div>
+        } @else if (testimonial.status === 'APPROVED') {
+          <div class="testimonial-actions">
+            @if (testimonial.visibleOnWebsite) {
+              <button
+                class="action-button action-button--reject"
+                [disabled]="processingId() === testimonial.id"
+                (click)="unpublish(testimonial.id)"
+              >
+                <span class="material-symbols-rounded">visibility_off</span>
+                <span>Von Website entfernen</span>
+              </button>
+            } @else {
+              <button
+                class="action-button action-button--approve"
+                [disabled]="processingId() === testimonial.id"
+                (click)="publish(testimonial.id)"
+              >
+                <span class="material-symbols-rounded">visibility</span>
+                <span>Auf Website veröffentlichen</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">rate_review</span>
+        <p>Keine Referenzen in dieser Kategorie</p>
+      </div>
+    }
+  </div>
+}
+</file>
+
+<file path="src/app/pages/testimonials/testimonials.scss">
+@use '../../../styles' as *;
+
+.page-header {
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 2.4rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 1rem 0.4rem;
+  margin-right: 2rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-grey);
+  cursor: pointer;
+
+  &--active {
+    color: var(--main-navy);
+    border-bottom-color: var(--accent-cyan);
+  }
+}
+
+.tab-badge {
+  background-color: var(--accent-pink);
+  color: var(--text-light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.1rem 0.7rem;
+  border-radius: 50rem;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+
+  @include respond(lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @include respond(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.testimonial-card {
+  @include card-surface;
+  padding: 2rem;
+  @include flex-col(1.4rem);
+}
+
+.testimonial-header {
+  @include flex-between;
+}
+
+.testimonial-stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  font-size: 1.8rem;
+  color: var(--border-color);
+
+  &--filled {
+    color: var(--accent-pink);
+  }
+}
+
+.testimonial-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: -0.6rem;
+}
+
+.status-tag {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem;
+  border-radius: 50rem;
+
+  &--pending_review {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  &--approved {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &--rejected {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.website-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem;
+  border-radius: 50rem;
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 1.4rem;
+  }
+
+  &--active {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+}
+
+.testimonial-description {
+  font-size: 1.4rem;
+  color: var(--text-dark);
+  font-style: italic;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.testimonial-footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-light);
+}
+
+.testimonial-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.testimonial-role {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.testimonial-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.action-button {
+  flex: 1;
+  @include button-base;
+  font-size: 1.3rem;
+  padding: 0.8rem 1.2rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--approve {
+    background-color: var(--success-light);
+    color: var(--success);
+
+    &:hover:not(:disabled) {
+      background-color: var(--success);
+      color: var(--text-light);
+    }
+  }
+
+  &--reject {
+    background-color: var(--danger-light);
+    color: var(--danger);
+
+    &:hover:not(:disabled) {
+      background-color: var(--danger);
+      color: var(--text-light);
+    }
+  }
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  @include flex-col(0.8rem);
+  align-items: center;
+  padding: 4.8rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 4rem;
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</file>
+
+<file path="src/app/pages/testimonials/testimonials.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { Avatar } from '../../util/avatar/avatar';
+import { TestimonialStore } from '../../core/testimonials/testimonial-store';
+import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
+import { TestimonialStatus } from '../../model/testimonial';
+
+type TabFilter = TestimonialStatus | 'ALL';
+
+@Component({
+  selector: 'app-testimonials',
+  imports: [Avatar],
+  templateUrl: './testimonials.html',
+  styleUrl: './testimonials.scss',
+})
+export class Testimonials {
+  protected readonly testimonialStore = inject(TestimonialStore);
+  private readonly toast = inject(Toast);
+
+  readonly activeTab = signal<TabFilter>('ALL');
+  readonly ratingArray = [1, 2, 3, 4, 5];
+  readonly processingId = signal<string | null>(null);
+
+  readonly tabs: { status: TabFilter; label: string }[] = [
+    { status: 'ALL', label: 'Alle' },
+    { status: 'PENDING_REVIEW', label: 'Zur Prüfung' },
+    { status: 'APPROVED', label: 'Freigegeben' },
+    { status: 'REJECTED', label: 'Abgelehnt' },
+  ];
+
+  readonly statusLabels: Record<TestimonialStatus, string> = {
+    PENDING_REVIEW: 'Zur Prüfung',
+    APPROVED: 'Freigegeben',
+    REJECTED: 'Abgelehnt',
+  };
+
+  readonly filteredTestimonials = computed(() => {
+    const tab = this.activeTab();
+    const all = this.testimonialStore.testimonials();
+    return tab === 'ALL' ? all : all.filter((t) => t.status === tab);
+  });
+
+  readonly pendingCount = computed(
+    () => this.testimonialStore.testimonials().filter((t) => t.status === 'PENDING_REVIEW').length,
+  );
+
+  async approve(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.approve(id);
+      this.toast.success('Referenz freigegeben');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Freigabe fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async reject(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.reject(id);
+      this.toast.success('Referenz abgelehnt');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Ablehnung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async publish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.publish(id);
+      this.toast.success('Referenz auf der Website veröffentlicht');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async unpublish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.unpublish(id);
+      this.toast.success('Referenz von der Website entfernt');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+}
+</file>
+
+<file path="src/environments/environment.ts">
+export const environment = {
+  production: false,
+  apiBaseUrl: 'http://localhost:8081/api/crm',
+  websiteBaseUrl: 'http://localhost:4201',
+  auth: {
+    issuer: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_mWfiv7VVv',
+    clientId: '3k9vr6j2nv6po6djjvp42bg97m',
+    redirectUri: `${window.location.origin}/callback`,
+    postLogoutRedirectUri: window.location.origin,
+    scope: 'openid email profile',
+    cognitoDomain: 'https://us-east-1mwfiv7vvv.auth.us-east-1.amazoncognito.com',
+  },
+};
+</file>
+
 <file path="src/index.html">
 <!doctype html>
 <html lang="de">
@@ -10889,35 +11986,6 @@ body {
 }
 </file>
 
-<file path="src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { Tenants } from './pages/tenants/tenants';
-import { TenantDetail } from './pages/tenant-detail/tenant-detail';
-import { Projects } from './pages/projects/projects';
-import { Invoices } from './pages/invoices/invoices';
-import { Testimonials } from './pages/testimonials/testimonials';
-import { Welcome } from './pages/welcome/welcome';
-import { Login } from './pages/login/login';
-import { SessionExpired } from './pages/session-expired/session-expired';
-import { authGuard } from './core/auth/auth.guard';
-import { ProjectDetail } from './pages/project-details/project-details';
-import { InvoiceDetail } from './pages/invoice-details/invoice-details';
-
-export const routes: Routes = [
-  { path: '', component: Welcome },
-  { path: 'login', component: Login },
-  { path: 'session-expired', component: SessionExpired },
-  { path: 'callback', redirectTo: 'tenants', pathMatch: 'full' },
-  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
-  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
-  { path: 'projects', component: Projects, canActivate: [authGuard] },
-  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
-  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
-  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
-  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
-];
-</file>
-
 <file path="src/app/core/invoices/invoice-api.ts">
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -10987,6 +12055,823 @@ export class InvoiceApi {
 
   getDocumentUrl(invoiceId: string): Observable<{ url: string }> {
     return this.http.get<{ url: string }>(`${this.baseUrl}/${invoiceId}/document`);
+  }
+}
+</file>
+
+<file path="src/app/core/testimonials/testimonial-api.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { CreateInvitationRequest, InvitationResponse, Testimonial } from '../../model/testimonial';
+
+@Injectable({ providedIn: 'root' })
+export class TestimonialApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/testimonials`;
+
+  approve(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/approve`, {});
+  }
+
+  reject(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/reject`, {});
+  }
+
+  publish(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/publish`, {});
+  }
+
+  unpublish(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/unpublish`, {});
+  }
+
+  createInvitation(request: CreateInvitationRequest): Observable<InvitationResponse> {
+    return this.http.post<InvitationResponse>(
+      `${environment.apiBaseUrl}/testimonial-invitations`,
+      request,
+    );
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.ts">
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { InvoiceApi } from '../../core/invoices/invoice-api';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectStore } from '../../core/projects/project-store';
+import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
+import {
+  Address,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  Money,
+  UpdateInvoiceHeaderRequest,
+} from '../../model/invoice';
+import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+
+@Component({
+  selector: 'app-invoice-detail',
+  imports: [MatDialogModule],
+  templateUrl: './invoice-details.html',
+  styleUrl: './invoice-details.scss',
+})
+export class InvoiceDetail {
+  readonly id = input.required<string>();
+
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly invoiceApi = inject(InvoiceApi);
+  private readonly invoiceStore = inject(InvoiceStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+
+  readonly editingHeader = signal(false);
+  readonly headerBuyerReference = signal('');
+  readonly headerPaymentTermsDays = signal('');
+  readonly savingHeader = signal(false);
+
+  readonly deletingDraft = signal(false);
+
+  private readonly invoiceResource = httpResource<Invoice>(
+    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
+  );
+
+  readonly invoice = computed(() => this.invoiceResource.value());
+  readonly loading = computed(() => this.invoiceResource.isLoading());
+
+  readonly statusLabels: Record<InvoiceStatus, string> = {
+    DRAFT: 'Entwurf',
+    ISSUED: 'Ausgestellt',
+    SENT: 'Versendet',
+    PAID: 'Bezahlt',
+    OVERDUE: 'Überfällig',
+    CANCELLED: 'Storniert',
+  };
+
+  readonly tenantName = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return '';
+    return (
+      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
+    );
+  });
+
+  readonly projectName = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.projectId) return '';
+    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
+  });
+
+  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
+
+  readonly issuing = signal(false);
+
+  private refreshEverywhere(): void {
+    this.invoiceResource.reload();
+    this.invoiceStore.reload();
+  }
+
+  back(): void {
+    this.router.navigate(['/invoices']);
+  }
+
+  itemNet(item: InvoiceLineItem): Money {
+    return item.netAmount;
+  }
+
+  formatMoney(money?: Money): string {
+    if (!money) return '–';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
+  }
+
+  formatAddress(address?: Address): string {
+    if (!address) return '–';
+    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
+    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
+    return [line1, line2].filter(Boolean).join(', ');
+  }
+
+  openAddLineItemDialog(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(AddLineItemDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        invoiceId: inv.id,
+        tenantId: inv.tenantId,
+        projectId: inv.projectId,
+        existingMilestoneIds: inv.lineItems
+          .map((i) => i.milestoneId)
+          .filter((id): id is string => !!id),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position hinzugefügt');
+      }
+    });
+  }
+
+  async removeLineItem(item: InvoiceLineItem): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Position entfernen?',
+        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
+        confirmLabel: 'Entfernen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      try {
+        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
+        this.refreshEverywhere();
+        this.toast.success('Position entfernt');
+      } catch (err) {
+        this.toast.error(extractErrorMessage(err, 'Position konnte nicht entfernt werden'));
+      }
+    }
+  }
+
+  async issueInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnung ausstellen?',
+        message:
+          'Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können danach nicht mehr geändert werden.',
+        confirmLabel: 'Ausstellen',
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.issuing.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.issue(inv.id));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung ausgestellt');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
+    } finally {
+      this.issuing.set(false);
+    }
+  }
+
+  async openDocument(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+    try {
+      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+      window.open(url, '_blank');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Dokument konnte nicht geladen werden'));
+    }
+  }
+
+  startEditHeader(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+    this.headerBuyerReference.set(inv.buyerReference ?? '');
+    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
+    this.editingHeader.set(true);
+  }
+
+  cancelEditHeader(): void {
+    this.editingHeader.set(false);
+  }
+
+  async saveHeader(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.savingHeader.set(true);
+    const request: UpdateInvoiceHeaderRequest = {
+      buyerReference: this.headerBuyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
+    };
+
+    try {
+      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
+      this.editingHeader.set(false);
+      this.refreshEverywhere();
+      this.toast.success('Rechnungsdaten aktualisiert');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Aktualisierung fehlgeschlagen'));
+    } finally {
+      this.savingHeader.set(false);
+    }
+  }
+
+  openEditLineItemDialog(item: InvoiceLineItem): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(EditLineItemDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { invoiceId: inv.id, item },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position aktualisiert');
+      }
+    });
+  }
+
+  async deleteDraftInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '46rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnungsentwurf löschen?',
+        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
+        confirmLabel: 'Löschen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.deletingDraft.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
+      this.invoiceStore.reload();
+      this.toast.success('Entwurf gelöscht');
+      this.router.navigate(['/invoices']);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Löschen fehlgeschlagen'));
+      this.deletingDraft.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html">
+<div class="dialog-header">
+  <h2>Neue Rechnung</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
+    </div>
+  } @else {
+    <div class="field-row">
+      <div class="field">
+        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
+            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+            @for (tenant of tenantStore.tenants(); track tenant.id) {
+              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+                {{ tenant.companyName }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
+        <div class="select-lock" [class.select-lock--active]="projectLocked()">
+          <select
+            [disabled]="!tenantId() || projectLocked()"
+            (change)="onProjectChange($any($event.target).value)"
+          >
+            <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
+            @for (project of tenantProjects(); track project.id) {
+              <option [value]="project.id" [selected]="project.id === projectId()">
+                {{ project.title }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Auftrags-Referenz</label>
+        <input
+          type="text"
+          placeholder="Automatisch (z. B. MBS.5)"
+          [value]="buyerReference()"
+          (input)="buyerReference.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Zahlungsziel (Tage)</label>
+        <input
+          type="text"
+          [value]="paymentTermsDays()"
+          (input)="paymentTermsDays.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (tenantId() && projectId()) {
+      <div class="section-title">Positionen</div>
+
+      @if (prefillLoading()) {
+        <div class="prefill-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+          <span>Meilensteine werden geladen...</span>
+        </div>
+      } @else if (prefill(); as p) {
+        @if (p.availableMilestones.length > 0) {
+          <div class="milestone-grid">
+            @for (milestone of p.availableMilestones; track milestone.id) {
+              <button
+                type="button"
+                class="milestone-tile"
+                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+                [disabled]="milestone.alreadyInvoiced"
+                (click)="toggleMilestone(milestone)"
+              >
+                <div class="milestone-tile-icon">
+                  <span class="material-symbols-rounded">
+                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+                  </span>
+                </div>
+                <div class="milestone-tile-body">
+                  <p class="milestone-tile-title">{{ milestone.title }}</p>
+                  @if (milestone.price) {
+                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+                  }
+
+                  @if (milestone.alreadyInvoiced) {
+                    <div class="milestone-tile-tags">
+                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                        <span class="material-symbols-rounded">lock</span>
+                        Abgerechnet
+                      </span>
+                    </div>
+                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                    <div class="milestone-tile-tags">
+                      @if (milestone.inDraftInvoice) {
+                        <span class="milestone-tile-tag milestone-tile-tag--draft">
+                          <span class="material-symbols-rounded">edit_note</span>
+                          In Rechnungsentwurf
+                        </span>
+                      }
+                      @if (milestone.milestoneStatus !== 'DONE') {
+                        <span class="milestone-tile-tag milestone-tile-tag--pending">
+                          <span class="material-symbols-rounded">hourglass_empty</span>
+                          Nicht abgeschlossen
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
+        }
+
+        <div class="free-position-row">
+          <input
+            type="text"
+            class="free-description"
+            placeholder="Freie Position, z. B. Gerät (Hardware)"
+            [value]="freeDescription()"
+            (input)="freeDescription.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-quantity"
+            placeholder="Menge"
+            [value]="freeQuantity()"
+            (input)="freeQuantity.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-price"
+            placeholder="Preis netto"
+            [value]="freeUnitPrice()"
+            (input)="freeUnitPrice.set($any($event.target).value)"
+          />
+          <select
+            class="free-tax"
+            [value]="freeTaxRate()"
+            (change)="freeTaxRate.set(+$any($event.target).value)"
+          >
+            @for (rate of taxRateOptions; track rate) {
+              <option [value]="rate">{{ rate }} %</option>
+            }
+          </select>
+          <button type="button" class="free-add-button" (click)="addFreePosition()">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @if (lineItems().length > 0) {
+          <div class="positions-list">
+            @for (item of lineItems(); track item.key) {
+              <div class="position-row">
+                <div class="position-main">
+                  <span class="position-source-icon material-symbols-rounded">
+                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+                  </span>
+                  <div>
+                    <p class="position-description">{{ item.description }}</p>
+                    <p class="position-meta">
+                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
+                    </p>
+                  </div>
+                </div>
+
+                <select
+                  class="position-tax-select"
+                  [value]="item.taxRatePercentage"
+                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+                >
+                  @for (rate of taxRateOptions; track rate) {
+                    <option [value]="rate">{{ rate }} % USt</option>
+                  }
+                </select>
+
+                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
+
+                <button
+                  type="button"
+                  class="position-remove-button"
+                  (click)="removeLineItem(item.key)"
+                >
+                  <span class="material-symbols-rounded">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <span>Netto</span>
+              <span>{{ formatMoney(totals().net) }}</span>
+            </div>
+            @for (group of taxBreakdown(); track group.rate) {
+              <div class="summary-row summary-row--muted">
+                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
+                <span>{{ formatMoney(group.tax) }}</span>
+              </div>
+            }
+            <div class="summary-row summary-row--total">
+              <span>Rechnungsbetrag</span>
+              <span>{{ formatMoney(totals().gross) }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="no-positions-hint">
+            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
+          </p>
+        }
+      }
+    }
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Rechnung anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { environment } from '../../../../environments/environment';
+import { InvoiceStore } from '../../../core/invoices/invoice-store';
+import { ProjectStore } from '../../../core/projects/project-store';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import {
+  CreateInvoiceRequest,
+  InvoicePrefill,
+  LineItemSource,
+  Money,
+  MilestoneOption,
+} from '../../../model/invoice';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+
+export interface CreateInvoiceDialogData {
+  tenantId?: string;
+  projectId?: string;
+}
+
+interface DraftLineItem {
+  key: string;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}
+
+@Component({
+  selector: 'app-create-invoice-dialog',
+  imports: [],
+  templateUrl: './create-invoice-dialog.html',
+  styleUrl: './create-invoice-dialog.scss',
+})
+export class CreateInvoiceDialog {
+  private readonly dialogRef = inject(MatDialogRef<CreateInvoiceDialog>);
+  private readonly invoiceStore = inject(InvoiceStore);
+  protected readonly tenantStore = inject(TenantStore);
+  protected readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+  private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
+
+  readonly taxRateOptions = [19, 7, 0];
+
+  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
+  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly projectLocked = computed(() => !!this.dialogData?.projectId);
+  readonly projectId = signal(this.dialogData?.projectId ?? '');
+  readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
+
+  readonly buyerReference = signal('');
+  readonly paymentTermsDays = signal('14');
+
+  readonly lineItems = signal<DraftLineItem[]>([]);
+
+  readonly freeDescription = signal('');
+  readonly freeQuantity = signal('1');
+  readonly freeUnitPrice = signal('');
+  readonly freeTaxRate = signal(19);
+
+  readonly submitting = signal(false);
+  readonly showWarning = signal(false);
+
+  // Nur Projekte des gewählten Mandanten - Projekt ist bei uns Pflichtfeld
+  readonly tenantProjects = computed(() =>
+    this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
+  );
+
+  private readonly prefillResource = httpResource<InvoicePrefill>(() => {
+    const tenantId = this.tenantId();
+    const projectId = this.projectId();
+    return tenantId && projectId
+      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${tenantId}&projectId=${projectId}`
+      : undefined;
+  });
+
+  readonly prefill = computed(() => this.prefillResource.value());
+  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
+
+  readonly totals = computed(() => {
+    const items = this.lineItems();
+    return {
+      net: items.reduce((sum, i) => sum + this.itemNet(i), 0),
+      tax: items.reduce((sum, i) => sum + this.itemTax(i), 0),
+      gross: items.reduce((sum, i) => sum + this.itemGross(i), 0),
+    };
+  });
+
+  // Aufschlüsselung pro Steuersatz - genau das, was auf der Rechnung als
+  // eigene USt-Zeile je Satz ausgewiesen werden muss
+  readonly taxBreakdown = computed(() => {
+    const map = new Map<number, { net: number; tax: number }>();
+    for (const item of this.lineItems()) {
+      const net = this.itemNet(item);
+      const tax = this.itemTax(item);
+      const entry = map.get(item.taxRatePercentage) ?? { net: 0, tax: 0 };
+      entry.net += net;
+      entry.tax += tax;
+      map.set(item.taxRatePercentage, entry);
+    }
+    return [...map.entries()]
+      .map(([rate, values]) => ({ rate, ...values }))
+      .sort((a, b) => b.rate - a.rate);
+  });
+
+  readonly isValid = computed(
+    () => !!this.tenantId() && !!this.projectId() && this.lineItems().length > 0,
+  );
+
+  itemNet(item: DraftLineItem): number {
+    return item.unitPrice.amount * item.quantity;
+  }
+
+  itemTax(item: DraftLineItem): number {
+    return this.itemNet(item) * (item.taxRatePercentage / 100);
+  }
+
+  itemGross(item: DraftLineItem): number {
+    return this.itemNet(item) + this.itemTax(item);
+  }
+
+  onTenantChange(value: string): void {
+    this.tenantId.set(value);
+    this.projectId.set('');
+    this.lineItems.set([]);
+  }
+
+  onProjectChange(value: string): void {
+    this.projectId.set(value);
+    this.lineItems.set([]);
+  }
+
+  isMilestoneAdded(milestoneId: string): boolean {
+    return this.lineItems().some((i) => i.milestoneId === milestoneId);
+  }
+
+  toggleMilestone(milestone: MilestoneOption): void {
+    if (milestone.alreadyInvoiced) return;
+
+    if (this.isMilestoneAdded(milestone.id)) {
+      this.lineItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
+      return;
+    }
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'MILESTONE',
+        milestoneId: milestone.id,
+        description: milestone.title,
+        quantity: 1,
+        unitCode: 'C62',
+        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
+        taxRatePercentage: 19,
+      },
+    ]);
+  }
+
+  addFreePosition(): void {
+    const description = this.freeDescription().trim();
+    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
+    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
+
+    if (!description || isNaN(amount) || amount <= 0) return;
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'CUSTOM',
+        description,
+        quantity,
+        unitCode: 'C62',
+        unitPrice: { amount, currencyCode: 'EUR' },
+        taxRatePercentage: this.freeTaxRate(),
+      },
+    ]);
+
+    this.freeDescription.set('');
+    this.freeQuantity.set('1');
+    this.freeUnitPrice.set('');
+    this.freeTaxRate.set(19);
+  }
+
+  removeLineItem(key: string): void {
+    this.lineItems.update((list) => list.filter((i) => i.key !== key));
+  }
+
+  updateItemTaxRate(key: string, rate: number): void {
+    this.lineItems.update((list) =>
+      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
+    );
+  }
+
+  formatMoney(amount: number, currencyCode = 'EUR'): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
+      amount,
+    );
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    if (!this.isValid()) {
+      this.showWarning.set(true);
+      return;
+    }
+
+    this.submitting.set(true);
+
+    const request: CreateInvoiceRequest = {
+      tenantId: this.tenantId(),
+      projectId: this.projectId(),
+      buyerReference: this.buyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.paymentTermsDays(), 10) || undefined,
+      lineItems: this.lineItems().map((i) => ({
+        source: i.source,
+        milestoneId: i.milestoneId,
+        description: i.description,
+        quantity: i.quantity,
+        unitCode: i.unitCode,
+        unitPrice: i.unitPrice,
+        taxRatePercentage: i.taxRatePercentage,
+      })),
+    };
+
+    try {
+      const invoice = await this.invoiceStore.create(request);
+      this.dialogRef.close(invoice);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht angelegt werden'));
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }
 </file>
@@ -11781,6 +13666,363 @@ export class Projects {
 }
 </file>
 
+<file path="src/app/pages/tenant-detail/tenant-detail.html">
+@if (tenant(); as t) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Mandanten</span>
+      </button>
+
+      <div class="hero-main">
+        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
+        <div>
+          <h1 class="hero-title">{{ t.companyName }}</h1>
+          @if (t.legalName && t.legalName !== t.companyName) {
+            <p class="hero-legal">{{ t.legalName }}</p>
+          }
+          <span class="status-badge" [class]="'status-badge--' + t.status.toLowerCase()">
+            {{ statusLabels[t.status] }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <p class="info-card-title">Kontaktdaten</p>
+        <div class="info-row">
+          <span class="material-symbols-rounded">mail</span>
+          <span>{{ t.contactEmail || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">call</span>
+          <span>{{ t.contactPhone || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">location_on</span>
+          <span>
+            @if (t.address; as a) {
+              {{ a.street }} {{ a.houseNumber }}, {{ a.postalCode }} {{ a.city }}
+            } @else {
+              -
+            }
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>{{ t.vatId || 'Keine USt-ID hinterlegt' }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Ansprechpartner</p>
+          <div class="header-actions">
+            <span class="count-badge">{{ partners().length }}</span>
+            <button
+              class="add-icon-button"
+              (click)="openAddPartnerDialog()"
+              title="Ansprechpartner hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          </div>
+        </div>
+
+        @for (partner of partners(); track partner.id) {
+          <div class="partner-row">
+            <app-avatar
+              [name]="partner.firstName + ' ' + partner.lastName"
+              [size]="'3.6rem'"
+            ></app-avatar>
+            <div class="partner-info">
+              <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
+              <p class="partner-role">
+                {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
+              </p>
+            </div>
+            <div class="partner-actions">
+              <button
+                class="icon-button"
+                (click)="openRequestTestimonialDialog(partner)"
+                title="Referenz anfragen"
+              >
+                <span class="material-symbols-rounded">rate_review</span>
+              </button>
+              <button
+                class="icon-button"
+                (click)="openEditPartnerDialog(partner)"
+                title="Bearbeiten"
+              >
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+              <button
+                class="icon-button icon-button--danger"
+                (click)="deletePartner(partner)"
+                title="Entfernen"
+              >
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Ansprechpartner hinterlegt.</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Projekte</p>
+          <span class="count-badge">{{ projects().length }}</span>
+        </div>
+        @for (project of projects(); track project.id) {
+          <div class="project-row">
+            <div>
+              <p class="project-title">{{ project.title }}</p>
+              <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
+            </div>
+            <span
+              class="status-badge status-badge--project"
+              [class]="'status-badge--' + project.status.toLowerCase()"
+            >
+              {{ projectStatusLabels[project.status] }}
+            </span>
+          </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
+        }
+      </div>
+    </div>
+
+    <aside class="detail-sidebar">
+      <div class="sidebar-card">
+        <p class="sidebar-label">Website-Sichtbarkeit</p>
+        <div class="website-status" [class.website-status--active]="t.visibleOnWebsite">
+          <span class="material-symbols-rounded">
+            {{ t.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+          </span>
+          <span>{{ t.visibleOnWebsite ? 'Sichtbar' : 'Nicht sichtbar' }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card sidebar-card--dark">
+        <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
+        <button class="sidebar-action" (click)="openEditCoreDetails()">
+          <span class="material-symbols-rounded">business_center</span>
+          <span>Stammdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openEditDialog()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>Kontaktdaten bearbeiten</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateProjectDialog()">
+          <span class="material-symbols-rounded">add</span>
+          <span>Projekt anlegen</span>
+        </button>
+        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnung erstellen</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Mandant wird geladen...</p>
+  </div>
+}
+</file>
+
+<file path="src/app/app.html">
+@if (isPublicPage()) {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="sidebar-logo" />
+        <span class="sidebar-title">CRM</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <span class="material-symbols-rounded">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
+          <span class="material-symbols-rounded">apartment</span>
+          <span>Mandanten</span>
+        </a>
+        <a class="nav-item" routerLink="/projects" routerLinkActive="active">
+          <span class="material-symbols-rounded">work</span>
+          <span>Projekte</span>
+        </a>
+        <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnungen</span>
+        </a>
+        <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
+          <span class="material-symbols-rounded">rate_review</span>
+          <span>Referenzen</span>
+        </a>
+        <a class="nav-item" routerLink="/website" routerLinkActive="active">
+          <span class="material-symbols-rounded">language</span>
+          <span>Website</span>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-search">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" placeholder="Suchen..." />
+        </div>
+
+        <div class="topbar-user">
+          <app-avatar [name]="auth.userName() ?? '?'" [size]="'3.6rem'"></app-avatar>
+          <span class="user-name">{{ auth.userName() ?? 'Wird geladen...' }}</span>
+          <button class="logout-button" (click)="auth.logout()">
+            <span class="material-symbols-rounded">logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+}
+</file>
+
+<file path="src/app/model/invoice.ts">
+import { MilestoneStatus } from './project';
+
+export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export type LineItemSource = 'MILESTONE' | 'CUSTOM';
+
+export interface Money {
+  amount: number;
+  currencyCode: string;
+}
+
+export interface Address {
+  street?: string;
+  houseNumber?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+}
+
+export interface BillingParty {
+  name: string;
+  vatId?: string;
+  address?: Address;
+  email?: string;
+  iban?: string;
+  bic?: string;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  positionNumber: number;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+  netAmount: Money;
+  taxAmount: Money;
+  grossAmount: Money;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string;
+  tenantId: string;
+  projectId?: string;
+  status: InvoiceStatus;
+  currencyCode: string;
+  issueDate?: string;
+  dueDate?: string;
+  paymentTermsDays?: number;
+  buyerReference?: string;
+  seller?: BillingParty;
+  buyer?: BillingParty;
+  lineItems: InvoiceLineItem[];
+  netTotal: Money;
+  taxTotal: Money;
+  grossTotal: Money;
+  documentKey?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---- Requests ----
+
+export interface LineItemRequest {
+  source: LineItemSource;
+  milestoneId?: string;
+  description?: string;
+  quantity?: number;
+  unitCode?: string;
+  unitPrice?: Money;
+  taxRatePercentage?: number;
+}
+
+export interface CreateInvoiceRequest {
+  tenantId: string;
+  projectId?: string;
+  buyerReference?: string;
+  paymentTermsDays?: number;
+  lineItems: LineItemRequest[];
+}
+
+export interface IssueInvoiceRequest {
+  issueDate?: string;
+}
+
+// ---- Prefill ----
+
+export interface MilestoneOption {
+  id: string;
+  title: string;
+  dueDate?: string;
+  price?: Money;
+  alreadyInvoiced: boolean;
+  inDraftInvoice: boolean;
+  milestoneStatus: MilestoneStatus;
+}
+
+export interface InvoicePrefill {
+  suggestedSeller: BillingParty;
+  suggestedBuyer: BillingParty;
+  availableMilestones: MilestoneOption[];
+}
+
+export interface UpdateInvoiceHeaderRequest {
+  buyerReference?: string;
+  paymentTermsDays?: number;
+}
+
+export interface UpdateLineItemRequest {
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}
+</file>
+
 <file path="src/app/pages/tenant-detail/tenant-detail.ts">
 import { Component, computed, inject, input } from '@angular/core';
 import { httpResource } from '@angular/common/http';
@@ -11800,6 +14042,7 @@ import { Tenant, Partner } from '../../model/tenant';
 import { Project } from '../../model/project';
 import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
 import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
+import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -11954,6 +14197,20 @@ export class TenantDetail {
     });
   }
 
+  openRequestTestimonialDialog(partner: Partner): void {
+    const dialogRef = this.dialog.open(RequestTestimonialDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+      data: { partner, projects: this.projects() },
+    });
+
+    dialogRef.afterClosed().subscribe((created) => {
+      if (created) {
+        this.toast.success('Einladung erzeugt');
+      }
+    });
+  }
+
   async deletePartner(partner: Partner): Promise<void> {
     const dialogRef = this.dialog.open(ConfirmDialog, {
       width: '44rem',
@@ -11980,125 +14237,37 @@ export class TenantDetail {
 }
 </file>
 
-<file path="src/app/model/invoice.ts">
-import { MilestoneStatus } from './project';
+<file path="src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { Dashboard } from './pages/dashboard/dashboard';
+import { Tenants } from './pages/tenants/tenants';
+import { TenantDetail } from './pages/tenant-detail/tenant-detail';
+import { Projects } from './pages/projects/projects';
+import { Invoices } from './pages/invoices/invoices';
+import { Testimonials } from './pages/testimonials/testimonials';
+import { Website } from './pages/website/website';
+import { Welcome } from './pages/welcome/welcome';
+import { Login } from './pages/login/login';
+import { SessionExpired } from './pages/session-expired/session-expired';
+import { authGuard } from './core/auth/auth.guard';
+import { ProjectDetail } from './pages/project-details/project-details';
+import { InvoiceDetail } from './pages/invoice-details/invoice-details';
 
-export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export type LineItemSource = 'MILESTONE' | 'CUSTOM';
-
-export interface Money {
-  amount: number;
-  currencyCode: string;
-}
-
-export interface Address {
-  street?: string;
-  houseNumber?: string;
-  postalCode?: string;
-  city?: string;
-  countryCode?: string;
-}
-
-export interface BillingParty {
-  name: string;
-  vatId?: string;
-  address?: Address;
-  email?: string;
-  iban?: string;
-  bic?: string;
-}
-
-export interface InvoiceLineItem {
-  id: string;
-  positionNumber: number;
-  source: LineItemSource;
-  milestoneId?: string;
-  description: string;
-  quantity: number;
-  unitCode: string;
-  unitPrice: Money;
-  taxRatePercentage: number;
-  netAmount: Money;
-  taxAmount: Money;
-  grossAmount: Money;
-}
-
-export interface Invoice {
-  id: string;
-  invoiceNumber?: string;
-  tenantId: string;
-  projectId?: string;
-  status: InvoiceStatus;
-  currencyCode: string;
-  issueDate?: string;
-  dueDate?: string;
-  paymentTermsDays?: number;
-  buyerReference?: string;
-  seller?: BillingParty;
-  buyer?: BillingParty;
-  lineItems: InvoiceLineItem[];
-  netTotal: Money;
-  taxTotal: Money;
-  grossTotal: Money;
-  documentKey?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ---- Requests ----
-
-export interface LineItemRequest {
-  source: LineItemSource;
-  milestoneId?: string;
-  description?: string;
-  quantity?: number;
-  unitCode?: string;
-  unitPrice?: Money;
-  taxRatePercentage?: number;
-}
-
-export interface CreateInvoiceRequest {
-  tenantId: string;
-  projectId?: string;
-  buyerReference?: string;
-  paymentTermsDays?: number;
-  lineItems: LineItemRequest[];
-}
-
-export interface IssueInvoiceRequest {
-  issueDate?: string;
-}
-
-// ---- Prefill ----
-
-export interface MilestoneOption {
-  id: string;
-  title: string;
-  dueDate?: string;
-  price?: Money;
-  alreadyInvoiced: boolean;
-  inDraftInvoice: boolean;
-  milestoneStatus: MilestoneStatus;
-}
-
-export interface InvoicePrefill {
-  suggestedSeller: BillingParty;
-  suggestedBuyer: BillingParty;
-  availableMilestones: MilestoneOption[];
-}
-
-export interface UpdateInvoiceHeaderRequest {
-  buyerReference?: string;
-  paymentTermsDays?: number;
-}
-
-export interface UpdateLineItemRequest {
-  description: string;
-  quantity: number;
-  unitCode: string;
-  unitPrice: Money;
-  taxRatePercentage: number;
-}
+export const routes: Routes = [
+  { path: '', component: Welcome },
+  { path: 'login', component: Login },
+  { path: 'session-expired', component: SessionExpired },
+  { path: 'callback', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
+  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
+  { path: 'projects', component: Projects, canActivate: [authGuard] },
+  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
+  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
+  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
+  { path: 'website', component: Website, canActivate: [authGuard] },
+];
 </file>
 
 </files>

@@ -121,6 +121,28 @@
         </button>
       }
 
+      @if (canSend()) {
+        <button
+          class="issue-button"
+          [disabled]="sending() || alreadySent()"
+          [title]="
+            alreadySent()
+              ? 'Bereits versendet' + (inv.sentAt ? ' am ' + (inv.sentAt | date: 'dd.MM.yyyy') : '')
+              : ''
+          "
+          (click)="sendInvoice()"
+        >
+          @if (!sending()) {
+            <span class="material-symbols-rounded">{{
+              alreadySent() ? 'mark_email_read' : 'forward_to_inbox'
+            }}</span>
+            <span>{{ alreadySent() ? 'Bereits versendet' : 'Per E-Mail versenden' }}</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
       <div class="sidebar-card">
         <p class="sidebar-label">Summen</p>
         <div class="summary-row">

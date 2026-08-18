@@ -58,6 +58,8 @@ export interface Invoice {
   taxTotal: Money;
   grossTotal: Money;
   documentKey?: string;
+  sentToEmail?: string;
+  sentAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +86,12 @@ export interface CreateInvoiceRequest {
 
 export interface IssueInvoiceRequest {
   issueDate?: string;
+  sendEmailDirectly?: boolean;
+  invoiceEmail?: string;
+}
+
+export interface SendInvoiceRequest {
+  email?: string;
 }
 
 // ---- Prefill ----
@@ -101,6 +109,7 @@ export interface MilestoneOption {
 export interface InvoicePrefill {
   suggestedSeller: BillingParty;
   suggestedBuyer: BillingParty;
+  suggestedBuyerReference?: string;
   availableMilestones: MilestoneOption[];
 }
 

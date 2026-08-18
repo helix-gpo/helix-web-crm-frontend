@@ -1,0 +1,24 @@
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper">
+    <span class="material-symbols-rounded">forward_to_inbox</span>
+  </div>
+  <h2 class="confirm-title">Rechnung per E-Mail versenden?</h2>
+  <p class="confirm-message">
+    Die Rechnung wird als PDF-Anhang an die angegebene Adresse gesendet.
+  </p>
+
+  <div class="email-field">
+    <label>Rechnungs-E-Mail-Adresse</label>
+    <input
+      type="email"
+      placeholder="rechnung@mandant.de"
+      [value]="email()"
+      (input)="email.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [disabled]="!canConfirm()" (click)="confirm()">Versenden</button>
+  </div>
+</div>

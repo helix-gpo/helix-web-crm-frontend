@@ -1,0 +1,114 @@
+@use '../../../../styles' as *;
+
+.confirm-dialog {
+  padding: 3.2rem 2.8rem 2.4rem;
+  @include flex-col(1.2rem);
+  align-items: center;
+  text-align: center;
+}
+
+.confirm-icon-wrapper {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background-color: rgba(3, 219, 255, 0.12);
+  @include flex-center;
+  margin-bottom: 0.4rem;
+
+  .material-symbols-rounded {
+    font-size: 3.2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.confirm-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.confirm-message {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 36rem;
+}
+
+.send-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  cursor: pointer;
+  margin-top: 0.8rem;
+
+  input[type='checkbox'] {
+    width: 1.8rem;
+    height: 1.8rem;
+    accent-color: var(--accent-cyan);
+  }
+}
+
+.email-field {
+  width: 100%;
+  text-align: left;
+
+  label {
+    display: block;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-light);
+    font-size: 1.3rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.2rem;
+}
+
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  @include button-base;
+}
+
+.cancel-button {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.confirm-button {
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
