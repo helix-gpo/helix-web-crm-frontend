@@ -17,6 +17,8 @@ import { Project } from '../../model/project';
 import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
 import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
 import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
+import { InvitationSummary } from '../../model/testimonial';
+import { TestimonialApi } from '../../core/testimonials/testimonial-api';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -31,6 +33,7 @@ export class TenantDetail {
   private readonly dialog = inject(MatDialog);
   private readonly tenantStore = inject(TenantStore);
   private readonly tenantApi = inject(TenantApi);
+  private readonly testimonialApi = inject(TestimonialApi);
   private readonly toast = inject(Toast);
 
   private readonly tenantResource = httpResource<Tenant>(
@@ -47,10 +50,17 @@ export class TenantDetail {
     { defaultValue: [] },
   );
 
+  private readonly invitationsResource = httpResource<InvitationSummary[]>(() =>
+    this.tenant()?.id
+      ? `${environment.apiBaseUrl}/testimonial-invitations?tenantId=${this.tenant()!.id}`
+      : undefined,
+  );
+
   readonly tenant = computed(() => this.tenantResource.value());
   readonly loading = computed(() => this.tenantResource.isLoading());
   readonly partners = computed(() => this.partnersResource.value() ?? []);
   readonly projects = computed(() => this.projectsResource.value() ?? []);
+  readonly invitations = computed(() => this.invitationsResource.value() ?? []);
 
   readonly statusLabels: Record<Tenant['status'], string> = {
     PROSPECT: 'Interessent',
@@ -180,9 +190,27 @@ export class TenantDetail {
 
     dialogRef.afterClosed().subscribe((created) => {
       if (created) {
+        this.invitationsResource.reload();
         this.toast.success('Einladung erzeugt');
       }
     });
+  }
+
+  latestInvitationForPartner(partnerId: string): InvitationSummary | null {
+    const list = this.invitations().filter((i) => i.partnerId === partnerId);
+    if (list.length === 0) return null;
+    return list.reduce((latest, i) => (i.createdAt > latest.createdAt ? i : latest));
+  }
+
+  invitationStatusLabel(partnerId: string): string {
+    const inv = this.latestInvitationForPartner(partnerId);
+    if (!inv) return 'Noch nicht eingeladen';
+    if (!inv.sentAt) return 'Link erzeugt, nicht versendet';
+    const date = new Date(inv.sentAt).toLocaleDateString('de-DE');
+    if (inv.status === 'USED') return `Referenz abgegeben (eingeladen am ${date})`;
+    if (inv.status === 'EXPIRED') return `Einladung abgelaufen (versendet am ${date})`;
+    if (inv.status === 'REVOKED') return `Einladung widerrufen`;
+    return `Eingeladen am ${date}`;
   }
 
   async deletePartner(partner: Partner): Promise<void> {

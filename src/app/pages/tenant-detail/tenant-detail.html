@@ -76,6 +76,7 @@
               <p class="partner-role">
                 {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
               </p>
+              <p class="partner-invitation-status">{{ invitationStatusLabel(partner.id) }}</p>
             </div>
             <div class="partner-actions">
               <button

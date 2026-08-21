@@ -2,7 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateInvitationRequest, InvitationResponse, Testimonial } from '../../model/testimonial';
+import {
+  CreateInvitationRequest,
+  InvitationResponse,
+  InvitationSummary,
+  Testimonial,
+} from '../../model/testimonial';
 
 @Injectable({ providedIn: 'root' })
 export class TestimonialApi {
@@ -29,6 +34,12 @@ export class TestimonialApi {
     return this.http.post<InvitationResponse>(
       `${environment.apiBaseUrl}/testimonial-invitations`,
       request,
+    );
+  }
+
+  findInvitationsByTenant(tenantId: string): Observable<InvitationSummary[]> {
+    return this.http.get<InvitationSummary[]>(
+      `${environment.apiBaseUrl}/testimonial-invitations?tenantId=${tenantId}`,
     );
   }
 }

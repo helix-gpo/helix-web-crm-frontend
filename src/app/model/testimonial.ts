@@ -19,10 +19,26 @@ export interface CreateInvitationRequest {
   partnerId: string;
   projectId?: string;
   expiresInDays?: number;
+  sendEmail?: boolean;
+  email?: string;
 }
 
 export interface InvitationResponse {
   invitationId: string;
   rawToken: string;
   expiresAt: string;
+  sent: boolean;
+  sentToEmail?: string;
+}
+
+export interface InvitationSummary {
+  id: string;
+  partnerId: string;
+  projectId?: string;
+  status: 'PENDING' | 'USED' | 'EXPIRED' | 'REVOKED';
+  sentToEmail?: string;
+  sentAt?: string;
+  expiresAt: string;
+  usedAt?: string;
+  createdAt: string;
 }

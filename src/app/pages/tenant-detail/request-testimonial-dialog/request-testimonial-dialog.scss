@@ -146,3 +146,24 @@
     cursor: not-allowed;
   }
 }
+
+.send-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 1.8rem;
+    height: 1.8rem;
+    accent-color: var(--accent-cyan);
+  }
+}
+
+.field-hint {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}

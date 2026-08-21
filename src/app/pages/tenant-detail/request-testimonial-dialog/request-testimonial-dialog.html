@@ -12,6 +12,28 @@
       einmaliger Link erzeugt, über den eine Referenz abgegeben werden kann.
     </p>
 
+    <label class="send-checkbox-row">
+      <input type="checkbox" [checked]="sendEmail()" (change)="toggleSendEmail()" />
+      <span>Direkt per E-Mail versenden</span>
+    </label>
+
+    @if (sendEmail()) {
+      <div class="field">
+        <label>E-Mail-Adresse</label>
+        <input
+          type="email"
+          placeholder="partner@mandant.de"
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
+        />
+        @if (!data.partner.email) {
+          <p class="field-hint">
+            Für diesen Partner ist keine E-Mail hinterlegt - bitte manuell eintragen.
+          </p>
+        }
+      </div>
+    }
+
     <div class="field">
       <label>Projekt (optional)</label>
       <select [value]="projectId()" (change)="projectId.set($any($event.target).value)">
@@ -35,16 +57,25 @@
 
   <div class="dialog-footer">
     <button class="cancel-button" (click)="close()">Abbrechen</button>
-    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
-      {{ submitting() ? 'Wird erzeugt...' : 'Link erzeugen' }}
+    <button class="submit-button" [disabled]="submitting() || !canSubmit()" (click)="submit()">
+      {{
+        submitting() ? 'Wird erzeugt...' : sendEmail() ? 'Erzeugen & versenden' : 'Link erzeugen'
+      }}
     </button>
   </div>
 } @else {
   <div class="dialog-body">
-    <p class="dialog-intro">
-      Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
-      {{ data.partner.firstName }} senden.
-    </p>
+    @if (wasSent()) {
+      <p class="dialog-intro">
+        Die Einladung wurde per E-Mail an {{ data.partner.firstName }} versendet. Der Link kann
+        zusätzlich manuell weitergegeben werden:
+      </p>
+    } @else {
+      <p class="dialog-intro">
+        Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
+        {{ data.partner.firstName }} senden.
+      </p>
+    }
 
     <div class="link-box">
       <span class="link-text">{{ generatedLink() }}</span>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -10,7 +10,7 @@ import { Project } from '../../../model/project';
 
 export interface RequestTestimonialDialogData {
   partner: Partner;
-  projects: Project[]; // Projekte dieses Mandanten, zur optionalen Auswahl
+  projects: Project[];
 }
 
 @Component({
@@ -29,19 +29,24 @@ export class RequestTestimonialDialog {
   readonly expiresInDays = signal('30');
   readonly submitting = signal(false);
 
-  // Sobald gesetzt, zeigt der Dialog den fertigen Link statt des Formulars -
-  // der Token kommt nur EINMAL vom Backend zurück (nur der Hash landet in
-  // der DB), muss also sofort sichtbar gemacht werden
+  readonly sendEmail = signal(!!this.data.partner.email);
+  readonly email = signal(this.data.partner.email ?? '');
+  readonly canSubmit = computed(() => !this.sendEmail() || this.email().trim().length > 3);
+
   readonly generatedLink = signal<string | null>(null);
+  readonly wasSent = signal(false);
   readonly copied = signal(false);
 
+  toggleSendEmail(): void {
+    this.sendEmail.update((v) => !v);
+  }
+
   close(): void {
-    // true = es wurde tatsächlich eine Einladung erzeugt (für Toast im
-    // Aufrufer), egal ob der Link schon kopiert wurde oder nicht
     this.dialogRef.close(!!this.generatedLink());
   }
 
   async submit(): Promise<void> {
+    if (!this.canSubmit()) return;
     this.submitting.set(true);
     try {
       const response = await firstValueFrom(
@@ -49,9 +54,12 @@ export class RequestTestimonialDialog {
           partnerId: this.data.partner.id,
           projectId: this.projectId() || undefined,
           expiresInDays: parseInt(this.expiresInDays(), 10) || undefined,
+          sendEmail: this.sendEmail(),
+          email: this.sendEmail() ? this.email().trim() : undefined,
         }),
       );
       this.generatedLink.set(`${environment.websiteBaseUrl}/feedback?token=${response.rawToken}`);
+      this.wasSent.set(response.sent);
     } catch (err) {
       this.toast.error(extractErrorMessage(err, 'Einladung konnte nicht erzeugt werden'));
     } finally {
