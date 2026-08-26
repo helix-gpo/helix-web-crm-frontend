@@ -109,6 +109,7 @@ export interface MilestoneOption {
 export interface InvoicePrefill {
   suggestedSeller: BillingParty;
   suggestedBuyer: BillingParty;
+  buyerDataComplete: boolean;
   suggestedBuyerReference?: string;
   availableMilestones: MilestoneOption[];
 }

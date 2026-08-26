@@ -73,6 +73,10 @@ export class CreateInvoiceDialog {
     this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
   );
 
+  readonly buyerDataIncomplete = computed(
+    () => this.prefill() != null && !this.prefill()!.buyerDataComplete,
+  );
+
   readonly suggestedBuyerReference = computed(
     () => this.prefill()?.suggestedBuyerReference ?? null,
   );
