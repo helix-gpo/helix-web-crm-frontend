@@ -18,12 +18,21 @@
         <select [disabled]="tenantLocked()" (change)="tenantId.set($any($event.target).value)">
           <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
           @for (tenant of tenantStore.tenants(); track tenant.id) {
-            <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
-              {{ tenant.companyName }}
+            <option
+              [value]="tenant.id"
+              [selected]="tenant.id === tenantId()"
+              [disabled]="tenant.status !== 'ACTIVE'"
+            >
+              {{ tenant.companyName }}{{ tenant.status !== 'ACTIVE' ? ' (Inaktiv)' : '' }}
             </option>
           }
         </select>
       </div>
+      @if (selectedTenant() && selectedTenant()!.status !== 'ACTIVE') {
+        <p class="field-hint field-hint--warning">
+          Dieser Mandant ist inaktiv - Projekte können erst nach Reaktivierung angelegt werden.
+        </p>
+      }
     </div>
 
     <div class="field">

@@ -27,6 +27,7 @@ import {
 } from './issue-invoice-dialog/issue-invoice-dialog';
 import { SendInvoiceDialog } from './send-invoice-dialog/send-invoice-dialog';
 import { DatePipe } from '@angular/common';
+import { MarkPaidDialog } from './mark-paid-dialog/mark-paid-dialog';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -55,6 +56,12 @@ export class InvoiceDetail {
   private readonly invoiceResource = httpResource<Invoice>(
     () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
   );
+
+  readonly markingPaid = signal(false);
+  readonly canMarkPaid = computed(() => {
+    const status = this.invoice()?.status;
+    return status === 'ISSUED' || status === 'SENT' || status === 'OVERDUE';
+  });
 
   readonly invoice = computed(() => this.invoiceResource.value());
   readonly loading = computed(() => this.invoiceResource.isLoading());
@@ -163,13 +170,9 @@ export class InvoiceDetail {
 
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (confirmed) {
-      try {
-        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
-        this.refreshEverywhere();
-        this.toast.success('Position entfernt');
-      } catch (err) {
-        this.toast.error(extractErrorMessage(err, 'Position konnte nicht entfernt werden'));
-      }
+      await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
+      this.refreshEverywhere();
+      this.toast.success('Position entfernt');
     }
   }
 
@@ -199,8 +202,6 @@ export class InvoiceDetail {
       this.toast.success(
         result.sendEmail ? 'Rechnung ausgestellt und versendet' : 'Rechnung ausgestellt',
       );
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
     } finally {
       this.issuing.set(false);
     }
@@ -224,8 +225,6 @@ export class InvoiceDetail {
       await firstValueFrom(this.invoiceApi.send(inv.id, { email }));
       this.refreshEverywhere();
       this.toast.success('Rechnung versendet');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht versendet werden'));
     } finally {
       this.sending.set(false);
     }
@@ -234,12 +233,8 @@ export class InvoiceDetail {
   async openDocument(): Promise<void> {
     const inv = this.invoice();
     if (!inv) return;
-    try {
-      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
-      window.open(url, '_blank');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Dokument konnte nicht geladen werden'));
-    }
+    const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+    window.open(url, '_blank');
   }
 
   startEditHeader(): void {
@@ -269,8 +264,6 @@ export class InvoiceDetail {
       this.editingHeader.set(false);
       this.refreshEverywhere();
       this.toast.success('Rechnungsdaten aktualisiert');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Aktualisierung fehlgeschlagen'));
     } finally {
       this.savingHeader.set(false);
     }
@@ -318,9 +311,29 @@ export class InvoiceDetail {
       this.invoiceStore.reload();
       this.toast.success('Entwurf gelöscht');
       this.router.navigate(['/invoices']);
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Löschen fehlgeschlagen'));
+    } finally {
       this.deletingDraft.set(false);
+    }
+  }
+
+  async markPaid(): Promise<void> {
+    if (!this.canMarkPaid()) return;
+
+    const dialogRef = this.dialog.open(MarkPaidDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    const paidDate = await firstValueFrom(dialogRef.afterClosed());
+    if (!paidDate) return;
+
+    this.markingPaid.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.markPaid(this.invoice()!.id, { paidDate }));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung als bezahlt markiert');
+    } finally {
+      this.markingPaid.set(false);
     }
   }
 }

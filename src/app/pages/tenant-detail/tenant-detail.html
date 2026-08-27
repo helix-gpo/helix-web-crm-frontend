@@ -8,7 +8,38 @@
       </button>
 
       <div class="hero-main">
-        <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
+        @if (t.logoUrl) {
+          <app-image-upload
+            [imageUrl]="t.logoUrl"
+            shape="circle"
+            [uploading]="uploadingLogo()"
+            (fileSelected)="uploadLogo($event)"
+            (removed)="removeLogo()"
+          />
+        } @else {
+          <button
+            class="logo-upload-placeholder"
+            type="button"
+            (click)="logoFileInput.click()"
+            title="Logo hochladen"
+          >
+            <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
+            <div class="logo-upload-placeholder-overlay">
+              @if (uploadingLogo()) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+              } @else {
+                <span class="material-symbols-rounded">add_a_photo</span>
+              }
+            </div>
+          </button>
+          <input
+            #logoFileInput
+            type="file"
+            hidden
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onLogoFileChange($event)"
+          />
+        }
         <div>
           <h1 class="hero-title">{{ t.companyName }}</h1>
           @if (t.legalName && t.legalName !== t.companyName) {
@@ -67,10 +98,14 @@
 
         @for (partner of partners(); track partner.id) {
           <div class="partner-row">
-            <app-avatar
-              [name]="partner.firstName + ' ' + partner.lastName"
-              [size]="'3.6rem'"
-            ></app-avatar>
+            @if (partner.photoUrl) {
+              <img class="partner-avatar" [src]="partner.photoUrl" alt="" />
+            } @else {
+              <app-avatar
+                [name]="partner.firstName + ' ' + partner.lastName"
+                [size]="'3.6rem'"
+              ></app-avatar>
+            }
             <div class="partner-info">
               <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
               <p class="partner-role">
@@ -152,9 +187,20 @@
           <span class="material-symbols-rounded">edit</span>
           <span>Kontaktdaten bearbeiten</span>
         </button>
-        <button class="sidebar-action" (click)="openCreateProjectDialog()">
-          <span class="material-symbols-rounded">add</span>
-          <span>Projekt anlegen</span>
+        <button
+          class="sidebar-action"
+          [class.sidebar-action--disabled]="!canCreateProject()"
+          [disabled]="!canCreateProject()"
+          [title]="canCreateProject() ? '' : 'Nur für aktive Mandanten möglich'"
+          (click)="openCreateProjectDialog()"
+        >
+          <span class="material-symbols-rounded">{{ canCreateProject() ? 'add' : 'lock' }}</span>
+          <span class="sidebar-action-text">
+            <span>Projekt anlegen</span>
+            @if (!canCreateProject()) {
+              <span class="sidebar-action-hint">Mandant ist inaktiv</span>
+            }
+          </span>
         </button>
         <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
           <span class="material-symbols-rounded">receipt_long</span>

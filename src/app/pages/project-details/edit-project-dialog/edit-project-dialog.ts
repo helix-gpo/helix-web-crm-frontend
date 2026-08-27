@@ -31,6 +31,7 @@ export class EditProjectDialog {
   readonly startDate = signal(this.data.startDate ?? '');
   readonly endDate = signal(this.data.endDate ?? '');
   readonly status = signal<ProjectStatus>(this.data.status);
+  readonly notes = signal(this.data.notes ?? '');
 
   readonly highlights = signal<string[]>([...this.data.highlights]);
   readonly newHighlight = signal('');
@@ -96,11 +97,15 @@ export class EditProjectDialog {
         }),
       );
 
-      // Status separat ändern, da er über einen eigenen Endpunkt läuft -
-      // nur aufrufen, wenn er sich tatsächlich geändert hat
       if (this.status() !== this.data.status) {
         updated = await firstValueFrom(this.projectApi.changeStatus(this.data.id, this.status()));
       }
+
+      updated = await firstValueFrom(
+        this.projectApi.updateNotes(this.data.id, {
+          notes: this.notes().trim() || undefined,
+        }),
+      );
 
       this.dialogRef.close(updated);
     } finally {

@@ -15,6 +15,7 @@ import localeDe from '@angular/common/locales/de';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { errorInterceptor } from './core/errors/error.interceptor';
 import { Auth } from './core/auth/auth';
 
 registerLocaleData(localeDe);
@@ -25,7 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideOAuthClient(),
     provideAppInitializer(() => inject(Auth).init()),
     { provide: LOCALE_ID, useValue: 'de' },

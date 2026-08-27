@@ -62,6 +62,11 @@ export interface Invoice {
   sentAt?: string;
   createdAt: string;
   updatedAt: string;
+  paidDate?: string;
+}
+
+export interface MarkPaidRequest {
+  paidDate?: string;
 }
 
 // ---- Requests ----

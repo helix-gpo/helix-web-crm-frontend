@@ -6,6 +6,19 @@
 </div>
 
 <div class="dialog-body">
+  @if (isEditMode()) {
+    <app-image-upload
+      [imageUrl]="data.partner?.photoUrl"
+      placeholderIcon="person"
+      shape="circle"
+      [uploading]="uploadingPhoto()"
+      (fileSelected)="uploadPhoto($event)"
+      (removed)="removePhoto()"
+    />
+  } @else {
+    <p class="field-hint">Foto kann ergänzt werden, sobald der Ansprechpartner angelegt ist.</p>
+  }
+
   <div class="field-row">
     <div class="field">
       <label [class.warning]="showNameWarning()">Vorname *</label>

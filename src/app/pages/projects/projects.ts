@@ -108,18 +108,14 @@ export class Projects {
   }
 
   async togglePublish(project: Project): Promise<void> {
-    try {
-      const call = project.visibleOnWebsite
-        ? this.projectApi.unpublish(project.id)
-        : this.projectApi.publish(project.id);
-      await firstValueFrom(call);
-      this.projectStore.reload();
-      this.toast.success(
-        project.visibleOnWebsite ? 'Von Website entfernt' : 'Auf Website veröffentlicht',
-      );
-    } catch {
-      this.toast.error('Aktion fehlgeschlagen');
-    }
+    const call = project.visibleOnWebsite
+      ? this.projectApi.unpublish(project.id)
+      : this.projectApi.publish(project.id);
+    await firstValueFrom(call);
+    this.projectStore.reload();
+    this.toast.success(
+      project.visibleOnWebsite ? 'Von Website entfernt' : 'Auf Website veröffentlicht',
+    );
   }
 
   async cancelProject(project: Project): Promise<void> {
@@ -136,13 +132,9 @@ export class Projects {
 
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (confirmed) {
-      try {
-        await firstValueFrom(this.projectApi.changeStatus(project.id, 'CANCELLED'));
-        this.projectStore.reload();
-        this.toast.success(`${project.title} abgebrochen`);
-      } catch {
-        this.toast.error('Projekt konnte nicht abgebrochen werden');
-      }
+      await firstValueFrom(this.projectApi.changeStatus(project.id, 'CANCELLED'));
+      this.projectStore.reload();
+      this.toast.success(`${project.title} abgebrochen`);
     }
   }
 }

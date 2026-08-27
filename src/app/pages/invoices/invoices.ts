@@ -3,7 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { InvoiceStore } from '../../core/invoices/invoice-store';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { Invoice, InvoiceStatus } from '../../model/invoice';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { Toast } from '../../core/toast/toast';
 import { CreateInvoiceDialog } from './create-invoice-dialog/create-invoice-dialog';
 import { Router } from '@angular/router';

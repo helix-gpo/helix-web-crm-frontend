@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Avatar } from '../../util/avatar/avatar';
 import { TestimonialStore } from '../../core/testimonials/testimonial-store';
 import { Toast } from '../../core/toast/toast';
-import { extractErrorMessage } from '../../core/errors/error-message';
 import { TestimonialStatus } from '../../model/testimonial';
 
 type TabFilter = TestimonialStatus | 'ALL';
@@ -49,8 +48,6 @@ export class Testimonials {
     try {
       await this.testimonialStore.approve(id);
       this.toast.success('Referenz freigegeben');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Freigabe fehlgeschlagen'));
     } finally {
       this.processingId.set(null);
     }
@@ -61,8 +58,6 @@ export class Testimonials {
     try {
       await this.testimonialStore.reject(id);
       this.toast.success('Referenz abgelehnt');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Ablehnung fehlgeschlagen'));
     } finally {
       this.processingId.set(null);
     }
@@ -73,8 +68,6 @@ export class Testimonials {
     try {
       await this.testimonialStore.publish(id);
       this.toast.success('Referenz auf der Website veröffentlicht');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
     } finally {
       this.processingId.set(null);
     }
@@ -85,8 +78,6 @@ export class Testimonials {
     try {
       await this.testimonialStore.unpublish(id);
       this.toast.success('Referenz von der Website entfernt');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
     } finally {
       this.processingId.set(null);
     }

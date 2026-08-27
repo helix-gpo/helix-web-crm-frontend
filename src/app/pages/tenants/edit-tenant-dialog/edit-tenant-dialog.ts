@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Tenant } from '../../../model/tenant';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TenantStore } from '../../../core/tenants/tenant-store';
-import { Tenant } from '../../../model/tenant';
 
 @Component({
   selector: 'app-edit-tenant-dialog',
@@ -20,6 +20,8 @@ export class EditTenantDialog {
   readonly houseNumber = signal(this.tenant.address?.houseNumber ?? '');
   readonly postalCode = signal(this.tenant.address?.postalCode ?? '');
   readonly city = signal(this.tenant.address?.city ?? '');
+  readonly websiteUrl = signal(this.tenant.websiteUrl ?? '');
+  readonly notes = signal(this.tenant.notes ?? '');
 
   readonly submitting = signal(false);
 
@@ -33,9 +35,10 @@ export class EditTenantDialog {
     this.submitting.set(true);
 
     try {
-      const updated = await this.tenantStore.update(this.tenant.id, {
+      await this.tenantStore.update(this.tenant.id, {
         contactEmail: this.contactEmail().trim() || undefined,
         contactPhone: this.contactPhone().trim() || undefined,
+        websiteUrl: this.websiteUrl().trim() || undefined,
         address:
           this.street() || this.city()
             ? {
@@ -47,6 +50,11 @@ export class EditTenantDialog {
               }
             : undefined,
       });
+
+      const updated = await this.tenantStore.updateNotes(this.tenant.id, {
+        notes: this.notes().trim() || undefined,
+      });
+
       this.dialogRef.close(updated);
     } finally {
       this.submitting.set(false);

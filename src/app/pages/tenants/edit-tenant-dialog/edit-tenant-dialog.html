@@ -57,6 +57,32 @@
         <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
       </div>
     </div>
+
+    <div class="field-row">
+      <div class="field field--full">
+        <label>Website</label>
+        <input
+          type="url"
+          placeholder="https://beispiel.de"
+          [value]="websiteUrl()"
+          (input)="websiteUrl.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <p class="section-title">Notizen</p>
+    <div class="field-row">
+      <div class="field field--full">
+        <textarea
+          rows="4"
+          placeholder="Interne Notizen zu diesem Mandanten..."
+          [value]="notes()"
+          (input)="notes.set($any($event.target).value)"
+        ></textarea>
+      </div>
+    </div>
   </div>
 
   <p class="edit-hint">

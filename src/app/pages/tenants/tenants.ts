@@ -43,21 +43,13 @@ export class Tenants {
   }
 
   async activate(tenant: Tenant): Promise<void> {
-    try {
-      await this.tenantStore.activate(tenant.id);
-      this.toast.success(`${tenant.companyName} aktiviert`);
-    } catch {
-      this.toast.error('Mandant konnte nicht aktiviert werden');
-    }
+    await this.tenantStore.activate(tenant.id);
+    this.toast.success(`${tenant.companyName} aktiviert`);
   }
 
   async archive(tenant: Tenant): Promise<void> {
-    try {
-      await this.tenantStore.archive(tenant.id);
-      this.toast.success(`${tenant.companyName} archiviert`);
-    } catch {
-      this.toast.error('Mandant konnte nicht archiviert werden');
-    }
+    await this.tenantStore.archive(tenant.id);
+    this.toast.success(`${tenant.companyName} archiviert`);
   }
 
   openCreateDialog(): void {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -19,10 +19,11 @@ import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-in
 import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
 import { InvitationSummary } from '../../model/testimonial';
 import { TestimonialApi } from '../../core/testimonials/testimonial-api';
+import { ImageUpload } from '../../shared/image-upload/image-upload';
 
 @Component({
   selector: 'app-tenant-detail',
-  imports: [Avatar, MatDialogModule],
+  imports: [Avatar, MatDialogModule, ImageUpload],
   templateUrl: './tenant-detail.html',
   styleUrl: './tenant-detail.scss',
 })
@@ -56,11 +57,15 @@ export class TenantDetail {
       : undefined,
   );
 
+  readonly uploadingLogo = signal(false);
+
   readonly tenant = computed(() => this.tenantResource.value());
   readonly loading = computed(() => this.tenantResource.isLoading());
   readonly partners = computed(() => this.partnersResource.value() ?? []);
   readonly projects = computed(() => this.projectsResource.value() ?? []);
   readonly invitations = computed(() => this.invitationsResource.value() ?? []);
+
+  readonly canCreateProject = computed(() => this.tenant()?.status === 'ACTIVE');
 
   readonly statusLabels: Record<Tenant['status'], string> = {
     PROSPECT: 'Interessent',
@@ -227,13 +232,38 @@ export class TenantDetail {
 
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (confirmed) {
-      try {
-        await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
-        this.partnersResource.reload();
-        this.toast.success('Ansprechpartner entfernt');
-      } catch {
-        this.toast.error('Ansprechpartner konnte nicht entfernt werden');
-      }
+      await firstValueFrom(this.tenantApi.removePartner(this.id(), partner.id));
+      this.partnersResource.reload();
+      this.toast.success('Ansprechpartner entfernt');
     }
+  }
+
+  async uploadLogo(file: File): Promise<void> {
+    this.uploadingLogo.set(true);
+    try {
+      await firstValueFrom(this.tenantApi.uploadLogo(this.id(), file));
+      this.refreshEverywhere();
+      this.toast.success('Logo hochgeladen');
+    } finally {
+      this.uploadingLogo.set(false);
+    }
+  }
+
+  async removeLogo(): Promise<void> {
+    this.uploadingLogo.set(true);
+    try {
+      await firstValueFrom(this.tenantApi.removeLogo(this.id()));
+      this.refreshEverywhere();
+      this.toast.success('Logo entfernt');
+    } finally {
+      this.uploadingLogo.set(false);
+    }
+  }
+
+  onLogoFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.uploadLogo(file);
+    input.value = '';
   }
 }

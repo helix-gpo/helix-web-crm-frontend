@@ -237,3 +237,11 @@
     transform: rotate(360deg);
   }
 }
+
+.cell-avatar-img {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}

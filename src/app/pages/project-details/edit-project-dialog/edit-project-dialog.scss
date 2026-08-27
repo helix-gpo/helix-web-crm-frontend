@@ -56,6 +56,25 @@
   }
 }
 
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
 .section-title {
   font-size: 1.3rem;
   font-weight: 700;

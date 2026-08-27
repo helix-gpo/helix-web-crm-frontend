@@ -33,6 +33,11 @@
   @include flex-col(1.4rem);
 }
 
+.field-hint {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

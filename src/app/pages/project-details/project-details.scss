@@ -40,6 +40,12 @@
   }
 }
 
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
 .hero-tenant {
   font-size: 1.4rem;
   font-weight: 600;
@@ -115,8 +121,28 @@
   margin-bottom: 1.6rem;
 }
 
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
 .info-card-header .info-card-title {
   margin-bottom: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.count-badge {
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.2rem 1rem;
+  border-radius: 50rem;
 }
 
 .add-icon-button {

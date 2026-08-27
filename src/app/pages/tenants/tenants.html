@@ -48,7 +48,11 @@
     @for (tenant of filteredTenants(); track tenant.id) {
       <div class="table-row" (click)="openDetail(tenant.id)">
         <div class="tenant-cell">
-          <app-avatar [name]="tenant.companyName"></app-avatar>
+          @if (tenant.logoUrl) {
+            <img class="cell-avatar-img" [src]="tenant.logoUrl" alt="" />
+          } @else {
+            <app-avatar [name]="tenant.companyName"></app-avatar>
+          }
           <div>
             <p class="tenant-name">{{ tenant.companyName }}</p>
             @if (tenant.vatId) {
@@ -57,8 +61,8 @@
           </div>
         </div>
 
-        <span class="contact-cell">{{ tenant.contactEmail || '–' }}</span>
-        <span class="city-cell">{{ tenant.address?.city || '–' }}</span>
+        <span class="contact-cell">{{ tenant.contactEmail || '-' }}</span>
+        <span class="city-cell">{{ tenant.address?.city || '-' }}</span>
 
         <span class="status-badge" [class]="'status-badge--' + tenant.status.toLowerCase()">
           {{ statusLabels[tenant.status] }}

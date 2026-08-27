@@ -46,6 +46,36 @@
   gap: 2rem;
 }
 
+.logo-upload-placeholder {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.logo-upload-placeholder-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 20, 36, 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  .material-symbols-rounded {
+    color: #fff;
+    font-size: 2rem;
+  }
+}
+
+.logo-upload-placeholder:hover .logo-upload-placeholder-overlay {
+  opacity: 1;
+}
+
 .hero-title {
   font-size: 2.8rem;
   font-weight: 700;
@@ -220,8 +250,37 @@
     color: var(--accent-cyan);
   }
 
+  .sidebar-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .sidebar-action-hint {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #ffb020;
+  }
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &.sidebar-action--disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+
+    .material-symbols-rounded {
+      color: #ffb020;
+    }
+
+    .sidebar-action-text > span:first-child {
+      color: var(--text-muted);
+    }
+
+    &:hover {
+      background-color: transparent;
+    }
   }
 }
 
@@ -299,6 +358,14 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
+}
+
+.partner-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .partner-info {

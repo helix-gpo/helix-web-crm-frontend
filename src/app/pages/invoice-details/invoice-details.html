@@ -143,6 +143,17 @@
         </button>
       }
 
+      @if (canMarkPaid()) {
+        <button class="issue-button" [disabled]="markingPaid()" (click)="markPaid()">
+          @if (!markingPaid()) {
+            <span class="material-symbols-rounded">paid</span>
+            <span>Als bezahlt markieren</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
       <div class="sidebar-card">
         <p class="sidebar-label">Summen</p>
         <div class="summary-row">

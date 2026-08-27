@@ -9,6 +9,7 @@ import {
   AddMilestoneRequest,
   UpdateMilestoneRequest,
   UpdateProjectRequest,
+  UpdateProjectNotesRequest,
 } from '../../model/project';
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +41,10 @@ export class ProjectApi {
     return this.http.patch<Project>(`${this.baseUrl}/${id}`, request);
   }
 
+  updateNotes(id: string, request: UpdateProjectNotesRequest): Observable<Project> {
+    return this.http.patch<Project>(`${this.baseUrl}/${id}/notes`, request);
+  }
+
   addMilestone(id: string, request: AddMilestoneRequest): Observable<Milestone> {
     return this.http.post<Milestone>(`${this.baseUrl}/${id}/milestones`, request);
   }
@@ -68,5 +73,15 @@ export class ProjectApi {
 
   removeMilestone(projectId: string, milestoneId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${projectId}/milestones/${milestoneId}`);
+  }
+
+  uploadImage(id: string, file: File): Observable<Project> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<Project>(`${this.baseUrl}/${id}/image`, formData);
+  }
+
+  removeImage(id: string): Observable<Project> {
+    return this.http.delete<Project>(`${this.baseUrl}/${id}/image`);
   }
 }

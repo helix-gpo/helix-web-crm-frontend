@@ -8,6 +8,7 @@ import {
   Tenant,
   UpdateTenantContactDetailsRequest,
   UpdateTenantCoreDetailsRequest,
+  UpdateTenantNotesRequest,
 } from '../../model/tenant';
 import { TenantApi } from './tenant-api';
 
@@ -55,6 +56,12 @@ export class TenantStore {
 
   async update(tenantId: string, request: UpdateTenantContactDetailsRequest): Promise<Tenant> {
     const tenant = await firstValueFrom(this.tenantApi.updateContactDetails(tenantId, request));
+    this.reload();
+    return tenant;
+  }
+
+  async updateNotes(tenantId: string, request: UpdateTenantNotesRequest): Promise<Tenant> {
+    const tenant = await firstValueFrom(this.tenantApi.updateNotes(tenantId, request));
     this.reload();
     return tenant;
   }

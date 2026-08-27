@@ -32,6 +32,8 @@ export interface Project {
   startDate?: string;
   endDate?: string;
   visibleOnWebsite: boolean;
+  imageUrl?: string;
+  notes?: string;
   milestones: Milestone[];
   createdAt: string;
   updatedAt: string;
@@ -57,6 +59,10 @@ export interface UpdateProjectRequest {
   tags: ProjectTag[];
   startDate?: string;
   endDate?: string;
+}
+
+export interface UpdateProjectNotesRequest {
+  notes?: string;
 }
 
 export interface AddMilestoneRequest {

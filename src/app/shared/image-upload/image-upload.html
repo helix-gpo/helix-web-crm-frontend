@@ -1,0 +1,31 @@
+<div class="image-upload" [class.image-upload--circle]="shape === 'circle'">
+  <label class="image-upload-dropzone" [class.image-upload-dropzone--has-image]="imageUrl">
+    @if (uploading) {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    } @else if (imageUrl) {
+      <img [src]="imageUrl" alt="" />
+      <div class="image-upload-overlay">
+        <span class="material-symbols-rounded">edit</span>
+      </div>
+    } @else {
+      <span class="material-symbols-rounded">{{ placeholderIcon }}</span>
+      <span class="image-upload-hint">Bild hochladen</span>
+    }
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      [disabled]="uploading"
+      (change)="onFileChange($event)"
+    />
+  </label>
+  @if (imageUrl && !uploading) {
+    <button
+      class="image-upload-remove"
+      type="button"
+      title="Bild entfernen"
+      (click)="remove($event)"
+    >
+      <span class="material-symbols-rounded">close</span>
+    </button>
+  }
+</div>

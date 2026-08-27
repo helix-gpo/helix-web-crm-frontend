@@ -163,6 +163,14 @@
   padding: 1.6rem;
 }
 
+.cell-avatar-img {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .project-title {
   font-size: 1.5rem;
   font-weight: 700;

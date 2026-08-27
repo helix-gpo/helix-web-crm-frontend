@@ -30,7 +30,11 @@
     @for (testimonial of filteredTestimonials(); track testimonial.id) {
       <div class="testimonial-card">
         <div class="testimonial-header">
-          <app-avatar [name]="testimonial.partnerName"></app-avatar>
+          @if (testimonial.partnerPhotoUrl) {
+            <img class="cell-avatar-img" [src]="testimonial.partnerPhotoUrl" alt="" />
+          } @else {
+            <app-avatar [name]="testimonial.partnerName"></app-avatar>
+          }
           <div class="testimonial-stars">
             @for (i of ratingArray; track i) {
               <span

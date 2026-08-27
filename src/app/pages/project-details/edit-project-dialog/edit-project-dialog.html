@@ -56,6 +56,18 @@
   </div>
 
   <div class="field-group">
+    <p class="section-title">Notizen</p>
+    <div class="field">
+      <textarea
+        rows="3"
+        placeholder="Interne Notizen zu diesem Projekt..."
+        [value]="notes()"
+        (input)="notes.set($any($event.target).value)"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="field-group">
     <p class="section-title">Highlights</p>
     @if (highlights().length > 0) {
       <div class="chip-list">

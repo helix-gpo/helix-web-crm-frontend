@@ -59,7 +59,16 @@ export class CreateProjectDialog {
   readonly submitting = signal(false);
   readonly showWarning = signal(false);
 
-  readonly isValid = computed(() => this.tenantId() !== '' && this.title().trim().length > 0);
+  readonly selectedTenant = computed(() =>
+    this.tenantStore.tenants().find((t) => t.id === this.tenantId()),
+  );
+
+  readonly isValid = computed(
+    () =>
+      this.tenantId() !== '' &&
+      this.title().trim().length > 0 &&
+      this.selectedTenant()?.status === 'ACTIVE',
+  );
 
   addHighlight(): void {
     const value = this.newHighlight().trim();

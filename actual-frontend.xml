@@ -91,6 +91,12 @@ src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.ts
 src/app/pages/invoice-details/invoice-details.html
 src/app/pages/invoice-details/invoice-details.scss
 src/app/pages/invoice-details/invoice-details.ts
+src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.html
+src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.scss
+src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.ts
+src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.html
+src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.scss
+src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.ts
 src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html
 src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss
 src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts
@@ -3176,379 +3182,137 @@ export class EditLineItemDialog {
 }
 </file>
 
-<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss">
+<file path="src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.html">
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper">
+    <span class="material-symbols-rounded">task_alt</span>
+  </div>
+  <h2 class="confirm-title">Rechnung ausstellen?</h2>
+  <p class="confirm-message">
+    Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können
+    danach nicht mehr geändert werden.
+  </p>
+
+  <label class="send-checkbox-row">
+    <input type="checkbox" [checked]="sendEmail()" (change)="toggleSendEmail()" />
+    <span>Direkt per E-Mail an den Mandanten versenden</span>
+  </label>
+
+  @if (sendEmail()) {
+    <div class="email-field">
+      <label>Rechnungs-E-Mail-Adresse</label>
+      <input
+        type="email"
+        placeholder="rechnung@mandant.de"
+        [value]="email()"
+        (input)="email.set($any($event.target).value)"
+      />
+    </div>
+  }
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [disabled]="!canConfirm()" (click)="confirm()">
+      Ausstellen
+    </button>
+  </div>
+</div>
+</file>
+
+<file path="src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.scss">
 @use '../../../../styles' as *;
 
-.dialog-header {
-  @include flex-between;
-  padding: 2.4rem 2.4rem 0;
-
-  h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-light);
-  }
+.confirm-dialog {
+  padding: 3.2rem 2.8rem 2.4rem;
+  @include flex-col(1.2rem);
+  align-items: center;
+  text-align: center;
 }
 
-.close-button {
-  width: 3.6rem;
-  height: 3.6rem;
+.confirm-icon-wrapper {
+  width: 6rem;
+  height: 6rem;
   border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  cursor: pointer;
+  background-color: rgba(3, 219, 255, 0.12);
   @include flex-center;
+  margin-bottom: 0.4rem;
 
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-    color: var(--text-light);
+  .material-symbols-rounded {
+    font-size: 3.2rem;
+    color: var(--accent-cyan);
   }
 }
 
-.dialog-body {
-  padding: 2rem 2.4rem;
-  box-sizing: border-box;
-  max-height: 68vh;
-  overflow-y: auto;
-  @include flex-col(1.6rem);
+.confirm-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-light);
 }
 
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.2rem;
+.confirm-message {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 36rem;
 }
 
-.field {
-  @include flex-col(0.6rem);
+.send-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  cursor: pointer;
+  margin-top: 0.8rem;
+
+  input[type='checkbox'] {
+    width: 1.8rem;
+    height: 1.8rem;
+    accent-color: var(--accent-cyan);
+  }
+}
+
+.email-field {
+  width: 100%;
+  text-align: left;
 
   label {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-light);
+    display: block;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
 
-    &.warning {
-      color: var(--accent-pink);
+  input {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-light);
+    font-size: 1.3rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
     }
   }
 }
 
-.field input,
-.field select,
-.free-position-row input,
-.free-position-row select {
+.confirm-actions {
+  display: flex;
+  gap: 1rem;
   width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: 1.4rem;
-  color: var(--text-light);
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-cyan);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  option {
-    background-color: var(--main-navy);
-    color: var(--text-light);
-  }
+  margin-top: 1.2rem;
 }
 
-// Erzwingt "not-allowed"-Cursor über gesperrten Selects (z. B. vorausgewählter
-// Mandant) - native disabled-Selects respektieren cursor-CSS browserübergreifend
-// nicht zuverlässig, daher ein unsichtbares Overlay statt Verlass auf :disabled
-.select-lock {
-  position: relative;
-
-  &--active::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    cursor: not-allowed;
-  }
-}
-
-.section-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04rem;
-  color: var(--text-muted);
-}
-
-.prefill-loading {
-  @include flex-center;
-  gap: 0.8rem;
-  padding: 2rem;
-  color: var(--text-muted);
-  font-size: 1.4rem;
-
-  .material-symbols-rounded {
-    font-size: 2rem;
-    color: var(--accent-cyan);
-  }
-}
-
-// ===== Meilenstein-Kacheln =====
-
-.milestone-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.milestone-tile {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.2rem 1.4rem;
-  min-height: 8.4rem; // Platz für Titel + Preis + bis zu zwei Tags
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  transition: all 0.2s;
-
-  &:hover:not(&--disabled) {
-    border-color: var(--accent-cyan);
-    background-color: rgba(3, 219, 255, 0.06);
-  }
-
-  &--active {
-    border-color: var(--accent-cyan);
-    background-color: rgba(3, 219, 255, 0.1);
-
-    .milestone-tile-icon .material-symbols-rounded {
-      color: var(--accent-cyan);
-    }
-  }
-
-  &--disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-}
-
-.milestone-tile-icon .material-symbols-rounded {
-  font-size: 2.2rem;
-  color: var(--text-muted);
-}
-
-.milestone-tile-body {
-  @include flex-col(0.3rem);
-  min-width: 0; // verhindert Overflow bei langen Titeln
-}
-
-.milestone-tile-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-light);
-  line-height: 1.3;
-}
-
-.milestone-tile-price {
-  font-size: 1.3rem;
-  color: var(--accent-cyan);
-  font-weight: 600;
-}
-
-.milestone-tile-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.2rem;
-}
-
-.milestone-tile-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  width: fit-content;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.2rem 0.7rem;
-  border-radius: 50rem;
-
-  .material-symbols-rounded {
-    font-size: 1.3rem;
-  }
-
-  &--invoiced {
-    background-color: var(--danger-light);
-    color: var(--danger);
-  }
-
-  &--draft {
-    background-color: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
-  }
-
-  &--pending {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--text-muted);
-  }
-}
-
-.no-milestones,
-.no-positions-hint {
-  font-size: 1.3rem;
-  color: var(--text-muted);
-  padding: 0.4rem 0;
-}
-
-// ===== Freie Position =====
-
-.free-position-row {
-  display: grid;
-  grid-template-columns: 1fr 6rem 10rem 8rem auto;
-  gap: 0.8rem;
-  align-items: center;
-}
-
-.free-add-button {
-  width: 4rem;
-  height: 4rem;
-  border-radius: var(--radius-sm);
-  border: none;
-  background-color: var(--accent-cyan);
-  color: var(--main-navy);
-  cursor: pointer;
-  @include flex-center;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: var(--accent-cyan-hover);
-  }
-}
-
-// ===== Positionsliste =====
-
-.positions-list {
-  @include card-surface;
-  @include flex-col(0);
-  overflow: hidden;
-}
-
-.position-row {
-  display: grid;
-  grid-template-columns: 1fr 11rem 9rem auto;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1rem 1.4rem;
-  border-bottom: 1px solid var(--border-color);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.position-main {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  min-width: 0;
-}
-
-.position-source-icon {
-  font-size: 1.8rem;
-  color: var(--text-grey);
-  flex-shrink: 0;
-}
-
-.position-description {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.position-meta {
-  font-size: 1.2rem;
-  color: var(--text-grey);
-}
-
-.position-tax-select {
-  font-size: 1.3rem;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: var(--text-dark);
-  background-color: var(--bg-light);
-}
-
-.position-gross {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  text-align: right;
-}
-
-.position-remove-button {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  border: none;
-  background-color: transparent;
-  color: var(--text-grey);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: var(--danger-light);
-    color: var(--danger);
-  }
-}
-
-// ===== Summenkarte =====
-
-.summary-card {
-  @include flex-col(0.6rem);
-  padding: 1.4rem 1.6rem;
-  background-color: rgba(255, 255, 255, 0.04);
-  border-radius: var(--radius-sm);
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.4rem;
-  color: var(--text-light);
-
-  &--muted {
-    font-size: 1.25rem;
-    color: var(--text-muted);
-  }
-
-  &--total {
-    padding-top: 0.8rem;
-    margin-top: 0.4rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-weight: 700;
-    font-size: 1.6rem;
-    color: var(--accent-cyan);
-  }
-}
-
-.dialog-footer {
-  @include flex-between;
-  padding: 1.6rem 2.4rem 2.4rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  @include button-base;
 }
 
 .cancel-button {
-  @include button-base;
   background-color: rgba(255, 255, 255, 0.06);
   color: var(--text-light);
 
@@ -3557,33 +3321,241 @@ export class EditLineItemDialog {
   }
 }
 
-.submit-button {
-  @include button-base;
+.confirm-button {
   background-color: var(--accent-cyan);
   color: var(--main-navy);
-  box-shadow: var(--shadow-cyan);
-  min-width: 14rem;
 
   &:hover:not(:disabled) {
     background-color: var(--accent-cyan-hover);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
+</file>
 
-.spin {
-  animation: spin 1s linear infinite;
+<file path="src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+
+export interface IssueInvoiceDialogData {
+  buyerEmail?: string;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+export interface IssueInvoiceDialogResult {
+  sendEmail: boolean;
+  email?: string;
+}
+
+@Component({
+  selector: 'app-issue-invoice-dialog',
+  imports: [],
+  templateUrl: './issue-invoice-dialog.html',
+  styleUrl: './issue-invoice-dialog.scss',
+})
+export class IssueInvoiceDialog {
+  private readonly dialogRef = inject(MatDialogRef<IssueInvoiceDialog>);
+  protected readonly data = inject<IssueInvoiceDialogData>(MAT_DIALOG_DATA);
+
+  protected readonly sendEmail = signal(!!this.data.buyerEmail);
+  protected readonly email = signal(this.data.buyerEmail ?? '');
+  protected readonly canConfirm = computed(
+    () => !this.sendEmail() || this.email().trim().length > 3,
+  );
+
+  toggleSendEmail(): void {
+    this.sendEmail.update((v) => !v);
   }
-  to {
-    transform: rotate(360deg);
+
+  cancel(): void {
+    this.dialogRef.close(false);
+  }
+
+  confirm(): void {
+    if (!this.canConfirm()) return;
+    const result: IssueInvoiceDialogResult = {
+      sendEmail: this.sendEmail(),
+      email: this.sendEmail() ? this.email().trim() : undefined,
+    };
+    this.dialogRef.close(result);
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.html">
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper">
+    <span class="material-symbols-rounded">forward_to_inbox</span>
+  </div>
+  <h2 class="confirm-title">Rechnung per E-Mail versenden?</h2>
+  <p class="confirm-message">
+    Die Rechnung wird als PDF-Anhang an die angegebene Adresse gesendet.
+  </p>
+
+  <div class="email-field">
+    <label>Rechnungs-E-Mail-Adresse</label>
+    <input
+      type="email"
+      placeholder="rechnung@mandant.de"
+      [value]="email()"
+      (input)="email.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [disabled]="!canConfirm()" (click)="confirm()">Versenden</button>
+  </div>
+</div>
+</file>
+
+<file path="src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.scss">
+@use '../../../../styles' as *;
+
+.confirm-dialog {
+  padding: 3.2rem 2.8rem 2.4rem;
+  @include flex-col(1.2rem);
+  align-items: center;
+  text-align: center;
+}
+
+.confirm-icon-wrapper {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background-color: rgba(3, 219, 255, 0.12);
+  @include flex-center;
+  margin-bottom: 0.4rem;
+
+  .material-symbols-rounded {
+    font-size: 3.2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.confirm-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.confirm-message {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 36rem;
+}
+
+.send-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  cursor: pointer;
+  margin-top: 0.8rem;
+
+  input[type='checkbox'] {
+    width: 1.8rem;
+    height: 1.8rem;
+    accent-color: var(--accent-cyan);
+  }
+}
+
+.email-field {
+  width: 100%;
+  text-align: left;
+
+  label {
+    display: block;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-light);
+    font-size: 1.3rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.2rem;
+}
+
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  @include button-base;
+}
+
+.cancel-button {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.confirm-button {
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+
+export interface SendInvoiceDialogData {
+  buyerEmail?: string;
+}
+
+@Component({
+  selector: 'app-send-invoice-dialog',
+  imports: [],
+  templateUrl: './send-invoice-dialog.html',
+  styleUrl: './send-invoice-dialog.scss',
+})
+export class SendInvoiceDialog {
+  private readonly dialogRef = inject(MatDialogRef<SendInvoiceDialog>);
+  protected readonly data = inject<SendInvoiceDialogData>(MAT_DIALOG_DATA);
+
+  protected readonly email = signal(this.data.buyerEmail ?? '');
+  protected readonly canConfirm = computed(() => this.email().trim().length > 3);
+
+  cancel(): void {
+    this.dialogRef.close(false);
+  }
+
+  confirm(): void {
+    if (!this.canConfirm()) return;
+    this.dialogRef.close(this.email().trim());
   }
 }
 </file>
@@ -4912,643 +4884,6 @@ export class SessionExpired {
 
   backToStart(): void {
     this.router.navigate(['/']);
-  }
-}
-</file>
-
-<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.html">
-<div class="dialog-header">
-  <h2>Referenz anfragen</h2>
-  <button class="close-button" (click)="close()">
-    <span class="material-symbols-rounded">close</span>
-  </button>
-</div>
-
-@if (!generatedLink()) {
-  <div class="dialog-body">
-    <p class="dialog-intro">
-      Für <strong>{{ data.partner.firstName }} {{ data.partner.lastName }}</strong> wird ein
-      einmaliger Link erzeugt, über den eine Referenz abgegeben werden kann.
-    </p>
-
-    <div class="field">
-      <label>Projekt (optional)</label>
-      <select [value]="projectId()" (change)="projectId.set($any($event.target).value)">
-        <option value="">Kein bestimmtes Projekt</option>
-        @for (project of data.projects; track project.id) {
-          <option [value]="project.id">{{ project.title }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="field">
-      <label>Gültig für (Tage)</label>
-      <input
-        type="number"
-        min="1"
-        [value]="expiresInDays()"
-        (input)="expiresInDays.set($any($event.target).value)"
-      />
-    </div>
-  </div>
-
-  <div class="dialog-footer">
-    <button class="cancel-button" (click)="close()">Abbrechen</button>
-    <button class="submit-button" [disabled]="submitting()" (click)="submit()">
-      {{ submitting() ? 'Wird erzeugt...' : 'Link erzeugen' }}
-    </button>
-  </div>
-} @else {
-  <div class="dialog-body">
-    <p class="dialog-intro">
-      Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
-      {{ data.partner.firstName }} senden.
-    </p>
-
-    <div class="link-box">
-      <span class="link-text">{{ generatedLink() }}</span>
-      <button class="copy-button" (click)="copyLink()">
-        <span class="material-symbols-rounded">{{ copied() ? 'check' : 'content_copy' }}</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="dialog-footer">
-    <button class="cancel-button" (click)="close()">Fertig</button>
-  </div>
-}
-</file>
-
-<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.scss">
-@use '../../../../styles' as *;
-
-.dialog-header {
-  @include flex-between;
-  padding: 2.4rem 2.4rem 0;
-
-  h2 {
-    font-size: 1.9rem;
-    font-weight: 700;
-    color: var(--text-light);
-  }
-}
-
-.close-button {
-  width: 3.6rem;
-  height: 3.6rem;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-    color: var(--text-light);
-  }
-}
-
-.dialog-body {
-  padding: 2rem 2.4rem;
-  box-sizing: border-box;
-  @include flex-col(1.6rem);
-}
-
-.dialog-intro {
-  font-size: 1.4rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-
-  strong {
-    color: var(--text-light);
-  }
-}
-
-.field {
-  @include flex-col(0.6rem);
-
-  label {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-light);
-  }
-
-  input,
-  select {
-    width: 100%;
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: 1.4rem;
-    color: var(--text-light);
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-sm);
-    padding: 1rem 1.2rem;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-cyan);
-    }
-  }
-
-  select {
-    cursor: pointer;
-
-    option {
-      background-color: var(--main-navy);
-      color: var(--text-light);
-    }
-  }
-}
-
-.link-box {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  padding: 1.2rem 1.4rem;
-}
-
-.link-text {
-  flex: 1;
-  font-size: 1.3rem;
-  color: var(--text-light);
-  word-break: break-all;
-}
-
-.copy-button {
-  flex-shrink: 0;
-  width: 3.6rem;
-  height: 3.6rem;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--accent-cyan);
-  color: var(--main-navy);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: var(--accent-cyan-hover);
-  }
-}
-
-.dialog-footer {
-  @include flex-between;
-  padding: 1.6rem 2.4rem 2.4rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 0.4rem;
-}
-
-.cancel-button {
-  @include button-base;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: var(--text-light);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-  }
-}
-
-.submit-button {
-  @include button-base;
-  background-color: var(--accent-cyan);
-  color: var(--main-navy);
-  box-shadow: var(--shadow-cyan);
-  min-width: 12rem;
-
-  &:hover:not(:disabled) {
-    background-color: var(--accent-cyan-hover);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-</file>
-
-<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.ts">
-import { Component, inject, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { TestimonialApi } from '../../../core/testimonials/testimonial-api';
-import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
-import { Partner } from '../../../model/tenant';
-import { Project } from '../../../model/project';
-
-export interface RequestTestimonialDialogData {
-  partner: Partner;
-  projects: Project[]; // Projekte dieses Mandanten, zur optionalen Auswahl
-}
-
-@Component({
-  selector: 'app-request-testimonial-dialog',
-  imports: [],
-  templateUrl: './request-testimonial-dialog.html',
-  styleUrl: './request-testimonial-dialog.scss',
-})
-export class RequestTestimonialDialog {
-  private readonly dialogRef = inject(MatDialogRef<RequestTestimonialDialog>);
-  private readonly testimonialApi = inject(TestimonialApi);
-  private readonly toast = inject(Toast);
-  protected readonly data = inject<RequestTestimonialDialogData>(MAT_DIALOG_DATA);
-
-  readonly projectId = signal('');
-  readonly expiresInDays = signal('30');
-  readonly submitting = signal(false);
-
-  // Sobald gesetzt, zeigt der Dialog den fertigen Link statt des Formulars -
-  // der Token kommt nur EINMAL vom Backend zurück (nur der Hash landet in
-  // der DB), muss also sofort sichtbar gemacht werden
-  readonly generatedLink = signal<string | null>(null);
-  readonly copied = signal(false);
-
-  close(): void {
-    // true = es wurde tatsächlich eine Einladung erzeugt (für Toast im
-    // Aufrufer), egal ob der Link schon kopiert wurde oder nicht
-    this.dialogRef.close(!!this.generatedLink());
-  }
-
-  async submit(): Promise<void> {
-    this.submitting.set(true);
-    try {
-      const response = await firstValueFrom(
-        this.testimonialApi.createInvitation({
-          partnerId: this.data.partner.id,
-          projectId: this.projectId() || undefined,
-          expiresInDays: parseInt(this.expiresInDays(), 10) || undefined,
-        }),
-      );
-      this.generatedLink.set(`${environment.websiteBaseUrl}/feedback?token=${response.rawToken}`);
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Einladung konnte nicht erzeugt werden'));
-    } finally {
-      this.submitting.set(false);
-    }
-  }
-
-  async copyLink(): Promise<void> {
-    const link = this.generatedLink();
-    if (!link) return;
-    await navigator.clipboard.writeText(link);
-    this.copied.set(true);
-    setTimeout(() => this.copied.set(false), 2000);
-  }
-}
-</file>
-
-<file path="src/app/pages/tenant-detail/tenant-detail.scss">
-@use '../../../styles' as *;
-
-.detail-hero {
-  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
-  padding: 4rem 3.2rem 5.6rem;
-  position: relative;
-  overflow: hidden;
-  margin: -3.2rem -3.2rem 0;
-}
-
-.detail-hero-pattern {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
-  background-size: 2.4rem 2.4rem;
-  mask-image: linear-gradient(180deg, black, transparent);
-}
-
-.detail-hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 100rem;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: none;
-  border-radius: 50rem;
-  padding: 0.8rem 1.6rem 0.8rem 1.2rem;
-  color: var(--text-light);
-  font-size: 1.3rem;
-  cursor: pointer;
-  margin-bottom: 2.4rem;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.hero-main {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.hero-title {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--text-light);
-  margin-bottom: 0.4rem;
-}
-
-.hero-legal {
-  font-size: 1.4rem;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
-}
-
-.detail-body {
-  max-width: 100rem;
-  margin: -3.2rem auto 0;
-  display: grid;
-  grid-template-columns: 1fr 30rem;
-  gap: 2.4rem;
-  position: relative;
-  z-index: 1;
-  padding-bottom: 3.2rem;
-
-  @include respond(md) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.detail-main {
-  @include flex-col(2rem);
-}
-
-.info-card {
-  @include card-surface;
-  padding: 2.4rem;
-}
-
-.info-card-header {
-  @include flex-between;
-  margin-bottom: 1.6rem;
-}
-
-.info-card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 1.6rem;
-}
-
-.info-card-header .info-card-title {
-  margin-bottom: 0;
-}
-
-.count-badge {
-  background-color: var(--bg-light);
-  color: var(--text-grey);
-  font-size: 1.2rem;
-  font-weight: 700;
-  padding: 0.2rem 1rem;
-  border-radius: 50rem;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.8rem 0;
-  font-size: 1.4rem;
-  color: var(--text-dark);
-
-  .material-symbols-rounded {
-    color: var(--accent-cyan);
-    font-size: 2rem;
-  }
-}
-
-.partner-row,
-.project-row {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.2rem 0;
-  border-top: 1px solid var(--bg-light);
-
-  &:first-of-type {
-    border-top: none;
-  }
-}
-
-.project-row {
-  justify-content: space-between;
-}
-
-.partner-name,
-.project-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.partner-role,
-.project-meta {
-  font-size: 1.2rem;
-  color: var(--text-grey);
-}
-
-.empty-hint {
-  font-size: 1.3rem;
-  color: var(--text-grey);
-  padding: 1.2rem 0;
-}
-
-.detail-sidebar {
-  @include flex-col(1.6rem);
-}
-
-.sidebar-card {
-  @include card-surface;
-  padding: 2rem;
-
-  &--dark {
-    background-color: var(--main-navy);
-    border: none;
-  }
-}
-
-.sidebar-label {
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04rem;
-  color: var(--text-grey);
-  margin-bottom: 1.2rem;
-
-  &--light {
-    color: var(--text-muted);
-  }
-}
-
-.website-status {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-grey);
-
-  .material-symbols-rounded {
-    font-size: 2.2rem;
-  }
-
-  &--active {
-    color: var(--accent-cyan-hover);
-  }
-}
-
-.sidebar-action {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 1rem 0.8rem;
-  color: var(--text-light);
-  font-size: 1.4rem;
-  cursor: pointer;
-  text-align: left;
-
-  .material-symbols-rounded {
-    color: var(--accent-cyan);
-  }
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-  }
-}
-
-.status-badge--project {
-  &.status-badge--lead {
-    background-color: var(--accent-cyan-light);
-    color: var(--accent-cyan-hover);
-  }
-  &.status-badge--in_progress {
-    background-color: var(--warning-light);
-    color: var(--warning);
-  }
-  &.status-badge--on_hold {
-    background-color: var(--bg-light);
-    color: var(--text-grey);
-  }
-  &.status-badge--completed {
-    background-color: var(--success-light);
-    color: var(--success);
-  }
-  &.status-badge--cancelled {
-    background-color: var(--danger-light);
-    color: var(--danger);
-  }
-}
-
-.state-panel {
-  @include flex-col(1.2rem);
-  align-items: center;
-  padding: 6.4rem 2rem;
-  color: var(--text-grey);
-
-  .material-symbols-rounded {
-    font-size: 3.6rem;
-    color: var(--accent-cyan);
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.add-icon-button {
-  width: 2.8rem;
-  height: 2.8rem;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--accent-cyan-light);
-  color: var(--accent-cyan-hover);
-  cursor: pointer;
-  @include flex-center;
-
-  &:hover {
-    background-color: var(--accent-cyan);
-    color: var(--text-light);
-  }
-}
-
-.partner-row {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-}
-
-.partner-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.partner-actions {
-  display: flex;
-  gap: 0.4rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.partner-row:hover .partner-actions {
-  opacity: 1;
-}
-
-.icon-button {
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  color: var(--text-grey);
-  cursor: pointer;
-  outline: none;
-  @include flex-center;
-
-  .material-symbols-rounded {
-    font-size: 1.8rem;
-  }
-
-  &:hover,
-  &:focus-visible {
-    background-color: var(--bg-light) !important;
-  }
-
-  &--danger {
-    &:hover,
-    &:focus-visible,
-    &:active {
-      background-color: var(--danger) !important;
-      color: var(--text-light) !important;
-    }
   }
 }
 </file>
@@ -8919,247 +8254,433 @@ export interface UpdatePartnerRequest {
 }
 </file>
 
-<file path="src/app/model/testimonial.ts">
-export type TestimonialStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss">
+@use '../../../../styles' as *;
 
-export interface Testimonial {
-  id: string;
-  tenantId: string;
-  partnerId: string;
-  projectId?: string;
-  partnerName: string;
-  partnerRole?: string;
-  companyName: string;
-  description: string;
-  rating: number;
-  status: TestimonialStatus;
-  visibleOnWebsite: boolean;
-  createdAt: string;
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
 }
 
-export interface CreateInvitationRequest {
-  partnerId: string;
-  projectId?: string;
-  expiresInDays?: number;
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
 }
 
-export interface InvitationResponse {
-  invitationId: string;
-  rawToken: string;
-  expiresAt: string;
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  max-height: 68vh;
+  overflow-y: auto;
+  @include flex-col(1.6rem);
 }
-</file>
 
-<file path="src/app/pages/invoice-details/invoice-details.html">
-@if (invoice(); as inv) {
-  <div class="detail-hero">
-    <div class="detail-hero-pattern"></div>
-    <div class="detail-hero-content">
-      <button class="back-button" (click)="back()">
-        <span class="material-symbols-rounded">arrow_back</span>
-        <span>Alle Rechnungen</span>
-      </button>
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
 
-      <p class="hero-tenant">
-        {{ tenantName() }}
-        @if (projectName()) {
-          · {{ projectName() }}
-        }
-      </p>
-      <h1 class="hero-title">{{ inv.invoiceNumber || 'Rechnungsentwurf' }}</h1>
+.field {
+  @include flex-col(0.6rem);
 
-      <span class="status-badge" [class]="'status-badge--invoice-' + inv.status.toLowerCase()">
-        {{ statusLabels[inv.status] }}
-      </span>
-    </div>
-  </div>
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
 
-  <div class="detail-body">
-    <div class="detail-main">
-      <div class="info-card">
-        <div class="parties-grid">
-          <div>
-            <p class="party-label">Von</p>
-            <p class="party-name">{{ inv.seller?.name }}</p>
-            <p class="party-line">{{ formatAddress(inv.seller?.address) }}</p>
-            @if (inv.seller?.vatId) {
-              <p class="party-line">USt-IdNr.: {{ inv.seller?.vatId }}</p>
-            }
-          </div>
-          <div>
-            <p class="party-label">An</p>
-            <p class="party-name">{{ inv.buyer?.name }}</p>
-            <p class="party-line">{{ formatAddress(inv.buyer?.address) }}</p>
-            @if (inv.buyer?.vatId) {
-              <p class="party-line">USt-IdNr.: {{ inv.buyer?.vatId }}</p>
-            }
-          </div>
-        </div>
-      </div>
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+}
 
-      <div class="info-card">
-        <div class="info-card-header">
-          <p class="info-card-title">Positionen</p>
-          @if (isDraft()) {
-            <button
-              class="add-icon-button"
-              (click)="openAddLineItemDialog()"
-              title="Position hinzufügen"
-            >
-              <span class="material-symbols-rounded">add</span>
-            </button>
-          }
-        </div>
+.field input,
+.field select,
+.free-position-row input,
+.free-position-row select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
 
-        @for (item of inv.lineItems; track item.id) {
-          <div class="line-item-row">
-            <div class="line-item-main">
-              <span class="line-item-source-icon material-symbols-rounded">
-                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
-              </span>
-              <div>
-                <p class="line-item-description">{{ item.description }}</p>
-                <p class="line-item-meta">
-                  {{ item.quantity }} × {{ formatMoney(item.unitPrice) }} ·
-                  {{ item.taxRatePercentage }} % USt
-                </p>
-              </div>
-            </div>
-            <span class="line-item-gross">{{ formatMoney(item.grossAmount) }}</span>
-            @if (isDraft()) {
-              <div class="line-item-actions">
-                <button
-                  class="icon-button"
-                  (click)="openEditLineItemDialog(item)"
-                  title="Bearbeiten"
-                >
-                  <span class="material-symbols-rounded">edit</span>
-                </button>
-                <button
-                  class="icon-button icon-button--danger"
-                  (click)="removeLineItem(item)"
-                  title="Entfernen"
-                >
-                  <span class="material-symbols-rounded">delete</span>
-                </button>
-              </div>
-            }
-          </div>
-        } @empty {
-          <p class="empty-hint">Noch keine Positionen auf dieser Rechnung.</p>
-        }
-      </div>
-    </div>
+  &:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
 
-    <aside class="detail-sidebar">
-      @if (isDraft()) {
-        <button
-          class="issue-button"
-          [disabled]="issuing() || inv.lineItems.length === 0"
-          (click)="issueInvoice()"
-        >
-          @if (!issuing()) {
-            <span class="material-symbols-rounded">task_alt</span>
-            <span>Rechnung ausstellen</span>
-          } @else {
-            <span class="material-symbols-rounded spin">progress_activity</span>
-          }
-        </button>
-      }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-      @if (inv.status !== 'DRAFT' && inv.documentKey) {
-        <button class="issue-button" (click)="openDocument()">
-          <span class="material-symbols-rounded">description</span>
-          <span>Rechnung öffnen (PDF)</span>
-        </button>
-      }
+  option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
+  }
+}
 
-      <div class="sidebar-card">
-        <p class="sidebar-label">Summen</p>
-        <div class="summary-row">
-          <span>Netto</span>
-          <span>{{ formatMoney(inv.netTotal) }}</span>
-        </div>
-        <div class="summary-row summary-row--muted">
-          <span>USt</span>
-          <span>{{ formatMoney(inv.taxTotal) }}</span>
-        </div>
-        <div class="summary-row summary-row--total">
-          <span>Brutto</span>
-          <span>{{ formatMoney(inv.grossTotal) }}</span>
-        </div>
-      </div>
+// Erzwingt "not-allowed"-Cursor über gesperrten Selects (z. B. vorausgewählter
+// Mandant) - native disabled-Selects respektieren cursor-CSS browserübergreifend
+// nicht zuverlässig, daher ein unsichtbares Overlay statt Verlass auf :disabled
+.select-lock {
+  position: relative;
 
-      <div class="sidebar-card">
-        <div class="sidebar-label-row">
-          <p class="sidebar-label">Details</p>
-          @if (isDraft() && !editingHeader()) {
-            <button class="inline-edit-button" (click)="startEditHeader()" title="Bearbeiten">
-              <span class="material-symbols-rounded">edit</span>
-            </button>
-          }
-        </div>
+  &--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
+  }
+}
 
-        @if (editingHeader()) {
-          <div class="header-edit-form">
-            <input
-              type="text"
-              placeholder="Auftrags-Referenz"
-              [value]="headerBuyerReference()"
-              (input)="headerBuyerReference.set($any($event.target).value)"
-            />
-            <input
-              type="text"
-              placeholder="Zahlungsziel (Tage)"
-              [value]="headerPaymentTermsDays()"
-              (input)="headerPaymentTermsDays.set($any($event.target).value)"
-            />
-            <div class="header-edit-actions">
-              <button class="cancel-button" (click)="cancelEditHeader()">Abbrechen</button>
-              <button class="submit-button" [disabled]="savingHeader()" (click)="saveHeader()">
-                Speichern
-              </button>
-            </div>
-          </div>
-        } @else {
-          <div class="detail-row">
-            <span>Ausgestellt</span>
-            <span>{{ inv.issueDate || '–' }}</span>
-          </div>
-          <div class="detail-row">
-            <span>Fällig</span>
-            <span>{{ inv.dueDate || '–' }}</span>
-          </div>
-          <div class="detail-row">
-            <span>Zahlungsziel</span>
-            <span>{{ inv.paymentTermsDays ? inv.paymentTermsDays + ' Tage' : '–' }}</span>
-          </div>
-          @if (inv.buyerReference) {
-            <div class="detail-row">
-              <span>Referenz</span>
-              <span>{{ inv.buyerReference }}</span>
-            </div>
-          }
-        }
-      </div>
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
 
-      @if (isDraft()) {
-        <button
-          class="delete-draft-button"
-          [disabled]="deletingDraft()"
-          (click)="deleteDraftInvoice()"
-        >
-          <span class="material-symbols-rounded">delete</span>
-          <span>Entwurf löschen</span>
-        </button>
-      }
-    </aside>
-  </div>
-} @else if (loading()) {
-  <div class="state-panel">
-    <span class="material-symbols-rounded spin">progress_activity</span>
-    <p>Rechnung wird geladen...</p>
-  </div>
+.prefill-loading {
+  @include flex-center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--accent-cyan);
+  }
+}
+
+// ===== Meilenstein-Kacheln =====
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.milestone-tile {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  min-height: 8.4rem; // Platz für Titel + Preis + bis zu zwei Tags
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+
+  &:hover:not(&--disabled) {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.06);
+  }
+
+  &--active {
+    border-color: var(--accent-cyan);
+    background-color: rgba(3, 219, 255, 0.1);
+
+    .milestone-tile-icon .material-symbols-rounded {
+      color: var(--accent-cyan);
+    }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.milestone-tile-icon .material-symbols-rounded {
+  font-size: 2.2rem;
+  color: var(--text-muted);
+}
+
+.milestone-tile-body {
+  @include flex-col(0.3rem);
+  min-width: 0; // verhindert Overflow bei langen Titeln
+}
+
+.milestone-tile-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.milestone-tile-price {
+  font-size: 1.3rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.milestone-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.milestone-tile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 50rem;
+
+  .material-symbols-rounded {
+    font-size: 1.3rem;
+  }
+
+  &--invoiced {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+
+  &--draft {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+
+  &--pending {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+.no-milestones,
+.no-positions-hint {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+// ===== Freie Position =====
+
+.free-position-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem 10rem 8rem auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.free-add-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+// ===== Positionsliste =====
+
+.positions-list {
+  @include card-surface;
+  @include flex-col(0);
+  overflow: hidden;
+}
+
+.position-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem 9rem auto;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.position-main {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.position-source-icon {
+  font-size: 1.8rem;
+  color: var(--text-grey);
+  flex-shrink: 0;
+}
+
+.position-description {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.position-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.position-tax-select {
+  font-size: 1.3rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+}
+
+.position-gross {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.position-remove-button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+// ===== Summenkarte =====
+
+.summary-card {
+  @include flex-col(0.6rem);
+  padding: 1.4rem 1.6rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  color: var(--text-light);
+
+  &--muted {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  &--total {
+    padding-top: 0.8rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 176, 32, 0.1);
+  border: 1px solid rgba(255, 176, 32, 0.3);
+  color: #ffb020;
+  font-size: 1.2rem;
+  line-height: 1.5;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+  }
 }
 </file>
 
@@ -10647,6 +10168,709 @@ export class ProjectDetail {
 }
 </file>
 
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.html">
+<div class="dialog-header">
+  <h2>Referenz anfragen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+@if (!generatedLink()) {
+  <div class="dialog-body">
+    <p class="dialog-intro">
+      Für <strong>{{ data.partner.firstName }} {{ data.partner.lastName }}</strong> wird ein
+      einmaliger Link erzeugt, über den eine Referenz abgegeben werden kann.
+    </p>
+
+    <label class="send-checkbox-row">
+      <input type="checkbox" [checked]="sendEmail()" (change)="toggleSendEmail()" />
+      <span>Direkt per E-Mail versenden</span>
+    </label>
+
+    @if (sendEmail()) {
+      <div class="field">
+        <label>E-Mail-Adresse</label>
+        <input
+          type="email"
+          placeholder="partner@mandant.de"
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
+        />
+        @if (!data.partner.email) {
+          <p class="field-hint">
+            Für diesen Partner ist keine E-Mail hinterlegt - bitte manuell eintragen.
+          </p>
+        }
+      </div>
+    }
+
+    <div class="field">
+      <label>Projekt (optional)</label>
+      <select [value]="projectId()" (change)="projectId.set($any($event.target).value)">
+        <option value="">Kein bestimmtes Projekt</option>
+        @for (project of data.projects; track project.id) {
+          <option [value]="project.id">{{ project.title }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Gültig für (Tage)</label>
+      <input
+        type="number"
+        min="1"
+        [value]="expiresInDays()"
+        (input)="expiresInDays.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Abbrechen</button>
+    <button class="submit-button" [disabled]="submitting() || !canSubmit()" (click)="submit()">
+      {{
+        submitting() ? 'Wird erzeugt...' : sendEmail() ? 'Erzeugen & versenden' : 'Link erzeugen'
+      }}
+    </button>
+  </div>
+} @else {
+  <div class="dialog-body">
+    @if (wasSent()) {
+      <p class="dialog-intro">
+        Die Einladung wurde per E-Mail an {{ data.partner.firstName }} versendet. Der Link kann
+        zusätzlich manuell weitergegeben werden:
+      </p>
+    } @else {
+      <p class="dialog-intro">
+        Dieser Link wird nur einmal angezeigt - jetzt kopieren und manuell (Mail/WhatsApp) an
+        {{ data.partner.firstName }} senden.
+      </p>
+    }
+
+    <div class="link-box">
+      <span class="link-text">{{ generatedLink() }}</span>
+      <button class="copy-button" (click)="copyLink()">
+        <span class="material-symbols-rounded">{{ copied() ? 'check' : 'content_copy' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button class="cancel-button" (click)="close()">Fertig</button>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.scss">
+@use '../../../../styles' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box;
+  @include flex-col(1.6rem);
+}
+
+.dialog-intro {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+
+  strong {
+    color: var(--text-light);
+  }
+}
+
+.field {
+  @include flex-col(0.6rem);
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  input,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+  }
+
+  select {
+    cursor: pointer;
+
+    option {
+      background-color: var(--main-navy);
+      color: var(--text-light);
+    }
+  }
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem 1.4rem;
+}
+
+.link-text {
+  flex: 1;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  word-break: break-all;
+}
+
+.copy-button {
+  flex-shrink: 0;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan-hover);
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 12rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.send-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-light);
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 1.8rem;
+    height: 1.8rem;
+    accent-color: var(--accent-cyan);
+  }
+}
+
+.field-hint {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { TestimonialApi } from '../../../core/testimonials/testimonial-api';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+import { Partner } from '../../../model/tenant';
+import { Project } from '../../../model/project';
+
+export interface RequestTestimonialDialogData {
+  partner: Partner;
+  projects: Project[];
+}
+
+@Component({
+  selector: 'app-request-testimonial-dialog',
+  imports: [],
+  templateUrl: './request-testimonial-dialog.html',
+  styleUrl: './request-testimonial-dialog.scss',
+})
+export class RequestTestimonialDialog {
+  private readonly dialogRef = inject(MatDialogRef<RequestTestimonialDialog>);
+  private readonly testimonialApi = inject(TestimonialApi);
+  private readonly toast = inject(Toast);
+  protected readonly data = inject<RequestTestimonialDialogData>(MAT_DIALOG_DATA);
+
+  readonly projectId = signal('');
+  readonly expiresInDays = signal('30');
+  readonly submitting = signal(false);
+
+  readonly sendEmail = signal(!!this.data.partner.email);
+  readonly email = signal(this.data.partner.email ?? '');
+  readonly canSubmit = computed(() => !this.sendEmail() || this.email().trim().length > 3);
+
+  readonly generatedLink = signal<string | null>(null);
+  readonly wasSent = signal(false);
+  readonly copied = signal(false);
+
+  toggleSendEmail(): void {
+    this.sendEmail.update((v) => !v);
+  }
+
+  close(): void {
+    this.dialogRef.close(!!this.generatedLink());
+  }
+
+  async submit(): Promise<void> {
+    if (!this.canSubmit()) return;
+    this.submitting.set(true);
+    try {
+      const response = await firstValueFrom(
+        this.testimonialApi.createInvitation({
+          partnerId: this.data.partner.id,
+          projectId: this.projectId() || undefined,
+          expiresInDays: parseInt(this.expiresInDays(), 10) || undefined,
+          sendEmail: this.sendEmail(),
+          email: this.sendEmail() ? this.email().trim() : undefined,
+        }),
+      );
+      this.generatedLink.set(`${environment.websiteBaseUrl}/feedback?token=${response.rawToken}`);
+      this.wasSent.set(response.sent);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Einladung konnte nicht erzeugt werden'));
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
+  async copyLink(): Promise<void> {
+    const link = this.generatedLink();
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    this.copied.set(true);
+    setTimeout(() => this.copied.set(false), 2000);
+  }
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/tenant-detail.scss">
+@use '../../../styles' as *;
+
+.detail-hero {
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  padding: 4rem 3.2rem 5.6rem;
+  position: relative;
+  overflow: hidden;
+  margin: -3.2rem -3.2rem 0;
+}
+
+.detail-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: linear-gradient(180deg, black, transparent);
+}
+
+.detail-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 100rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50rem;
+  padding: 0.8rem 1.6rem 0.8rem 1.2rem;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  cursor: pointer;
+  margin-bottom: 2.4rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.4rem;
+}
+
+.hero-legal {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.detail-body {
+  max-width: 100rem;
+  margin: -3.2rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr 30rem;
+  gap: 2.4rem;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 3.2rem;
+
+  @include respond(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-main {
+  @include flex-col(2rem);
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.6rem;
+}
+
+.info-card-header .info-card-title {
+  margin-bottom: 0;
+}
+
+.count-badge {
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.2rem 1rem;
+  border-radius: 50rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem 0;
+  font-size: 1.4rem;
+  color: var(--text-dark);
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+    font-size: 2rem;
+  }
+}
+
+.partner-row,
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.project-row {
+  justify-content: space-between;
+}
+
+.partner-name,
+.project-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.partner-role,
+.project-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.detail-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 2rem;
+
+  &--dark {
+    background-color: var(--main-navy);
+    border: none;
+  }
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+
+  &--light {
+    color: var(--text-muted);
+  }
+}
+
+.website-status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 2.2rem;
+  }
+
+  &--active {
+    color: var(--accent-cyan-hover);
+  }
+}
+
+.sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1rem 0.8rem;
+  color: var(--text-light);
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.status-badge--project {
+  &.status-badge--lead {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+  &.status-badge--in_progress {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  &.status-badge--on_hold {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+  &.status-badge--completed {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &.status-badge--cancelled {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.add-icon-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan-light);
+  color: var(--accent-cyan-hover);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan);
+    color: var(--text-light);
+  }
+}
+
+.partner-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.partner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.partner-actions {
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.partner-row:hover .partner-actions {
+  opacity: 1;
+}
+
+.icon-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  outline: none;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--bg-light) !important;
+  }
+
+  &--danger {
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--danger) !important;
+      color: var(--text-light) !important;
+    }
+  }
+}
+
+.partner-invitation-status {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+</file>
+
 <file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.html">
 <div class="dialog-header">
   <h2>Neuer Mandant</h2>
@@ -11986,893 +12210,285 @@ body {
 }
 </file>
 
-<file path="src/app/core/invoices/invoice-api.ts">
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import {
-  CreateInvoiceRequest,
-  Invoice,
-  InvoicePrefill,
-  IssueInvoiceRequest,
-  LineItemRequest,
-  UpdateInvoiceHeaderRequest,
-  UpdateLineItemRequest,
-} from '../../model/invoice';
+<file path="src/app/model/testimonial.ts">
+export type TestimonialStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
 
-@Injectable({ providedIn: 'root' })
-export class InvoiceApi {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/invoices`;
+export interface Testimonial {
+  id: string;
+  tenantId: string;
+  partnerId: string;
+  projectId?: string;
+  partnerName: string;
+  partnerRole?: string;
+  companyName: string;
+  description: string;
+  rating: number;
+  status: TestimonialStatus;
+  visibleOnWebsite: boolean;
+  createdAt: string;
+}
 
-  findById(id: string): Observable<Invoice> {
-    return this.http.get<Invoice>(`${this.baseUrl}/${id}`);
-  }
+export interface CreateInvitationRequest {
+  partnerId: string;
+  projectId?: string;
+  expiresInDays?: number;
+  sendEmail?: boolean;
+  email?: string;
+}
 
-  // projectId ist bei uns Pflicht (siehe Roadmap-Entscheidung), aber am
-  // Endpunkt weiterhin optional übergeben - Backend erlaubt beides
-  prefill(tenantId: string, projectId?: string): Observable<InvoicePrefill> {
-    let url = `${this.baseUrl}/prefill?tenantId=${tenantId}`;
-    if (projectId) url += `&projectId=${projectId}`;
-    return this.http.get<InvoicePrefill>(url);
-  }
+export interface InvitationResponse {
+  invitationId: string;
+  rawToken: string;
+  expiresAt: string;
+  sent: boolean;
+  sentToEmail?: string;
+}
 
-  create(request: CreateInvoiceRequest): Observable<Invoice> {
-    return this.http.post<Invoice>(this.baseUrl, request);
-  }
-
-  addLineItem(invoiceId: string, request: LineItemRequest): Observable<Invoice> {
-    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/line-items`, request);
-  }
-
-  removeLineItem(invoiceId: string, lineItemId: string): Observable<Invoice> {
-    return this.http.delete<Invoice>(`${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`);
-  }
-
-  issue(invoiceId: string, request?: IssueInvoiceRequest): Observable<Invoice> {
-    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/issue`, request ?? {});
-  }
-
-  updateHeader(invoiceId: string, request: UpdateInvoiceHeaderRequest): Observable<Invoice> {
-    return this.http.patch<Invoice>(`${this.baseUrl}/${invoiceId}`, request);
-  }
-
-  updateLineItem(
-    invoiceId: string,
-    lineItemId: string,
-    request: UpdateLineItemRequest,
-  ): Observable<Invoice> {
-    return this.http.patch<Invoice>(
-      `${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`,
-      request,
-    );
-  }
-
-  deleteDraft(invoiceId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${invoiceId}`);
-  }
-
-  getDocumentUrl(invoiceId: string): Observable<{ url: string }> {
-    return this.http.get<{ url: string }>(`${this.baseUrl}/${invoiceId}/document`);
-  }
+export interface InvitationSummary {
+  id: string;
+  partnerId: string;
+  projectId?: string;
+  status: 'PENDING' | 'USED' | 'EXPIRED' | 'REVOKED';
+  sentToEmail?: string;
+  sentAt?: string;
+  expiresAt: string;
+  usedAt?: string;
+  createdAt: string;
 }
 </file>
 
-<file path="src/app/core/testimonials/testimonial-api.ts">
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { CreateInvitationRequest, InvitationResponse, Testimonial } from '../../model/testimonial';
+<file path="src/app/pages/invoice-details/invoice-details.html">
+@if (invoice(); as inv) {
+  <div class="detail-hero">
+    <div class="detail-hero-pattern"></div>
+    <div class="detail-hero-content">
+      <button class="back-button" (click)="back()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Alle Rechnungen</span>
+      </button>
 
-@Injectable({ providedIn: 'root' })
-export class TestimonialApi {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/testimonials`;
+      <p class="hero-tenant">
+        {{ tenantName() }}
+        @if (projectName()) {
+          · {{ projectName() }}
+        }
+      </p>
+      <h1 class="hero-title">{{ inv.invoiceNumber || 'Rechnungsentwurf' }}</h1>
 
-  approve(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/approve`, {});
-  }
-
-  reject(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/reject`, {});
-  }
-
-  publish(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/publish`, {});
-  }
-
-  unpublish(id: string): Observable<Testimonial> {
-    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/unpublish`, {});
-  }
-
-  createInvitation(request: CreateInvitationRequest): Observable<InvitationResponse> {
-    return this.http.post<InvitationResponse>(
-      `${environment.apiBaseUrl}/testimonial-invitations`,
-      request,
-    );
-  }
-}
-</file>
-
-<file path="src/app/pages/invoice-details/invoice-details.ts">
-import { Component, computed, inject, input, signal } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { InvoiceApi } from '../../core/invoices/invoice-api';
-import { InvoiceStore } from '../../core/invoices/invoice-store';
-import { TenantStore } from '../../core/tenants/tenant-store';
-import { ProjectStore } from '../../core/projects/project-store';
-import { Toast } from '../../core/toast/toast';
-import { extractErrorMessage } from '../../core/errors/error-message';
-import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
-import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
-import {
-  Address,
-  Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
-  Money,
-  UpdateInvoiceHeaderRequest,
-} from '../../model/invoice';
-import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
-
-@Component({
-  selector: 'app-invoice-detail',
-  imports: [MatDialogModule],
-  templateUrl: './invoice-details.html',
-  styleUrl: './invoice-details.scss',
-})
-export class InvoiceDetail {
-  readonly id = input.required<string>();
-
-  private readonly router = inject(Router);
-  private readonly dialog = inject(MatDialog);
-  private readonly invoiceApi = inject(InvoiceApi);
-  private readonly invoiceStore = inject(InvoiceStore);
-  private readonly tenantStore = inject(TenantStore);
-  private readonly projectStore = inject(ProjectStore);
-  private readonly toast = inject(Toast);
-
-  readonly editingHeader = signal(false);
-  readonly headerBuyerReference = signal('');
-  readonly headerPaymentTermsDays = signal('');
-  readonly savingHeader = signal(false);
-
-  readonly deletingDraft = signal(false);
-
-  private readonly invoiceResource = httpResource<Invoice>(
-    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
-  );
-
-  readonly invoice = computed(() => this.invoiceResource.value());
-  readonly loading = computed(() => this.invoiceResource.isLoading());
-
-  readonly statusLabels: Record<InvoiceStatus, string> = {
-    DRAFT: 'Entwurf',
-    ISSUED: 'Ausgestellt',
-    SENT: 'Versendet',
-    PAID: 'Bezahlt',
-    OVERDUE: 'Überfällig',
-    CANCELLED: 'Storniert',
-  };
-
-  readonly tenantName = computed(() => {
-    const inv = this.invoice();
-    if (!inv) return '';
-    return (
-      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
-    );
-  });
-
-  readonly projectName = computed(() => {
-    const inv = this.invoice();
-    if (!inv?.projectId) return '';
-    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
-  });
-
-  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
-
-  readonly issuing = signal(false);
-
-  private refreshEverywhere(): void {
-    this.invoiceResource.reload();
-    this.invoiceStore.reload();
-  }
-
-  back(): void {
-    this.router.navigate(['/invoices']);
-  }
-
-  itemNet(item: InvoiceLineItem): Money {
-    return item.netAmount;
-  }
-
-  formatMoney(money?: Money): string {
-    if (!money) return '–';
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: money.currencyCode,
-    }).format(money.amount);
-  }
-
-  formatAddress(address?: Address): string {
-    if (!address) return '–';
-    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
-    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
-    return [line1, line2].filter(Boolean).join(', ');
-  }
-
-  openAddLineItemDialog(): void {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(AddLineItemDialog, {
-      width: '64rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        invoiceId: inv.id,
-        tenantId: inv.tenantId,
-        projectId: inv.projectId,
-        existingMilestoneIds: inv.lineItems
-          .map((i) => i.milestoneId)
-          .filter((id): id is string => !!id),
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshEverywhere();
-        this.toast.success('Position hinzugefügt');
-      }
-    });
-  }
-
-  async removeLineItem(item: InvoiceLineItem): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '44rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Position entfernen?',
-        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
-        confirmLabel: 'Entfernen',
-        danger: true,
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (confirmed) {
-      try {
-        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
-        this.refreshEverywhere();
-        this.toast.success('Position entfernt');
-      } catch (err) {
-        this.toast.error(extractErrorMessage(err, 'Position konnte nicht entfernt werden'));
-      }
-    }
-  }
-
-  async issueInvoice(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '48rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Rechnung ausstellen?',
-        message:
-          'Die Rechnung erhält eine lückenlose Rechnungsnummer und wird verbindlich - Positionen können danach nicht mehr geändert werden.',
-        confirmLabel: 'Ausstellen',
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (!confirmed) return;
-
-    this.issuing.set(true);
-    try {
-      await firstValueFrom(this.invoiceApi.issue(inv.id));
-      this.refreshEverywhere();
-      this.toast.success('Rechnung ausgestellt');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
-    } finally {
-      this.issuing.set(false);
-    }
-  }
-
-  async openDocument(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-    try {
-      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
-      window.open(url, '_blank');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Dokument konnte nicht geladen werden'));
-    }
-  }
-
-  startEditHeader(): void {
-    const inv = this.invoice();
-    if (!inv) return;
-    this.headerBuyerReference.set(inv.buyerReference ?? '');
-    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
-    this.editingHeader.set(true);
-  }
-
-  cancelEditHeader(): void {
-    this.editingHeader.set(false);
-  }
-
-  async saveHeader(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    this.savingHeader.set(true);
-    const request: UpdateInvoiceHeaderRequest = {
-      buyerReference: this.headerBuyerReference().trim() || undefined,
-      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
-    };
-
-    try {
-      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
-      this.editingHeader.set(false);
-      this.refreshEverywhere();
-      this.toast.success('Rechnungsdaten aktualisiert');
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Aktualisierung fehlgeschlagen'));
-    } finally {
-      this.savingHeader.set(false);
-    }
-  }
-
-  openEditLineItemDialog(item: InvoiceLineItem): void {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(EditLineItemDialog, {
-      width: '48rem',
-      panelClass: 'app-dialog-panel',
-      data: { invoiceId: inv.id, item },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.refreshEverywhere();
-        this.toast.success('Position aktualisiert');
-      }
-    });
-  }
-
-  async deleteDraftInvoice(): Promise<void> {
-    const inv = this.invoice();
-    if (!inv) return;
-
-    const dialogRef = this.dialog.open(ConfirmDialog, {
-      width: '46rem',
-      panelClass: 'app-dialog-panel',
-      data: {
-        title: 'Rechnungsentwurf löschen?',
-        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
-        confirmLabel: 'Löschen',
-        danger: true,
-      },
-    });
-
-    const confirmed = await firstValueFrom(dialogRef.afterClosed());
-    if (!confirmed) return;
-
-    this.deletingDraft.set(true);
-    try {
-      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
-      this.invoiceStore.reload();
-      this.toast.success('Entwurf gelöscht');
-      this.router.navigate(['/invoices']);
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Löschen fehlgeschlagen'));
-      this.deletingDraft.set(false);
-    }
-  }
-}
-</file>
-
-<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html">
-<div class="dialog-header">
-  <h2>Neue Rechnung</h2>
-  <button class="close-button" (click)="close()">
-    <span class="material-symbols-rounded">close</span>
-  </button>
-</div>
-
-<div class="dialog-body">
-  @if (dataLoading()) {
-    <div class="prefill-loading">
-      <span class="material-symbols-rounded spin">progress_activity</span>
-      <span>Daten werden geladen...</span>
+      <span class="status-badge" [class]="'status-badge--invoice-' + inv.status.toLowerCase()">
+        {{ statusLabels[inv.status] }}
+      </span>
     </div>
-  } @else {
-    <div class="field-row">
-      <div class="field">
-        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
-        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
-          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
-            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
-            @for (tenant of tenantStore.tenants(); track tenant.id) {
-              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
-                {{ tenant.companyName }}
-              </option>
-            }
-          </select>
-        </div>
-      </div>
+  </div>
 
-      <div class="field">
-        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
-        <div class="select-lock" [class.select-lock--active]="projectLocked()">
-          <select
-            [disabled]="!tenantId() || projectLocked()"
-            (change)="onProjectChange($any($event.target).value)"
-          >
-            <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
-            @for (project of tenantProjects(); track project.id) {
-              <option [value]="project.id" [selected]="project.id === projectId()">
-                {{ project.title }}
-              </option>
-            }
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label>Auftrags-Referenz</label>
-        <input
-          type="text"
-          placeholder="Automatisch (z. B. MBS.5)"
-          [value]="buyerReference()"
-          (input)="buyerReference.set($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label>Zahlungsziel (Tage)</label>
-        <input
-          type="text"
-          [value]="paymentTermsDays()"
-          (input)="paymentTermsDays.set($any($event.target).value)"
-        />
-      </div>
-    </div>
-
-    @if (tenantId() && projectId()) {
-      <div class="section-title">Positionen</div>
-
-      @if (prefillLoading()) {
-        <div class="prefill-loading">
-          <span class="material-symbols-rounded spin">progress_activity</span>
-          <span>Meilensteine werden geladen...</span>
-        </div>
-      } @else if (prefill(); as p) {
-        @if (p.availableMilestones.length > 0) {
-          <div class="milestone-grid">
-            @for (milestone of p.availableMilestones; track milestone.id) {
-              <button
-                type="button"
-                class="milestone-tile"
-                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
-                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
-                [disabled]="milestone.alreadyInvoiced"
-                (click)="toggleMilestone(milestone)"
-              >
-                <div class="milestone-tile-icon">
-                  <span class="material-symbols-rounded">
-                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
-                  </span>
-                </div>
-                <div class="milestone-tile-body">
-                  <p class="milestone-tile-title">{{ milestone.title }}</p>
-                  @if (milestone.price) {
-                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
-                  }
-
-                  @if (milestone.alreadyInvoiced) {
-                    <div class="milestone-tile-tags">
-                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
-                        <span class="material-symbols-rounded">lock</span>
-                        Abgerechnet
-                      </span>
-                    </div>
-                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
-                    <div class="milestone-tile-tags">
-                      @if (milestone.inDraftInvoice) {
-                        <span class="milestone-tile-tag milestone-tile-tag--draft">
-                          <span class="material-symbols-rounded">edit_note</span>
-                          In Rechnungsentwurf
-                        </span>
-                      }
-                      @if (milestone.milestoneStatus !== 'DONE') {
-                        <span class="milestone-tile-tag milestone-tile-tag--pending">
-                          <span class="material-symbols-rounded">hourglass_empty</span>
-                          Nicht abgeschlossen
-                        </span>
-                      }
-                    </div>
-                  }
-                </div>
-              </button>
+  <div class="detail-body">
+    <div class="detail-main">
+      <div class="info-card">
+        <div class="parties-grid">
+          <div>
+            <p class="party-label">Von</p>
+            <p class="party-name">{{ inv.seller?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.seller?.address) }}</p>
+            @if (inv.seller?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.seller?.vatId }}</p>
             }
           </div>
-        } @else {
-          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
-        }
-
-        <div class="free-position-row">
-          <input
-            type="text"
-            class="free-description"
-            placeholder="Freie Position, z. B. Gerät (Hardware)"
-            [value]="freeDescription()"
-            (input)="freeDescription.set($any($event.target).value)"
-          />
-          <input
-            type="text"
-            class="free-quantity"
-            placeholder="Menge"
-            [value]="freeQuantity()"
-            (input)="freeQuantity.set($any($event.target).value)"
-          />
-          <input
-            type="text"
-            class="free-price"
-            placeholder="Preis netto"
-            [value]="freeUnitPrice()"
-            (input)="freeUnitPrice.set($any($event.target).value)"
-          />
-          <select
-            class="free-tax"
-            [value]="freeTaxRate()"
-            (change)="freeTaxRate.set(+$any($event.target).value)"
-          >
-            @for (rate of taxRateOptions; track rate) {
-              <option [value]="rate">{{ rate }} %</option>
+          <div>
+            <p class="party-label">An</p>
+            <p class="party-name">{{ inv.buyer?.name }}</p>
+            <p class="party-line">{{ formatAddress(inv.buyer?.address) }}</p>
+            @if (inv.buyer?.vatId) {
+              <p class="party-line">USt-IdNr.: {{ inv.buyer?.vatId }}</p>
             }
-          </select>
-          <button type="button" class="free-add-button" (click)="addFreePosition()">
-            <span class="material-symbols-rounded">add</span>
-          </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-header">
+          <p class="info-card-title">Positionen</p>
+          @if (isDraft()) {
+            <button
+              class="add-icon-button"
+              (click)="openAddLineItemDialog()"
+              title="Position hinzufügen"
+            >
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          }
         </div>
 
-        @if (lineItems().length > 0) {
-          <div class="positions-list">
-            @for (item of lineItems(); track item.key) {
-              <div class="position-row">
-                <div class="position-main">
-                  <span class="position-source-icon material-symbols-rounded">
-                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
-                  </span>
-                  <div>
-                    <p class="position-description">{{ item.description }}</p>
-                    <p class="position-meta">
-                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
-                    </p>
-                  </div>
-                </div>
-
-                <select
-                  class="position-tax-select"
-                  [value]="item.taxRatePercentage"
-                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
-                >
-                  @for (rate of taxRateOptions; track rate) {
-                    <option [value]="rate">{{ rate }} % USt</option>
-                  }
-                </select>
-
-                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
-
+        @for (item of inv.lineItems; track item.id) {
+          <div class="line-item-row">
+            <div class="line-item-main">
+              <span class="line-item-source-icon material-symbols-rounded">
+                {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+              </span>
+              <div>
+                <p class="line-item-description">{{ item.description }}</p>
+                <p class="line-item-meta">
+                  {{ item.quantity }} × {{ formatMoney(item.unitPrice) }} ·
+                  {{ item.taxRatePercentage }} % USt
+                </p>
+              </div>
+            </div>
+            <span class="line-item-gross">{{ formatMoney(item.grossAmount) }}</span>
+            @if (isDraft()) {
+              <div class="line-item-actions">
                 <button
-                  type="button"
-                  class="position-remove-button"
-                  (click)="removeLineItem(item.key)"
+                  class="icon-button"
+                  (click)="openEditLineItemDialog(item)"
+                  title="Bearbeiten"
                 >
-                  <span class="material-symbols-rounded">close</span>
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+                <button
+                  class="icon-button icon-button--danger"
+                  (click)="removeLineItem(item)"
+                  title="Entfernen"
+                >
+                  <span class="material-symbols-rounded">delete</span>
                 </button>
               </div>
             }
           </div>
+        } @empty {
+          <p class="empty-hint">Noch keine Positionen auf dieser Rechnung.</p>
+        }
+      </div>
+    </div>
 
-          <div class="summary-card">
-            <div class="summary-row">
-              <span>Netto</span>
-              <span>{{ formatMoney(totals().net) }}</span>
-            </div>
-            @for (group of taxBreakdown(); track group.rate) {
-              <div class="summary-row summary-row--muted">
-                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
-                <span>{{ formatMoney(group.tax) }}</span>
-              </div>
-            }
-            <div class="summary-row summary-row--total">
-              <span>Rechnungsbetrag</span>
-              <span>{{ formatMoney(totals().gross) }}</span>
+    <aside class="detail-sidebar">
+      @if (isDraft()) {
+        <button
+          class="issue-button"
+          [disabled]="issuing() || inv.lineItems.length === 0"
+          (click)="issueInvoice()"
+        >
+          @if (!issuing()) {
+            <span class="material-symbols-rounded">task_alt</span>
+            <span>Rechnung ausstellen</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
+      @if (inv.status !== 'DRAFT' && inv.documentKey) {
+        <button class="issue-button" (click)="openDocument()">
+          <span class="material-symbols-rounded">description</span>
+          <span>Rechnung öffnen (PDF)</span>
+        </button>
+      }
+
+      @if (canSend()) {
+        <button
+          class="issue-button"
+          [disabled]="sending() || alreadySent()"
+          [title]="
+            alreadySent()
+              ? 'Bereits versendet' + (inv.sentAt ? ' am ' + (inv.sentAt | date: 'dd.MM.yyyy') : '')
+              : ''
+          "
+          (click)="sendInvoice()"
+        >
+          @if (!sending()) {
+            <span class="material-symbols-rounded">{{
+              alreadySent() ? 'mark_email_read' : 'forward_to_inbox'
+            }}</span>
+            <span>{{ alreadySent() ? 'Bereits versendet' : 'Per E-Mail versenden' }}</span>
+          } @else {
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          }
+        </button>
+      }
+
+      <div class="sidebar-card">
+        <p class="sidebar-label">Summen</p>
+        <div class="summary-row">
+          <span>Netto</span>
+          <span>{{ formatMoney(inv.netTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--muted">
+          <span>USt</span>
+          <span>{{ formatMoney(inv.taxTotal) }}</span>
+        </div>
+        <div class="summary-row summary-row--total">
+          <span>Brutto</span>
+          <span>{{ formatMoney(inv.grossTotal) }}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-label-row">
+          <p class="sidebar-label">Details</p>
+          @if (isDraft() && !editingHeader()) {
+            <button class="inline-edit-button" (click)="startEditHeader()" title="Bearbeiten">
+              <span class="material-symbols-rounded">edit</span>
+            </button>
+          }
+        </div>
+
+        @if (editingHeader()) {
+          <div class="header-edit-form">
+            <input
+              type="text"
+              placeholder="Auftrags-Referenz"
+              [value]="headerBuyerReference()"
+              (input)="headerBuyerReference.set($any($event.target).value)"
+            />
+            <input
+              type="text"
+              placeholder="Zahlungsziel (Tage)"
+              [value]="headerPaymentTermsDays()"
+              (input)="headerPaymentTermsDays.set($any($event.target).value)"
+            />
+            <div class="header-edit-actions">
+              <button class="cancel-button" (click)="cancelEditHeader()">Abbrechen</button>
+              <button class="submit-button" [disabled]="savingHeader()" (click)="saveHeader()">
+                Speichern
+              </button>
             </div>
           </div>
         } @else {
-          <p class="no-positions-hint">
-            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
-          </p>
+          <div class="detail-row">
+            <span>Ausgestellt</span>
+            <span>{{ inv.issueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Fällig</span>
+            <span>{{ inv.dueDate || '–' }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Zahlungsziel</span>
+            <span>{{ inv.paymentTermsDays ? inv.paymentTermsDays + ' Tage' : '–' }}</span>
+          </div>
+          @if (inv.buyerReference) {
+            <div class="detail-row">
+              <span>Referenz</span>
+              <span>{{ inv.buyerReference }}</span>
+            </div>
+          }
         }
+      </div>
+
+      @if (isDraft()) {
+        <button
+          class="delete-draft-button"
+          [disabled]="deletingDraft()"
+          (click)="deleteDraftInvoice()"
+        >
+          <span class="material-symbols-rounded">delete</span>
+          <span>Entwurf löschen</span>
+        </button>
       }
-    }
-  }
-</div>
-
-<div class="dialog-footer">
-  <button class="cancel-button" (click)="close()">Abbrechen</button>
-  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
-    @if (!submitting()) {
-      <span>Rechnung anlegen</span>
-    } @else {
-      <span class="material-symbols-rounded spin">progress_activity</span>
-    }
-  </button>
-</div>
-</file>
-
-<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts">
-import { Component, computed, inject, signal } from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { environment } from '../../../../environments/environment';
-import { InvoiceStore } from '../../../core/invoices/invoice-store';
-import { ProjectStore } from '../../../core/projects/project-store';
-import { TenantStore } from '../../../core/tenants/tenant-store';
-import {
-  CreateInvoiceRequest,
-  InvoicePrefill,
-  LineItemSource,
-  Money,
-  MilestoneOption,
-} from '../../../model/invoice';
-import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
-
-export interface CreateInvoiceDialogData {
-  tenantId?: string;
-  projectId?: string;
-}
-
-interface DraftLineItem {
-  key: string;
-  source: LineItemSource;
-  milestoneId?: string;
-  description: string;
-  quantity: number;
-  unitCode: string;
-  unitPrice: Money;
-  taxRatePercentage: number;
-}
-
-@Component({
-  selector: 'app-create-invoice-dialog',
-  imports: [],
-  templateUrl: './create-invoice-dialog.html',
-  styleUrl: './create-invoice-dialog.scss',
-})
-export class CreateInvoiceDialog {
-  private readonly dialogRef = inject(MatDialogRef<CreateInvoiceDialog>);
-  private readonly invoiceStore = inject(InvoiceStore);
-  protected readonly tenantStore = inject(TenantStore);
-  protected readonly projectStore = inject(ProjectStore);
-  private readonly toast = inject(Toast);
-  private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
-    optional: true,
-  });
-
-  readonly taxRateOptions = [19, 7, 0];
-
-  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
-  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
-  readonly projectLocked = computed(() => !!this.dialogData?.projectId);
-  readonly projectId = signal(this.dialogData?.projectId ?? '');
-  readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
-
-  readonly buyerReference = signal('');
-  readonly paymentTermsDays = signal('14');
-
-  readonly lineItems = signal<DraftLineItem[]>([]);
-
-  readonly freeDescription = signal('');
-  readonly freeQuantity = signal('1');
-  readonly freeUnitPrice = signal('');
-  readonly freeTaxRate = signal(19);
-
-  readonly submitting = signal(false);
-  readonly showWarning = signal(false);
-
-  // Nur Projekte des gewählten Mandanten - Projekt ist bei uns Pflichtfeld
-  readonly tenantProjects = computed(() =>
-    this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
-  );
-
-  private readonly prefillResource = httpResource<InvoicePrefill>(() => {
-    const tenantId = this.tenantId();
-    const projectId = this.projectId();
-    return tenantId && projectId
-      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${tenantId}&projectId=${projectId}`
-      : undefined;
-  });
-
-  readonly prefill = computed(() => this.prefillResource.value());
-  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
-
-  readonly totals = computed(() => {
-    const items = this.lineItems();
-    return {
-      net: items.reduce((sum, i) => sum + this.itemNet(i), 0),
-      tax: items.reduce((sum, i) => sum + this.itemTax(i), 0),
-      gross: items.reduce((sum, i) => sum + this.itemGross(i), 0),
-    };
-  });
-
-  // Aufschlüsselung pro Steuersatz - genau das, was auf der Rechnung als
-  // eigene USt-Zeile je Satz ausgewiesen werden muss
-  readonly taxBreakdown = computed(() => {
-    const map = new Map<number, { net: number; tax: number }>();
-    for (const item of this.lineItems()) {
-      const net = this.itemNet(item);
-      const tax = this.itemTax(item);
-      const entry = map.get(item.taxRatePercentage) ?? { net: 0, tax: 0 };
-      entry.net += net;
-      entry.tax += tax;
-      map.set(item.taxRatePercentage, entry);
-    }
-    return [...map.entries()]
-      .map(([rate, values]) => ({ rate, ...values }))
-      .sort((a, b) => b.rate - a.rate);
-  });
-
-  readonly isValid = computed(
-    () => !!this.tenantId() && !!this.projectId() && this.lineItems().length > 0,
-  );
-
-  itemNet(item: DraftLineItem): number {
-    return item.unitPrice.amount * item.quantity;
-  }
-
-  itemTax(item: DraftLineItem): number {
-    return this.itemNet(item) * (item.taxRatePercentage / 100);
-  }
-
-  itemGross(item: DraftLineItem): number {
-    return this.itemNet(item) + this.itemTax(item);
-  }
-
-  onTenantChange(value: string): void {
-    this.tenantId.set(value);
-    this.projectId.set('');
-    this.lineItems.set([]);
-  }
-
-  onProjectChange(value: string): void {
-    this.projectId.set(value);
-    this.lineItems.set([]);
-  }
-
-  isMilestoneAdded(milestoneId: string): boolean {
-    return this.lineItems().some((i) => i.milestoneId === milestoneId);
-  }
-
-  toggleMilestone(milestone: MilestoneOption): void {
-    if (milestone.alreadyInvoiced) return;
-
-    if (this.isMilestoneAdded(milestone.id)) {
-      this.lineItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
-      return;
-    }
-
-    this.lineItems.update((list) => [
-      ...list,
-      {
-        key: crypto.randomUUID(),
-        source: 'MILESTONE',
-        milestoneId: milestone.id,
-        description: milestone.title,
-        quantity: 1,
-        unitCode: 'C62',
-        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
-        taxRatePercentage: 19,
-      },
-    ]);
-  }
-
-  addFreePosition(): void {
-    const description = this.freeDescription().trim();
-    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
-    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
-
-    if (!description || isNaN(amount) || amount <= 0) return;
-
-    this.lineItems.update((list) => [
-      ...list,
-      {
-        key: crypto.randomUUID(),
-        source: 'CUSTOM',
-        description,
-        quantity,
-        unitCode: 'C62',
-        unitPrice: { amount, currencyCode: 'EUR' },
-        taxRatePercentage: this.freeTaxRate(),
-      },
-    ]);
-
-    this.freeDescription.set('');
-    this.freeQuantity.set('1');
-    this.freeUnitPrice.set('');
-    this.freeTaxRate.set(19);
-  }
-
-  removeLineItem(key: string): void {
-    this.lineItems.update((list) => list.filter((i) => i.key !== key));
-  }
-
-  updateItemTaxRate(key: string, rate: number): void {
-    this.lineItems.update((list) =>
-      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
-    );
-  }
-
-  formatMoney(amount: number, currencyCode = 'EUR'): string {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
-      amount,
-    );
-  }
-
-  close(): void {
-    this.dialogRef.close();
-  }
-
-  async submit(): Promise<void> {
-    if (!this.isValid()) {
-      this.showWarning.set(true);
-      return;
-    }
-
-    this.submitting.set(true);
-
-    const request: CreateInvoiceRequest = {
-      tenantId: this.tenantId(),
-      projectId: this.projectId(),
-      buyerReference: this.buyerReference().trim() || undefined,
-      paymentTermsDays: parseInt(this.paymentTermsDays(), 10) || undefined,
-      lineItems: this.lineItems().map((i) => ({
-        source: i.source,
-        milestoneId: i.milestoneId,
-        description: i.description,
-        quantity: i.quantity,
-        unitCode: i.unitCode,
-        unitPrice: i.unitPrice,
-        taxRatePercentage: i.taxRatePercentage,
-      })),
-    };
-
-    try {
-      const invoice = await this.invoiceStore.create(request);
-      this.dialogRef.close(invoice);
-    } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht angelegt werden'));
-    } finally {
-      this.submitting.set(false);
-    }
-  }
+    </aside>
+  </div>
+} @else if (loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rechnung wird geladen...</p>
+  </div>
 }
 </file>
 
@@ -13666,6 +13282,524 @@ export class Projects {
 }
 </file>
 
+<file path="src/app/app.html">
+@if (isPublicPage()) {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="sidebar-logo" />
+        <span class="sidebar-title">CRM</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <span class="material-symbols-rounded">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
+          <span class="material-symbols-rounded">apartment</span>
+          <span>Mandanten</span>
+        </a>
+        <a class="nav-item" routerLink="/projects" routerLinkActive="active">
+          <span class="material-symbols-rounded">work</span>
+          <span>Projekte</span>
+        </a>
+        <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <span>Rechnungen</span>
+        </a>
+        <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
+          <span class="material-symbols-rounded">rate_review</span>
+          <span>Referenzen</span>
+        </a>
+        <a class="nav-item" routerLink="/website" routerLinkActive="active">
+          <span class="material-symbols-rounded">language</span>
+          <span>Website</span>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-search">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" placeholder="Suchen..." />
+        </div>
+
+        <div class="topbar-user">
+          <app-avatar [name]="auth.userName() ?? '?'" [size]="'3.6rem'"></app-avatar>
+          <span class="user-name">{{ auth.userName() ?? 'Wird geladen...' }}</span>
+          <button class="logout-button" (click)="auth.logout()">
+            <span class="material-symbols-rounded">logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+}
+</file>
+
+<file path="src/app/core/invoices/invoice-api.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  CreateInvoiceRequest,
+  Invoice,
+  InvoicePrefill,
+  IssueInvoiceRequest,
+  LineItemRequest,
+  SendInvoiceRequest,
+  UpdateInvoiceHeaderRequest,
+  UpdateLineItemRequest,
+} from '../../model/invoice';
+
+@Injectable({ providedIn: 'root' })
+export class InvoiceApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/invoices`;
+
+  findById(id: string): Observable<Invoice> {
+    return this.http.get<Invoice>(`${this.baseUrl}/${id}`);
+  }
+
+  // projectId ist bei uns Pflicht (siehe Roadmap-Entscheidung), aber am
+  // Endpunkt weiterhin optional übergeben - Backend erlaubt beides
+  prefill(tenantId: string, projectId?: string): Observable<InvoicePrefill> {
+    let url = `${this.baseUrl}/prefill?tenantId=${tenantId}`;
+    if (projectId) url += `&projectId=${projectId}`;
+    return this.http.get<InvoicePrefill>(url);
+  }
+
+  create(request: CreateInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(this.baseUrl, request);
+  }
+
+  addLineItem(invoiceId: string, request: LineItemRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/line-items`, request);
+  }
+
+  removeLineItem(invoiceId: string, lineItemId: string): Observable<Invoice> {
+    return this.http.delete<Invoice>(`${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`);
+  }
+
+  issue(invoiceId: string, request?: IssueInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/issue`, request ?? {});
+  }
+
+  send(invoiceId: string, request?: SendInvoiceRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/${invoiceId}/send`, request ?? {});
+  }
+
+  updateHeader(invoiceId: string, request: UpdateInvoiceHeaderRequest): Observable<Invoice> {
+    return this.http.patch<Invoice>(`${this.baseUrl}/${invoiceId}`, request);
+  }
+
+  updateLineItem(
+    invoiceId: string,
+    lineItemId: string,
+    request: UpdateLineItemRequest,
+  ): Observable<Invoice> {
+    return this.http.patch<Invoice>(
+      `${this.baseUrl}/${invoiceId}/line-items/${lineItemId}`,
+      request,
+    );
+  }
+
+  deleteDraft(invoiceId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${invoiceId}`);
+  }
+
+  getDocumentUrl(invoiceId: string): Observable<{ url: string }> {
+    return this.http.get<{ url: string }>(`${this.baseUrl}/${invoiceId}/document`);
+  }
+}
+</file>
+
+<file path="src/app/core/testimonials/testimonial-api.ts">
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  CreateInvitationRequest,
+  InvitationResponse,
+  InvitationSummary,
+  Testimonial,
+} from '../../model/testimonial';
+
+@Injectable({ providedIn: 'root' })
+export class TestimonialApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/testimonials`;
+
+  approve(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/approve`, {});
+  }
+
+  reject(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/reject`, {});
+  }
+
+  publish(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/publish`, {});
+  }
+
+  unpublish(id: string): Observable<Testimonial> {
+    return this.http.post<Testimonial>(`${this.baseUrl}/${id}/unpublish`, {});
+  }
+
+  createInvitation(request: CreateInvitationRequest): Observable<InvitationResponse> {
+    return this.http.post<InvitationResponse>(
+      `${environment.apiBaseUrl}/testimonial-invitations`,
+      request,
+    );
+  }
+
+  findInvitationsByTenant(tenantId: string): Observable<InvitationSummary[]> {
+    return this.http.get<InvitationSummary[]>(
+      `${environment.apiBaseUrl}/testimonial-invitations?tenantId=${tenantId}`,
+    );
+  }
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.ts">
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { InvoiceApi } from '../../core/invoices/invoice-api';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectStore } from '../../core/projects/project-store';
+import { Toast } from '../../core/toast/toast';
+import { extractErrorMessage } from '../../core/errors/error-message';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
+import {
+  Address,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  Money,
+  UpdateInvoiceHeaderRequest,
+} from '../../model/invoice';
+import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+import {
+  IssueInvoiceDialog,
+  IssueInvoiceDialogResult,
+} from './issue-invoice-dialog/issue-invoice-dialog';
+import { SendInvoiceDialog } from './send-invoice-dialog/send-invoice-dialog';
+import { DatePipe } from '@angular/common';
+
+@Component({
+  selector: 'app-invoice-detail',
+  imports: [MatDialogModule, DatePipe],
+  templateUrl: './invoice-details.html',
+  styleUrl: './invoice-details.scss',
+})
+export class InvoiceDetail {
+  readonly id = input.required<string>();
+
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly invoiceApi = inject(InvoiceApi);
+  private readonly invoiceStore = inject(InvoiceStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+
+  readonly editingHeader = signal(false);
+  readonly headerBuyerReference = signal('');
+  readonly headerPaymentTermsDays = signal('');
+  readonly savingHeader = signal(false);
+
+  readonly deletingDraft = signal(false);
+
+  private readonly invoiceResource = httpResource<Invoice>(
+    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
+  );
+
+  readonly invoice = computed(() => this.invoiceResource.value());
+  readonly loading = computed(() => this.invoiceResource.isLoading());
+
+  readonly canSend = computed(() => {
+    const status = this.invoice()?.status;
+    return !!status && status !== 'DRAFT' && status !== 'CANCELLED';
+  });
+  readonly alreadySent = computed(() => this.invoice()?.status === 'SENT');
+  readonly sending = signal(false);
+
+  readonly statusLabels: Record<InvoiceStatus, string> = {
+    DRAFT: 'Entwurf',
+    ISSUED: 'Ausgestellt',
+    SENT: 'Versendet',
+    PAID: 'Bezahlt',
+    OVERDUE: 'Überfällig',
+    CANCELLED: 'Storniert',
+  };
+
+  readonly tenantName = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return '';
+    return (
+      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
+    );
+  });
+
+  readonly projectName = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.projectId) return '';
+    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
+  });
+
+  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
+
+  readonly issuing = signal(false);
+
+  private refreshEverywhere(): void {
+    this.invoiceResource.reload();
+    this.invoiceStore.reload();
+  }
+
+  back(): void {
+    this.router.navigate(['/invoices']);
+  }
+
+  itemNet(item: InvoiceLineItem): Money {
+    return item.netAmount;
+  }
+
+  formatMoney(money?: Money): string {
+    if (!money) return '–';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
+  }
+
+  formatAddress(address?: Address): string {
+    if (!address) return '–';
+    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
+    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
+    return [line1, line2].filter(Boolean).join(', ');
+  }
+
+  openAddLineItemDialog(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(AddLineItemDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        invoiceId: inv.id,
+        tenantId: inv.tenantId,
+        projectId: inv.projectId,
+        existingMilestoneIds: inv.lineItems
+          .map((i) => i.milestoneId)
+          .filter((id): id is string => !!id),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position hinzugefügt');
+      }
+    });
+  }
+
+  async removeLineItem(item: InvoiceLineItem): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Position entfernen?',
+        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
+        confirmLabel: 'Entfernen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      try {
+        await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
+        this.refreshEverywhere();
+        this.toast.success('Position entfernt');
+      } catch (err) {
+        this.toast.error(extractErrorMessage(err, 'Position konnte nicht entfernt werden'));
+      }
+    }
+  }
+
+  async issueInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(IssueInvoiceDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { buyerEmail: inv.buyer?.email },
+    });
+
+    const result = (await firstValueFrom(dialogRef.afterClosed())) as
+      IssueInvoiceDialogResult | false;
+    if (!result) return;
+
+    this.issuing.set(true);
+    try {
+      await firstValueFrom(
+        this.invoiceApi.issue(inv.id, {
+          sendEmailDirectly: result.sendEmail,
+          invoiceEmail: result.email,
+        }),
+      );
+      this.refreshEverywhere();
+      this.toast.success(
+        result.sendEmail ? 'Rechnung ausgestellt und versendet' : 'Rechnung ausgestellt',
+      );
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht ausgestellt werden'));
+    } finally {
+      this.issuing.set(false);
+    }
+  }
+
+  async sendInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv || this.alreadySent()) return;
+
+    const dialogRef = this.dialog.open(SendInvoiceDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { buyerEmail: inv.sentToEmail ?? inv.buyer?.email },
+    });
+
+    const email = await firstValueFrom(dialogRef.afterClosed());
+    if (!email) return;
+
+    this.sending.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.send(inv.id, { email }));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung versendet');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht versendet werden'));
+    } finally {
+      this.sending.set(false);
+    }
+  }
+
+  async openDocument(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+    try {
+      const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+      window.open(url, '_blank');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Dokument konnte nicht geladen werden'));
+    }
+  }
+
+  startEditHeader(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+    this.headerBuyerReference.set(inv.buyerReference ?? '');
+    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
+    this.editingHeader.set(true);
+  }
+
+  cancelEditHeader(): void {
+    this.editingHeader.set(false);
+  }
+
+  async saveHeader(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.savingHeader.set(true);
+    const request: UpdateInvoiceHeaderRequest = {
+      buyerReference: this.headerBuyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
+    };
+
+    try {
+      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
+      this.editingHeader.set(false);
+      this.refreshEverywhere();
+      this.toast.success('Rechnungsdaten aktualisiert');
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Aktualisierung fehlgeschlagen'));
+    } finally {
+      this.savingHeader.set(false);
+    }
+  }
+
+  openEditLineItemDialog(item: InvoiceLineItem): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(EditLineItemDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { invoiceId: inv.id, item },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position aktualisiert');
+      }
+    });
+  }
+
+  async deleteDraftInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '46rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnungsentwurf löschen?',
+        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
+        confirmLabel: 'Löschen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.deletingDraft.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
+      this.invoiceStore.reload();
+      this.toast.success('Entwurf gelöscht');
+      this.router.navigate(['/invoices']);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Löschen fehlgeschlagen'));
+      this.deletingDraft.set(false);
+    }
+  }
+}
+</file>
+
 <file path="src/app/pages/tenant-detail/tenant-detail.html">
 @if (tenant(); as t) {
   <div class="detail-hero">
@@ -13745,6 +13879,7 @@ export class Projects {
               <p class="partner-role">
                 {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
               </p>
+              <p class="partner-invitation-status">{{ invitationStatusLabel(partner.id) }}</p>
             </div>
             <div class="partner-actions">
               <button
@@ -13839,100 +13974,317 @@ export class Projects {
 }
 </file>
 
-<file path="src/app/app.html">
-@if (isPublicPage()) {
-  <router-outlet></router-outlet>
-} @else {
-  <div class="admin-layout">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="sidebar-logo" />
-        <span class="sidebar-title">CRM</span>
-      </div>
+<file path="src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { Dashboard } from './pages/dashboard/dashboard';
+import { Tenants } from './pages/tenants/tenants';
+import { TenantDetail } from './pages/tenant-detail/tenant-detail';
+import { Projects } from './pages/projects/projects';
+import { Invoices } from './pages/invoices/invoices';
+import { Testimonials } from './pages/testimonials/testimonials';
+import { Website } from './pages/website/website';
+import { Welcome } from './pages/welcome/welcome';
+import { Login } from './pages/login/login';
+import { SessionExpired } from './pages/session-expired/session-expired';
+import { authGuard } from './core/auth/auth.guard';
+import { ProjectDetail } from './pages/project-details/project-details';
+import { InvoiceDetail } from './pages/invoice-details/invoice-details';
 
-      <nav class="sidebar-nav">
-        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
-          <span class="material-symbols-rounded">dashboard</span>
-          <span>Dashboard</span>
-        </a>
-        <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
-          <span class="material-symbols-rounded">apartment</span>
-          <span>Mandanten</span>
-        </a>
-        <a class="nav-item" routerLink="/projects" routerLinkActive="active">
-          <span class="material-symbols-rounded">work</span>
-          <span>Projekte</span>
-        </a>
-        <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>Rechnungen</span>
-        </a>
-        <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
-          <span class="material-symbols-rounded">rate_review</span>
-          <span>Referenzen</span>
-        </a>
-        <a class="nav-item" routerLink="/website" routerLinkActive="active">
-          <span class="material-symbols-rounded">language</span>
-          <span>Website</span>
-        </a>
-      </nav>
-    </aside>
-
-    <div class="main-area">
-      <header class="topbar">
-        <div class="topbar-search">
-          <span class="material-symbols-rounded">search</span>
-          <input type="text" placeholder="Suchen..." />
-        </div>
-
-        <div class="topbar-user">
-          <app-avatar [name]="auth.userName() ?? '?'" [size]="'3.6rem'"></app-avatar>
-          <span class="user-name">{{ auth.userName() ?? 'Wird geladen...' }}</span>
-          <button class="logout-button" (click)="auth.logout()">
-            <span class="material-symbols-rounded">logout</span>
-          </button>
-        </div>
-      </header>
-
-      <main class="content">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
-  </div>
-}
+export const routes: Routes = [
+  { path: '', component: Welcome },
+  { path: 'login', component: Login },
+  { path: 'session-expired', component: SessionExpired },
+  { path: 'callback', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
+  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
+  { path: 'projects', component: Projects, canActivate: [authGuard] },
+  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
+  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
+  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
+  { path: 'website', component: Website, canActivate: [authGuard] },
+];
 </file>
 
-<file path="src/app/model/invoice.ts">
-import { MilestoneStatus } from './project';
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.html">
+<div class="dialog-header">
+  <h2>Neue Rechnung</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
 
-export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export type LineItemSource = 'MILESTONE' | 'CUSTOM';
+<div class="dialog-body">
+  @if (dataLoading()) {
+    <div class="prefill-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <span>Daten werden geladen...</span>
+    </div>
+  } @else {
+    <div class="field-row">
+      <div class="field">
+        <label [class.warning]="showWarning() && !tenantId()">Mandant *</label>
+        <div class="select-lock" [class.select-lock--active]="tenantLocked()">
+          <select [disabled]="tenantLocked()" (change)="onTenantChange($any($event.target).value)">
+            <option value="" [selected]="!tenantId()" disabled>Mandant auswählen...</option>
+            @for (tenant of tenantStore.tenants(); track tenant.id) {
+              <option [value]="tenant.id" [selected]="tenant.id === tenantId()">
+                {{ tenant.companyName }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
 
-export interface Money {
-  amount: number;
-  currencyCode: string;
+      <div class="field">
+        <label [class.warning]="showWarning() && !projectId()">Projekt *</label>
+        <div class="select-lock" [class.select-lock--active]="projectLocked()">
+          <select
+            [disabled]="!tenantId() || projectLocked()"
+            (change)="onProjectChange($any($event.target).value)"
+          >
+            <option value="" [selected]="!projectId()" disabled>Projekt auswählen...</option>
+            @for (project of tenantProjects(); track project.id) {
+              <option [value]="project.id" [selected]="project.id === projectId()">
+                {{ project.title }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    @if (buyerDataIncomplete()) {
+      <div class="warning-banner">
+        <span class="material-symbols-rounded">warning</span>
+        <span>
+          Beim Mandanten fehlen Pflichtangaben (z.B. USt-ID oder Anschrift). Die Rechnung kann
+          erstellt, aber nicht ausgestellt werden, bevor die Stammdaten vervollständigt sind.
+        </span>
+      </div>
+    }
+
+    <div class="field-row">
+      <div class="field">
+        <label>Auftrags-Referenz</label>
+        <input
+          type="text"
+          [placeholder]="buyerReferencePlaceholder()"
+          [value]="buyerReference()"
+          (input)="buyerReference.set($any($event.target).value)"
+        />
+      </div>
+      <div class="field">
+        <label>Zahlungsziel (Tage)</label>
+        <input
+          type="text"
+          [value]="paymentTermsDays()"
+          (input)="paymentTermsDays.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (tenantId() && projectId()) {
+      <div class="section-title">Positionen</div>
+
+      @if (prefillLoading()) {
+        <div class="prefill-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+          <span>Meilensteine werden geladen...</span>
+        </div>
+      } @else if (prefill(); as p) {
+        @if (p.availableMilestones.length > 0) {
+          <div class="milestone-grid">
+            @for (milestone of p.availableMilestones; track milestone.id) {
+              <button
+                type="button"
+                class="milestone-tile"
+                [class.milestone-tile--active]="isMilestoneAdded(milestone.id)"
+                [class.milestone-tile--disabled]="milestone.alreadyInvoiced"
+                [disabled]="milestone.alreadyInvoiced"
+                (click)="toggleMilestone(milestone)"
+              >
+                <div class="milestone-tile-icon">
+                  <span class="material-symbols-rounded">
+                    {{ isMilestoneAdded(milestone.id) ? 'check_circle' : 'add_circle' }}
+                  </span>
+                </div>
+                <div class="milestone-tile-body">
+                  <p class="milestone-tile-title">{{ milestone.title }}</p>
+                  @if (milestone.price) {
+                    <p class="milestone-tile-price">{{ formatMoney(milestone.price.amount) }}</p>
+                  }
+
+                  @if (milestone.alreadyInvoiced) {
+                    <div class="milestone-tile-tags">
+                      <span class="milestone-tile-tag milestone-tile-tag--invoiced">
+                        <span class="material-symbols-rounded">lock</span>
+                        Abgerechnet
+                      </span>
+                    </div>
+                  } @else if (milestone.inDraftInvoice || milestone.milestoneStatus !== 'DONE') {
+                    <div class="milestone-tile-tags">
+                      @if (milestone.inDraftInvoice) {
+                        <span class="milestone-tile-tag milestone-tile-tag--draft">
+                          <span class="material-symbols-rounded">edit_note</span>
+                          In Rechnungsentwurf
+                        </span>
+                      }
+                      @if (milestone.milestoneStatus !== 'DONE') {
+                        <span class="milestone-tile-tag milestone-tile-tag--pending">
+                          <span class="material-symbols-rounded">hourglass_empty</span>
+                          Nicht abgeschlossen
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="no-milestones">Dieses Projekt hat noch keine Meilensteine.</p>
+        }
+
+        <div class="free-position-row">
+          <input
+            type="text"
+            class="free-description"
+            placeholder="Freie Position, z. B. Gerät (Hardware)"
+            [value]="freeDescription()"
+            (input)="freeDescription.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-quantity"
+            placeholder="Menge"
+            [value]="freeQuantity()"
+            (input)="freeQuantity.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="free-price"
+            placeholder="Preis netto"
+            [value]="freeUnitPrice()"
+            (input)="freeUnitPrice.set($any($event.target).value)"
+          />
+          <select
+            class="free-tax"
+            [value]="freeTaxRate()"
+            (change)="freeTaxRate.set(+$any($event.target).value)"
+          >
+            @for (rate of taxRateOptions; track rate) {
+              <option [value]="rate">{{ rate }} %</option>
+            }
+          </select>
+          <button type="button" class="free-add-button" (click)="addFreePosition()">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        @if (lineItems().length > 0) {
+          <div class="positions-list">
+            @for (item of lineItems(); track item.key) {
+              <div class="position-row">
+                <div class="position-main">
+                  <span class="position-source-icon material-symbols-rounded">
+                    {{ item.source === 'MILESTONE' ? 'flag' : 'edit_note' }}
+                  </span>
+                  <div>
+                    <p class="position-description">{{ item.description }}</p>
+                    <p class="position-meta">
+                      {{ item.quantity }} x {{ formatMoney(item.unitPrice.amount) }}
+                    </p>
+                  </div>
+                </div>
+
+                <select
+                  class="position-tax-select"
+                  [value]="item.taxRatePercentage"
+                  (change)="updateItemTaxRate(item.key, +$any($event.target).value)"
+                >
+                  @for (rate of taxRateOptions; track rate) {
+                    <option [value]="rate">{{ rate }} % USt</option>
+                  }
+                </select>
+
+                <span class="position-gross">{{ formatMoney(itemGross(item)) }}</span>
+
+                <button
+                  type="button"
+                  class="position-remove-button"
+                  (click)="removeLineItem(item.key)"
+                >
+                  <span class="material-symbols-rounded">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <span>Netto</span>
+              <span>{{ formatMoney(totals().net) }}</span>
+            </div>
+            @for (group of taxBreakdown(); track group.rate) {
+              <div class="summary-row summary-row--muted">
+                <span>USt ({{ group.rate }} %) auf {{ formatMoney(group.net) }}</span>
+                <span>{{ formatMoney(group.tax) }}</span>
+              </div>
+            }
+            <div class="summary-row summary-row--total">
+              <span>Rechnungsbetrag</span>
+              <span>{{ formatMoney(totals().gross) }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="no-positions-hint">
+            Noch keine Positionen ausgewählt - Meilenstein antippen oder freie Position ergänzen.
+          </p>
+        }
+      }
+    }
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting() || !isValid()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Rechnung anlegen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
+</file>
+
+<file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { environment } from '../../../../environments/environment';
+import { InvoiceStore } from '../../../core/invoices/invoice-store';
+import { ProjectStore } from '../../../core/projects/project-store';
+import { TenantStore } from '../../../core/tenants/tenant-store';
+import {
+  CreateInvoiceRequest,
+  InvoicePrefill,
+  LineItemSource,
+  Money,
+  MilestoneOption,
+} from '../../../model/invoice';
+import { Toast } from '../../../core/toast/toast';
+import { extractErrorMessage } from '../../../core/errors/error-message';
+
+export interface CreateInvoiceDialogData {
+  tenantId?: string;
+  projectId?: string;
 }
 
-export interface Address {
-  street?: string;
-  houseNumber?: string;
-  postalCode?: string;
-  city?: string;
-  countryCode?: string;
-}
-
-export interface BillingParty {
-  name: string;
-  vatId?: string;
-  address?: Address;
-  email?: string;
-  iban?: string;
-  bic?: string;
-}
-
-export interface InvoiceLineItem {
-  id: string;
-  positionNumber: number;
+interface DraftLineItem {
+  key: string;
   source: LineItemSource;
   milestoneId?: string;
   description: string;
@@ -13940,86 +14292,233 @@ export interface InvoiceLineItem {
   unitCode: string;
   unitPrice: Money;
   taxRatePercentage: number;
-  netAmount: Money;
-  taxAmount: Money;
-  grossAmount: Money;
 }
 
-export interface Invoice {
-  id: string;
-  invoiceNumber?: string;
-  tenantId: string;
-  projectId?: string;
-  status: InvoiceStatus;
-  currencyCode: string;
-  issueDate?: string;
-  dueDate?: string;
-  paymentTermsDays?: number;
-  buyerReference?: string;
-  seller?: BillingParty;
-  buyer?: BillingParty;
-  lineItems: InvoiceLineItem[];
-  netTotal: Money;
-  taxTotal: Money;
-  grossTotal: Money;
-  documentKey?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+@Component({
+  selector: 'app-create-invoice-dialog',
+  imports: [],
+  templateUrl: './create-invoice-dialog.html',
+  styleUrl: './create-invoice-dialog.scss',
+})
+export class CreateInvoiceDialog {
+  private readonly dialogRef = inject(MatDialogRef<CreateInvoiceDialog>);
+  private readonly invoiceStore = inject(InvoiceStore);
+  protected readonly tenantStore = inject(TenantStore);
+  protected readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+  private readonly dialogData = inject<CreateInvoiceDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
 
-// ---- Requests ----
+  readonly taxRateOptions = [19, 7, 0];
 
-export interface LineItemRequest {
-  source: LineItemSource;
-  milestoneId?: string;
-  description?: string;
-  quantity?: number;
-  unitCode?: string;
-  unitPrice?: Money;
-  taxRatePercentage?: number;
-}
+  readonly tenantId = signal(this.dialogData?.tenantId ?? '');
+  readonly tenantLocked = computed(() => !!this.dialogData?.tenantId);
+  readonly projectLocked = computed(() => !!this.dialogData?.projectId);
+  readonly projectId = signal(this.dialogData?.projectId ?? '');
+  readonly dataLoading = computed(() => this.tenantStore.loading() || this.projectStore.loading());
 
-export interface CreateInvoiceRequest {
-  tenantId: string;
-  projectId?: string;
-  buyerReference?: string;
-  paymentTermsDays?: number;
-  lineItems: LineItemRequest[];
-}
+  readonly buyerReference = signal('');
+  readonly paymentTermsDays = signal('14');
 
-export interface IssueInvoiceRequest {
-  issueDate?: string;
-}
+  readonly lineItems = signal<DraftLineItem[]>([]);
 
-// ---- Prefill ----
+  readonly freeDescription = signal('');
+  readonly freeQuantity = signal('1');
+  readonly freeUnitPrice = signal('');
+  readonly freeTaxRate = signal(19);
 
-export interface MilestoneOption {
-  id: string;
-  title: string;
-  dueDate?: string;
-  price?: Money;
-  alreadyInvoiced: boolean;
-  inDraftInvoice: boolean;
-  milestoneStatus: MilestoneStatus;
-}
+  readonly submitting = signal(false);
+  readonly showWarning = signal(false);
 
-export interface InvoicePrefill {
-  suggestedSeller: BillingParty;
-  suggestedBuyer: BillingParty;
-  availableMilestones: MilestoneOption[];
-}
+  // Nur Projekte des gewählten Mandanten - Projekt ist bei uns Pflichtfeld
+  readonly tenantProjects = computed(() =>
+    this.projectStore.projects().filter((p) => p.tenantId === this.tenantId()),
+  );
 
-export interface UpdateInvoiceHeaderRequest {
-  buyerReference?: string;
-  paymentTermsDays?: number;
-}
+  readonly buyerDataIncomplete = computed(
+    () => this.prefill() != null && !this.prefill()!.buyerDataComplete,
+  );
 
-export interface UpdateLineItemRequest {
-  description: string;
-  quantity: number;
-  unitCode: string;
-  unitPrice: Money;
-  taxRatePercentage: number;
+  readonly suggestedBuyerReference = computed(
+    () => this.prefill()?.suggestedBuyerReference ?? null,
+  );
+  readonly buyerReferencePlaceholder = computed(() =>
+    this.suggestedBuyerReference()
+      ? `Automatisch (${this.suggestedBuyerReference()})`
+      : 'Automatisch',
+  );
+
+  private readonly prefillResource = httpResource<InvoicePrefill>(() => {
+    const tenantId = this.tenantId();
+    const projectId = this.projectId();
+    return tenantId && projectId
+      ? `${environment.apiBaseUrl}/invoices/prefill?tenantId=${tenantId}&projectId=${projectId}`
+      : undefined;
+  });
+
+  readonly prefill = computed(() => this.prefillResource.value());
+  readonly prefillLoading = computed(() => this.prefillResource.isLoading());
+
+  readonly totals = computed(() => {
+    const items = this.lineItems();
+    return {
+      net: items.reduce((sum, i) => sum + this.itemNet(i), 0),
+      tax: items.reduce((sum, i) => sum + this.itemTax(i), 0),
+      gross: items.reduce((sum, i) => sum + this.itemGross(i), 0),
+    };
+  });
+
+  // Aufschlüsselung pro Steuersatz - genau das, was auf der Rechnung als
+  // eigene USt-Zeile je Satz ausgewiesen werden muss
+  readonly taxBreakdown = computed(() => {
+    const map = new Map<number, { net: number; tax: number }>();
+    for (const item of this.lineItems()) {
+      const net = this.itemNet(item);
+      const tax = this.itemTax(item);
+      const entry = map.get(item.taxRatePercentage) ?? { net: 0, tax: 0 };
+      entry.net += net;
+      entry.tax += tax;
+      map.set(item.taxRatePercentage, entry);
+    }
+    return [...map.entries()]
+      .map(([rate, values]) => ({ rate, ...values }))
+      .sort((a, b) => b.rate - a.rate);
+  });
+
+  readonly isValid = computed(
+    () => !!this.tenantId() && !!this.projectId() && this.lineItems().length > 0,
+  );
+
+  itemNet(item: DraftLineItem): number {
+    return item.unitPrice.amount * item.quantity;
+  }
+
+  itemTax(item: DraftLineItem): number {
+    return this.itemNet(item) * (item.taxRatePercentage / 100);
+  }
+
+  itemGross(item: DraftLineItem): number {
+    return this.itemNet(item) + this.itemTax(item);
+  }
+
+  onTenantChange(value: string): void {
+    this.tenantId.set(value);
+    this.projectId.set('');
+    this.lineItems.set([]);
+  }
+
+  onProjectChange(value: string): void {
+    this.projectId.set(value);
+    this.lineItems.set([]);
+  }
+
+  isMilestoneAdded(milestoneId: string): boolean {
+    return this.lineItems().some((i) => i.milestoneId === milestoneId);
+  }
+
+  toggleMilestone(milestone: MilestoneOption): void {
+    if (milestone.alreadyInvoiced) return;
+
+    if (this.isMilestoneAdded(milestone.id)) {
+      this.lineItems.update((list) => list.filter((i) => i.milestoneId !== milestone.id));
+      return;
+    }
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'MILESTONE',
+        milestoneId: milestone.id,
+        description: milestone.title,
+        quantity: 1,
+        unitCode: 'C62',
+        unitPrice: milestone.price ?? { amount: 0, currencyCode: 'EUR' },
+        taxRatePercentage: 19,
+      },
+    ]);
+  }
+
+  addFreePosition(): void {
+    const description = this.freeDescription().trim();
+    const amount = parseFloat(this.freeUnitPrice().replace(',', '.'));
+    const quantity = parseFloat(this.freeQuantity().replace(',', '.')) || 1;
+
+    if (!description || isNaN(amount) || amount <= 0) return;
+
+    this.lineItems.update((list) => [
+      ...list,
+      {
+        key: crypto.randomUUID(),
+        source: 'CUSTOM',
+        description,
+        quantity,
+        unitCode: 'C62',
+        unitPrice: { amount, currencyCode: 'EUR' },
+        taxRatePercentage: this.freeTaxRate(),
+      },
+    ]);
+
+    this.freeDescription.set('');
+    this.freeQuantity.set('1');
+    this.freeUnitPrice.set('');
+    this.freeTaxRate.set(19);
+  }
+
+  removeLineItem(key: string): void {
+    this.lineItems.update((list) => list.filter((i) => i.key !== key));
+  }
+
+  updateItemTaxRate(key: string, rate: number): void {
+    this.lineItems.update((list) =>
+      list.map((i) => (i.key === key ? { ...i, taxRatePercentage: rate } : i)),
+    );
+  }
+
+  formatMoney(amount: number, currencyCode = 'EUR'): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: currencyCode }).format(
+      amount,
+    );
+  }
+
+  close(): void {
+    this.dialogRef.close();
+  }
+
+  async submit(): Promise<void> {
+    if (!this.isValid()) {
+      this.showWarning.set(true);
+      return;
+    }
+
+    this.submitting.set(true);
+
+    const request: CreateInvoiceRequest = {
+      tenantId: this.tenantId(),
+      projectId: this.projectId(),
+      buyerReference: this.buyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.paymentTermsDays(), 10) || undefined,
+      lineItems: this.lineItems().map((i) => ({
+        source: i.source,
+        milestoneId: i.milestoneId,
+        description: i.description,
+        quantity: i.quantity,
+        unitCode: i.unitCode,
+        unitPrice: i.unitPrice,
+        taxRatePercentage: i.taxRatePercentage,
+      })),
+    };
+
+    try {
+      const invoice = await this.invoiceStore.create(request);
+      this.dialogRef.close(invoice);
+    } catch (err) {
+      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht angelegt werden'));
+    } finally {
+      this.submitting.set(false);
+    }
+  }
 }
 </file>
 
@@ -14043,6 +14542,8 @@ import { Project } from '../../model/project';
 import { CreateProjectDialog } from '../projects/create-project-dialog/create-project-dialog';
 import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
 import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
+import { InvitationSummary } from '../../model/testimonial';
+import { TestimonialApi } from '../../core/testimonials/testimonial-api';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -14057,6 +14558,7 @@ export class TenantDetail {
   private readonly dialog = inject(MatDialog);
   private readonly tenantStore = inject(TenantStore);
   private readonly tenantApi = inject(TenantApi);
+  private readonly testimonialApi = inject(TestimonialApi);
   private readonly toast = inject(Toast);
 
   private readonly tenantResource = httpResource<Tenant>(
@@ -14073,10 +14575,17 @@ export class TenantDetail {
     { defaultValue: [] },
   );
 
+  private readonly invitationsResource = httpResource<InvitationSummary[]>(() =>
+    this.tenant()?.id
+      ? `${environment.apiBaseUrl}/testimonial-invitations?tenantId=${this.tenant()!.id}`
+      : undefined,
+  );
+
   readonly tenant = computed(() => this.tenantResource.value());
   readonly loading = computed(() => this.tenantResource.isLoading());
   readonly partners = computed(() => this.partnersResource.value() ?? []);
   readonly projects = computed(() => this.projectsResource.value() ?? []);
+  readonly invitations = computed(() => this.invitationsResource.value() ?? []);
 
   readonly statusLabels: Record<Tenant['status'], string> = {
     PROSPECT: 'Interessent',
@@ -14206,9 +14715,27 @@ export class TenantDetail {
 
     dialogRef.afterClosed().subscribe((created) => {
       if (created) {
+        this.invitationsResource.reload();
         this.toast.success('Einladung erzeugt');
       }
     });
+  }
+
+  latestInvitationForPartner(partnerId: string): InvitationSummary | null {
+    const list = this.invitations().filter((i) => i.partnerId === partnerId);
+    if (list.length === 0) return null;
+    return list.reduce((latest, i) => (i.createdAt > latest.createdAt ? i : latest));
+  }
+
+  invitationStatusLabel(partnerId: string): string {
+    const inv = this.latestInvitationForPartner(partnerId);
+    if (!inv) return 'Noch nicht eingeladen';
+    if (!inv.sentAt) return 'Link erzeugt, nicht versendet';
+    const date = new Date(inv.sentAt).toLocaleDateString('de-DE');
+    if (inv.status === 'USED') return `Referenz abgegeben (eingeladen am ${date})`;
+    if (inv.status === 'EXPIRED') return `Einladung abgelaufen (versendet am ${date})`;
+    if (inv.status === 'REVOKED') return `Einladung widerrufen`;
+    return `Eingeladen am ${date}`;
   }
 
   async deletePartner(partner: Partner): Promise<void> {
@@ -14237,37 +14764,135 @@ export class TenantDetail {
 }
 </file>
 
-<file path="src/app/app.routes.ts">
-import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard/dashboard';
-import { Tenants } from './pages/tenants/tenants';
-import { TenantDetail } from './pages/tenant-detail/tenant-detail';
-import { Projects } from './pages/projects/projects';
-import { Invoices } from './pages/invoices/invoices';
-import { Testimonials } from './pages/testimonials/testimonials';
-import { Website } from './pages/website/website';
-import { Welcome } from './pages/welcome/welcome';
-import { Login } from './pages/login/login';
-import { SessionExpired } from './pages/session-expired/session-expired';
-import { authGuard } from './core/auth/auth.guard';
-import { ProjectDetail } from './pages/project-details/project-details';
-import { InvoiceDetail } from './pages/invoice-details/invoice-details';
+<file path="src/app/model/invoice.ts">
+import { MilestoneStatus } from './project';
 
-export const routes: Routes = [
-  { path: '', component: Welcome },
-  { path: 'login', component: Login },
-  { path: 'session-expired', component: SessionExpired },
-  { path: 'callback', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
-  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
-  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
-  { path: 'projects', component: Projects, canActivate: [authGuard] },
-  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
-  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
-  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
-  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
-  { path: 'website', component: Website, canActivate: [authGuard] },
-];
+export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export type LineItemSource = 'MILESTONE' | 'CUSTOM';
+
+export interface Money {
+  amount: number;
+  currencyCode: string;
+}
+
+export interface Address {
+  street?: string;
+  houseNumber?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+}
+
+export interface BillingParty {
+  name: string;
+  vatId?: string;
+  address?: Address;
+  email?: string;
+  iban?: string;
+  bic?: string;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  positionNumber: number;
+  source: LineItemSource;
+  milestoneId?: string;
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+  netAmount: Money;
+  taxAmount: Money;
+  grossAmount: Money;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string;
+  tenantId: string;
+  projectId?: string;
+  status: InvoiceStatus;
+  currencyCode: string;
+  issueDate?: string;
+  dueDate?: string;
+  paymentTermsDays?: number;
+  buyerReference?: string;
+  seller?: BillingParty;
+  buyer?: BillingParty;
+  lineItems: InvoiceLineItem[];
+  netTotal: Money;
+  taxTotal: Money;
+  grossTotal: Money;
+  documentKey?: string;
+  sentToEmail?: string;
+  sentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---- Requests ----
+
+export interface LineItemRequest {
+  source: LineItemSource;
+  milestoneId?: string;
+  description?: string;
+  quantity?: number;
+  unitCode?: string;
+  unitPrice?: Money;
+  taxRatePercentage?: number;
+}
+
+export interface CreateInvoiceRequest {
+  tenantId: string;
+  projectId?: string;
+  buyerReference?: string;
+  paymentTermsDays?: number;
+  lineItems: LineItemRequest[];
+}
+
+export interface IssueInvoiceRequest {
+  issueDate?: string;
+  sendEmailDirectly?: boolean;
+  invoiceEmail?: string;
+}
+
+export interface SendInvoiceRequest {
+  email?: string;
+}
+
+// ---- Prefill ----
+
+export interface MilestoneOption {
+  id: string;
+  title: string;
+  dueDate?: string;
+  price?: Money;
+  alreadyInvoiced: boolean;
+  inDraftInvoice: boolean;
+  milestoneStatus: MilestoneStatus;
+}
+
+export interface InvoicePrefill {
+  suggestedSeller: BillingParty;
+  suggestedBuyer: BillingParty;
+  buyerDataComplete: boolean;
+  suggestedBuyerReference?: string;
+  availableMilestones: MilestoneOption[];
+}
+
+export interface UpdateInvoiceHeaderRequest {
+  buyerReference?: string;
+  paymentTermsDays?: number;
+}
+
+export interface UpdateLineItemRequest {
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: Money;
+  taxRatePercentage: number;
+}
 </file>
 
 </files>

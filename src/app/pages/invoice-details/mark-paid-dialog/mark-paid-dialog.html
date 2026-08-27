@@ -1,0 +1,17 @@
+<div class="confirm-dialog">
+  <div class="confirm-icon-wrapper">
+    <span class="material-symbols-rounded">paid</span>
+  </div>
+  <h2 class="confirm-title">Als bezahlt markieren?</h2>
+  <p class="confirm-message">Die Rechnung wird auf den Status "Bezahlt" gesetzt.</p>
+
+  <div class="email-field">
+    <label>Zahlungsdatum</label>
+    <input type="date" [value]="paidDate()" (input)="paidDate.set($any($event.target).value)" />
+  </div>
+
+  <div class="confirm-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" (click)="confirm()">Bestätigen</button>
+  </div>
+</div>

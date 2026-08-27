@@ -17,8 +17,11 @@ export interface Tenant {
   address?: Address;
   contactEmail?: string;
   contactPhone?: string;
+  websiteUrl?: string;
+  notes?: string;
   status: TenantStatus;
   visibleOnWebsite: boolean;
+  logoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +40,11 @@ export interface UpdateTenantContactDetailsRequest {
   contactEmail?: string;
   contactPhone?: string;
   address?: Address;
+  websiteUrl?: string;
+}
+
+export interface UpdateTenantNotesRequest {
+  notes?: string;
 }
 
 export interface UpdateTenantCoreDetailsRequest {
@@ -53,6 +61,7 @@ export interface Partner {
   role?: string;
   email?: string;
   phone?: string;
+  photoUrl?: string;
 }
 
 export interface CreatePartnerRequest {
