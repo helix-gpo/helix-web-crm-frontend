@@ -28,15 +28,15 @@
   gap: 0.6rem;
   background-color: rgba(255, 255, 255, 0.08);
   border: none;
-  border-radius: 50rem;
+  border-radius: 0.8rem;
+  padding: 0.6rem 1.4rem 0.6rem 1rem;
   color: var(--text-light);
   font-size: 1.3rem;
-  padding: 0.7rem 1.4rem;
   cursor: pointer;
-  margin-bottom: 2rem;
+  margin-bottom: 2.4rem;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.15);
   }
 }
 
