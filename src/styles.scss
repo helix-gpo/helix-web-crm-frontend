@@ -305,3 +305,26 @@ body {
     }
   }
 }
+
+// =====================
+// NATIVE DATE-INPUTS AN DARK-THEME ANGLEICHEN
+// Die Felder selbst übernehmen schon das App-Styling über die jeweiligen
+// .field input Regeln - hier geht's nur um das native Kalender-Icon und
+// das aufklappende Kalender-Popup, die der Browser rendert und die wir
+// sonst nicht beeinflussen können.
+// =====================
+input[type='date'] {
+  color-scheme: dark;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) brightness(1.4);
+    cursor: pointer;
+    border-radius: 0.4rem;
+    padding: 0.2rem;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
