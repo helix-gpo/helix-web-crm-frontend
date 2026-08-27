@@ -412,6 +412,16 @@
       color: var(--text-light) !important;
     }
   }
+
+  &--locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+
+    &:hover,
+    &:focus-visible {
+      background-color: transparent !important;
+    }
+  }
 }
 
 .partner-invitation-status {

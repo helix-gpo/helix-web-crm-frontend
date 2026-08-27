@@ -34,7 +34,6 @@ export class TenantDetail {
   private readonly dialog = inject(MatDialog);
   private readonly tenantStore = inject(TenantStore);
   private readonly tenantApi = inject(TenantApi);
-  private readonly testimonialApi = inject(TestimonialApi);
   private readonly toast = inject(Toast);
 
   private readonly tenantResource = httpResource<Tenant>(
@@ -66,6 +65,7 @@ export class TenantDetail {
   readonly invitations = computed(() => this.invitationsResource.value() ?? []);
 
   readonly canCreateProject = computed(() => this.tenant()?.status === 'ACTIVE');
+  readonly canRequestTestimonial = computed(() => this.projects().length > 0);
 
   readonly statusLabels: Record<Tenant['status'], string> = {
     PROSPECT: 'Interessent',
@@ -199,6 +199,11 @@ export class TenantDetail {
         this.toast.success('Einladung erzeugt');
       }
     });
+  }
+
+  requestTestimonialClick(partner: Partner): void {
+    if (!this.canRequestTestimonial()) return;
+    this.openRequestTestimonialDialog(partner);
   }
 
   latestInvitationForPartner(partnerId: string): InvitationSummary | null {

@@ -1,0 +1,8 @@
+<button type="button" class="sortable-header" (click)="clicked.emit()">
+  <span>{{ label }}</span>
+  <span class="sort-icon material-symbols-rounded" [class.sort-icon--active]="direction">
+    {{
+      direction === 'asc' ? 'arrow_upward' : direction === 'desc' ? 'arrow_downward' : 'unfold_more'
+    }}
+  </span>
+</button>

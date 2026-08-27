@@ -29,6 +29,9 @@
 }
 
 .filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
   margin-bottom: 1.6rem;
 }
 
@@ -142,6 +145,43 @@
   .material-symbols-rounded {
     font-size: 2rem;
   }
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: rgba(3, 219, 255, 0.08);
+    border-color: var(--accent-cyan);
+  }
+}
+
+.filter-count-badge {
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  @include flex-center;
 }
 
 .cell-avatar-img {

@@ -189,3 +189,65 @@
     transform: rotate(360deg);
   }
 }
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 2rem 0 1.6rem;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: rgba(3, 219, 255, 0.08);
+    border-color: var(--accent-cyan);
+  }
+}
+
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1.4rem;
+  width: 32rem;
+
+  .material-symbols-rounded {
+    color: var(--text-grey);
+    font-size: 2rem;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 1.4rem;
+    width: 100%;
+  }
+}
+
+.filter-count-badge {
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  @include flex-center;
+}

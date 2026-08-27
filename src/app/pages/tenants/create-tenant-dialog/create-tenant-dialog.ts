@@ -3,6 +3,18 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { TenantStore } from '../../../core/tenants/tenant-store';
 import { CreateTenantRequest, CreatePartnerRequest } from '../../../model/tenant';
 
+interface PartnerDraft {
+  firstName: string;
+  lastName: string;
+  role: string;
+  email: string;
+  phone: string;
+}
+
+function emptyPartnerDraft(): PartnerDraft {
+  return { firstName: '', lastName: '', role: '', email: '', phone: '' };
+}
+
 @Component({
   selector: 'app-create-tenant-dialog',
   imports: [],
@@ -25,13 +37,9 @@ export class CreateTenantDialog {
   readonly postalCode = signal('');
   readonly city = signal('');
 
-  // Optionaler erster Partner
-  readonly includePartner = signal(true);
-  readonly partnerFirstName = signal('');
-  readonly partnerLastName = signal('');
-  readonly partnerRole = signal('');
-  readonly partnerEmail = signal('');
-  readonly partnerPhone = signal('');
+  // Optionale Partner - beliebig viele
+  readonly includePartner = signal(false);
+  readonly partners = signal<PartnerDraft[]>([emptyPartnerDraft()]);
 
   readonly submitting = signal(false);
   readonly showCompanyNameWarning = signal(false);
@@ -53,6 +61,20 @@ export class CreateTenantDialog {
       .toUpperCase()
       .slice(0, 4);
     this.referenceCode.set(initials);
+  }
+
+  updatePartnerField(index: number, field: keyof PartnerDraft, value: string): void {
+    this.partners.update((list) =>
+      list.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    );
+  }
+
+  addPartnerRow(): void {
+    this.partners.update((list) => [...list, emptyPartnerDraft()]);
+  }
+
+  removePartnerRow(index: number): void {
+    this.partners.update((list) => (list.length > 1 ? list.filter((_, i) => i !== index) : list));
   }
 
   async submit(): Promise<void> {
@@ -82,19 +104,22 @@ export class CreateTenantDialog {
           : undefined,
     };
 
-    let partner: CreatePartnerRequest | undefined;
-    if (this.includePartner() && this.partnerFirstName().trim() && this.partnerLastName().trim()) {
-      partner = {
-        firstName: this.partnerFirstName().trim(),
-        lastName: this.partnerLastName().trim(),
-        role: this.partnerRole().trim() || undefined,
-        email: this.partnerEmail().trim() || undefined,
-        phone: this.partnerPhone().trim() || undefined,
-      };
-    }
+    // Nur Zeilen mit ausgefülltem Vor- und Nachnamen wirklich anlegen -
+    // leere Zusatzzeilen (z.B. durch versehentliches Plus-Klicken) werden ignoriert
+    const partners: CreatePartnerRequest[] = this.includePartner()
+      ? this.partners()
+          .filter((p) => p.firstName.trim() && p.lastName.trim())
+          .map((p) => ({
+            firstName: p.firstName.trim(),
+            lastName: p.lastName.trim(),
+            role: p.role.trim() || undefined,
+            email: p.email.trim() || undefined,
+            phone: p.phone.trim() || undefined,
+          }))
+      : [];
 
     try {
-      const tenant = await this.tenantStore.create(request, partner);
+      const tenant = await this.tenantStore.create(request, partners);
       this.dialogRef.close(tenant);
     } finally {
       this.submitting.set(false);

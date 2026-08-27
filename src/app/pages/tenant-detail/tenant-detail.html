@@ -116,8 +116,13 @@
             <div class="partner-actions">
               <button
                 class="icon-button"
-                (click)="openRequestTestimonialDialog(partner)"
-                title="Referenz anfragen"
+                [class.icon-button--locked]="!canRequestTestimonial()"
+                [title]="
+                  canRequestTestimonial()
+                    ? 'Referenz anfragen'
+                    : 'Erst möglich, wenn ein Projekt für diesen Mandanten existiert'
+                "
+                (click)="requestTestimonialClick(partner)"
               >
                 <span class="material-symbols-rounded">rate_review</span>
               </button>

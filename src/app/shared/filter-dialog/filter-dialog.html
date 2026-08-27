@@ -1,0 +1,31 @@
+<div class="dialog-header">
+  <h2>Filtern</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  @for (field of data.fields; track field.key) {
+    <div class="filter-section">
+      <p class="filter-section-label">{{ field.label }}</p>
+      <div class="option-list">
+        @for (option of field.options; track option.value) {
+          <label class="option-checkbox">
+            <input
+              type="checkbox"
+              [checked]="isChecked(field.key, option.value)"
+              (change)="toggle(field.key, option.value)"
+            />
+            <span>{{ option.label }}</span>
+          </label>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="clearAll()">Zurücksetzen</button>
+  <button class="submit-button" (click)="apply()">Anwenden</button>
+</div>

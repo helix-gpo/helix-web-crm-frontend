@@ -16,11 +16,18 @@
     <span class="material-symbols-rounded">search</span>
     <input
       type="text"
-      placeholder="Mandant suchen..."
+      placeholder="Titel, USt-ID, Kontakt, Ort..."
       [value]="searchTerm()"
       (input)="searchTerm.set($any($event.target).value)"
     />
   </div>
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
 </div>
 
 @if (tenantStore.loading()) {
@@ -37,10 +44,26 @@
 } @else {
   <div class="tenants-table">
     <div class="table-row table-row--header">
-      <span>Mandant</span>
-      <span>Kontakt</span>
-      <span>Ort</span>
-      <span>Status</span>
+      <app-sortable-header
+        label="Mandant"
+        [direction]="sortDirectionFor('companyName')"
+        (clicked)="toggleSort('companyName')"
+      />
+      <app-sortable-header
+        label="Kontakt"
+        [direction]="sortDirectionFor('contactEmail')"
+        (clicked)="toggleSort('contactEmail')"
+      />
+      <app-sortable-header
+        label="Ort"
+        [direction]="sortDirectionFor('city')"
+        (clicked)="toggleSort('city')"
+      />
+      <app-sortable-header
+        label="Status"
+        [direction]="sortDirectionFor('status')"
+        (clicked)="toggleSort('status')"
+      />
       <span>Website</span>
       <span></span>
     </div>
@@ -61,8 +84,8 @@
           </div>
         </div>
 
-        <span class="contact-cell">{{ tenant.contactEmail || '-' }}</span>
-        <span class="city-cell">{{ tenant.address?.city || '-' }}</span>
+        <span class="contact-cell">{{ tenant.contactEmail || '–' }}</span>
+        <span class="city-cell">{{ tenant.address?.city || '–' }}</span>
 
         <span class="status-badge" [class]="'status-badge--' + tenant.status.toLowerCase()">
           {{ statusLabels[tenant.status] }}

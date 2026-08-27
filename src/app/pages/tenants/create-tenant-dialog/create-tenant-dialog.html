@@ -112,52 +112,75 @@
     </div>
 
     @if (includePartner()) {
-      <div class="field-row">
-        <div class="field">
-          <label>Vorname</label>
-          <input
-            type="text"
-            [value]="partnerFirstName()"
-            (input)="partnerFirstName.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label>Nachname</label>
-          <input
-            type="text"
-            [value]="partnerLastName()"
-            (input)="partnerLastName.set($any($event.target).value)"
-          />
-        </div>
-      </div>
+      @for (partner of partners(); track $index) {
+        <div class="partner-block">
+          @if (partners().length > 1) {
+            <div class="partner-block-header">
+              <span class="partner-block-label">Partner {{ $index + 1 }}</span>
+              <button
+                class="remove-partner-button"
+                type="button"
+                title="Diesen Partner entfernen"
+                (click)="removePartnerRow($index)"
+              >
+                <span class="material-symbols-rounded">remove_circle_outline</span>
+              </button>
+            </div>
+          }
 
-      <div class="field-row">
-        <div class="field">
-          <label>Rolle</label>
-          <input
-            type="text"
-            placeholder="z. B. Geschäftsführer"
-            [value]="partnerRole()"
-            (input)="partnerRole.set($any($event.target).value)"
-          />
+          <div class="field-row">
+            <div class="field">
+              <label>Vorname</label>
+              <input
+                type="text"
+                [value]="partner.firstName"
+                (input)="updatePartnerField($index, 'firstName', $any($event.target).value)"
+              />
+            </div>
+            <div class="field">
+              <label>Nachname</label>
+              <input
+                type="text"
+                [value]="partner.lastName"
+                (input)="updatePartnerField($index, 'lastName', $any($event.target).value)"
+              />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Rolle</label>
+              <input
+                type="text"
+                placeholder="z. B. Geschäftsführer"
+                [value]="partner.role"
+                (input)="updatePartnerField($index, 'role', $any($event.target).value)"
+              />
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input
+                type="email"
+                [value]="partner.email"
+                (input)="updatePartnerField($index, 'email', $any($event.target).value)"
+              />
+            </div>
+            <div class="field">
+              <label>Telefon</label>
+              <input
+                type="text"
+                [value]="partner.phone"
+                (input)="updatePartnerField($index, 'phone', $any($event.target).value)"
+              />
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <label>Email</label>
-          <input
-            type="email"
-            [value]="partnerEmail()"
-            (input)="partnerEmail.set($any($event.target).value)"
-          />
-        </div>
-        <div class="field">
-          <label>Telefon</label>
-          <input
-            type="text"
-            [value]="partnerPhone()"
-            (input)="partnerPhone.set($any($event.target).value)"
-          />
-        </div>
-      </div>
+      }
+
+      <button class="add-partner-button" type="button" (click)="addPartnerRow()">
+        <span class="material-symbols-rounded">add</span>
+        <span>Weiteren Partner hinzufügen</span>
+      </button>
     }
   </div>
 </div>

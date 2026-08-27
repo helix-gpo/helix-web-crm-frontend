@@ -103,24 +103,32 @@
         (input)="searchTerm.set($any($event.target).value)"
       />
     </div>
-
-    <select
-      class="status-select"
-      [value]="statusFilter()"
-      (change)="statusFilter.set($any($event.target).value)"
-    >
-      <option value="ALL">Alle Status</option>
-      @for (column of columns; track column.status) {
-        <option [value]="column.status">{{ column.label }}</option>
+    <button class="filter-button" (click)="openFilterDialog()">
+      <span class="material-symbols-rounded">filter_list</span>
+      <span>Filter</span>
+      @if (activeFilterCount() > 0) {
+        <span class="filter-count-badge">{{ activeFilterCount() }}</span>
       }
-    </select>
+    </button>
   </div>
 
   <div class="projects-table">
     <div class="table-row table-row--header">
-      <span>Projekt</span>
-      <span>Mandant</span>
-      <span>Status</span>
+      <app-sortable-header
+        label="Projekt"
+        [direction]="sortDirectionFor('title')"
+        (clicked)="toggleSort('title')"
+      />
+      <app-sortable-header
+        label="Mandant"
+        [direction]="sortDirectionFor('tenantName')"
+        (clicked)="toggleSort('tenantName')"
+      />
+      <app-sortable-header
+        label="Status"
+        [direction]="sortDirectionFor('status')"
+        (clicked)="toggleSort('status')"
+      />
       <span>Meilensteine</span>
       <span>Website</span>
       <span></span>

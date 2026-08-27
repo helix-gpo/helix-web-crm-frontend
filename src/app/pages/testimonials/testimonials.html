@@ -1,7 +1,10 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Referenzen</h1>
-    <p class="page-subtitle">{{ testimonialStore.testimonials().length }} Referenzen insgesamt</p>
+    <p class="page-subtitle">
+      {{ filteredTestimonials().length }} von
+      {{ testimonialStore.testimonials().length }} Referenzen
+    </p>
   </div>
 </div>
 
@@ -18,6 +21,36 @@
       }
     </button>
   }
+</div>
+
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Partner, Firma oder Text suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+
+  <select
+    class="sort-select"
+    [value]="sortOption()"
+    (change)="sortOption.set($any($event.target).value)"
+  >
+    @for (option of sortOptions; track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
 </div>
 
 @if (testimonialStore.loading()) {
@@ -113,7 +146,7 @@
     } @empty {
       <div class="empty-state">
         <span class="material-symbols-rounded">rate_review</span>
-        <p>Keine Referenzen in dieser Kategorie</p>
+        <p>Keine Referenzen gefunden</p>
       </div>
     }
   </div>

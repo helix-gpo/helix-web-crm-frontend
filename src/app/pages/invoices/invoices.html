@@ -1,7 +1,9 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Rechnungen</h1>
-    <p class="page-subtitle">{{ invoiceStore.invoices().length }} Rechnungen insgesamt</p>
+    <p class="page-subtitle">
+      {{ filteredInvoices().length }} von {{ invoiceStore.invoices().length }} Rechnungen
+    </p>
   </div>
   <button class="add-button" (click)="openCreateDialog()">
     <span class="material-symbols-rounded">add</span>
@@ -35,6 +37,25 @@
   </div>
 </div>
 
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Rechnungsnummer oder Mandant suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+</div>
+
 @if (invoiceStore.loading()) {
   <div class="state-panel">
     <span class="material-symbols-rounded spin">progress_activity</span>
@@ -43,15 +64,39 @@
 } @else {
   <div class="invoices-table">
     <div class="table-row table-row--header">
-      <span>Nummer</span>
-      <span>Mandant</span>
-      <span>Ausgestellt</span>
-      <span>Fällig</span>
-      <span>Betrag</span>
-      <span>Status</span>
+      <app-sortable-header
+        label="Nummer"
+        [direction]="sortDirectionFor('invoiceNumber')"
+        (clicked)="toggleSort('invoiceNumber')"
+      />
+      <app-sortable-header
+        label="Mandant"
+        [direction]="sortDirectionFor('tenantName')"
+        (clicked)="toggleSort('tenantName')"
+      />
+      <app-sortable-header
+        label="Ausgestellt"
+        [direction]="sortDirectionFor('issueDate')"
+        (clicked)="toggleSort('issueDate')"
+      />
+      <app-sortable-header
+        label="Fällig"
+        [direction]="sortDirectionFor('dueDate')"
+        (clicked)="toggleSort('dueDate')"
+      />
+      <app-sortable-header
+        label="Betrag"
+        [direction]="sortDirectionFor('amount')"
+        (clicked)="toggleSort('amount')"
+      />
+      <app-sortable-header
+        label="Status"
+        [direction]="sortDirectionFor('status')"
+        (clicked)="toggleSort('status')"
+      />
     </div>
 
-    @for (invoice of invoiceStore.invoices(); track invoice.id) {
+    @for (invoice of filteredInvoices(); track invoice.id) {
       <div class="table-row" (click)="openInvoice(invoice.id)">
         <span class="invoice-number">{{ invoice.invoiceNumber || '- (Entwurf)' }}</span>
         <span>{{ tenantName(invoice.tenantId) }}</span>
@@ -68,7 +113,7 @@
     } @empty {
       <div class="empty-state">
         <span class="material-symbols-rounded">receipt_long</span>
-        <p>Noch keine Rechnungen vorhanden</p>
+        <p>Keine Rechnungen gefunden</p>
       </div>
     }
   </div>

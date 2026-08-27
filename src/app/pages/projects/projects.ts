@@ -12,12 +12,20 @@ import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { CreateProjectDialog } from './create-project-dialog/create-project-dialog';
 import { getContrastTextColor } from '../../util/color-contrast';
 import { Project, ProjectStatus } from '../../model/project';
+import { SortableHeader } from '../../shared/sortable-header/sortable-header';
+import {
+  FilterDialog,
+  FilterFieldConfig,
+  ActiveFilters,
+} from '../../shared/filter-dialog/filter-dialog';
+import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
 
 type ViewMode = 'kanban' | 'list';
+type ProjectSortKey = 'title' | 'tenantName' | 'status';
 
 @Component({
   selector: 'app-projects',
-  imports: [MatDialogModule, MatMenuModule, MatDividerModule],
+  imports: [MatDialogModule, MatMenuModule, MatDividerModule, SortableHeader],
   templateUrl: './projects.html',
   styleUrl: './projects.scss',
 })
@@ -33,7 +41,8 @@ export class Projects {
 
   readonly viewMode = signal<ViewMode>('list');
   readonly searchTerm = signal('');
-  readonly statusFilter = signal<ProjectStatus | 'ALL'>('ALL');
+  readonly sort = signal<SortState<ProjectSortKey>>({ key: null, direction: null });
+  readonly activeFilters = signal<ActiveFilters>({});
 
   readonly columns: { status: ProjectStatus; label: string }[] = [
     { status: 'LEAD', label: 'Interessent' },
@@ -50,6 +59,26 @@ export class Projects {
     COMPLETED: 'Abgeschlossen',
     CANCELLED: 'Abgebrochen',
   };
+
+  readonly filterFields: FilterFieldConfig[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: this.columns.map((c) => ({ value: c.status, label: c.label })),
+    },
+    {
+      key: 'visibleOnWebsite',
+      label: 'Website-Sichtbarkeit',
+      options: [
+        { value: 'true', label: 'Sichtbar' },
+        { value: 'false', label: 'Nicht sichtbar' },
+      ],
+    },
+  ];
+
+  readonly activeFilterCount = computed(() =>
+    Object.values(this.activeFilters()).reduce((sum, values) => sum + values.length, 0),
+  );
 
   private readonly tenantNameById = computed(() => {
     const map = new Map<string, string>();
@@ -71,17 +100,59 @@ export class Projects {
 
   readonly filteredListProjects = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    const status = this.statusFilter();
+    let projects = this.projectStore.projects();
 
-    return this.projectStore.projects().filter((p) => {
-      const matchesStatus = status === 'ALL' || p.status === status;
-      const matchesSearch =
-        !term ||
-        p.title.toLowerCase().includes(term) ||
-        this.tenantName(p.tenantId).toLowerCase().includes(term);
-      return matchesStatus && matchesSearch;
+    if (term) {
+      projects = projects.filter(
+        (p) =>
+          p.title.toLowerCase().includes(term) ||
+          this.tenantName(p.tenantId).toLowerCase().includes(term),
+      );
+    }
+
+    const filters = this.activeFilters();
+
+    if (filters['status']?.length) {
+      projects = projects.filter((p) => filters['status'].includes(p.status));
+    }
+    if (filters['visibleOnWebsite']?.length) {
+      projects = projects.filter((p) =>
+        filters['visibleOnWebsite'].includes(String(p.visibleOnWebsite)),
+      );
+    }
+
+    return sortByKey(projects, this.sort(), (p, key) => {
+      switch (key) {
+        case 'title':
+          return p.title;
+        case 'tenantName':
+          return this.tenantName(p.tenantId);
+        case 'status':
+          return p.status;
+      }
     });
   });
+
+  toggleSort(key: ProjectSortKey): void {
+    this.sort.update((current) => cycleSort(current, key));
+  }
+
+  sortDirectionFor(key: ProjectSortKey): SortDirection {
+    const s = this.sort();
+    return s.key === key ? s.direction : null;
+  }
+
+  openFilterDialog(): void {
+    const dialogRef = this.dialog.open(FilterDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { fields: this.filterFields, active: this.activeFilters() },
+    });
+
+    dialogRef.afterClosed().subscribe((result?: ActiveFilters) => {
+      if (result) this.activeFilters.set(result);
+    });
+  }
 
   tenantName(tenantId: string): string {
     return this.tenantNameById().get(tenantId) ?? 'Unbekannt';
