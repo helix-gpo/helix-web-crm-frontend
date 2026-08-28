@@ -77,7 +77,8 @@
     color: var(--text-light);
 
     &:hover {
-      filter: brightness(1.1);
+      background-color: var(--danger);
+      filter: brightness(1.15);
     }
   }
 }
