@@ -44,7 +44,10 @@ export class CreateTenantDialog {
   readonly submitting = signal(false);
   readonly showCompanyNameWarning = signal(false);
 
-  readonly isValid = computed(() => this.companyName().trim().length > 0);
+  readonly showReferenceCodeWarning = signal(false);
+  readonly isValid = computed(
+    () => this.companyName().trim().length > 0 && this.referenceCode().trim().length > 0,
+  );
 
   close(): void {
     this.dialogRef.close();
@@ -79,7 +82,8 @@ export class CreateTenantDialog {
 
   async submit(): Promise<void> {
     if (!this.isValid()) {
-      this.showCompanyNameWarning.set(true);
+      this.showCompanyNameWarning.set(this.companyName().trim().length === 0);
+      this.showReferenceCodeWarning.set(this.referenceCode().trim().length === 0);
       return;
     }
 

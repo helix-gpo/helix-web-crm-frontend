@@ -37,12 +37,17 @@
 
     <div class="field-row">
       <div class="field">
-        <label>Kürzel (für Rechnungsreferenzen)</label>
+        <label [class.warning]="showReferenceCodeWarning()"
+          >Kürzel (für Rechnungsreferenzen) *</label
+        >
         <input
           type="text"
           placeholder="z. B. MBS"
           [value]="referenceCode()"
-          (input)="referenceCode.set($any($event.target).value.toUpperCase())"
+          (input)="
+            referenceCode.set($any($event.target).value.toUpperCase());
+            showReferenceCodeWarning.set(false)
+          "
         />
       </div>
       <div class="field"></div>

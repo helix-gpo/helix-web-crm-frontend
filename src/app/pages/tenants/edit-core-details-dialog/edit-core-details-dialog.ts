@@ -19,10 +19,11 @@ export class EditCoreDetailsDialog {
   readonly vatId = signal(this.tenant.vatId ?? '');
   readonly referenceCode = signal(this.tenant.referenceCode ?? '');
 
-  // Felder starten gesperrt - verhindert Versehens-Änderungen
+  // fields start locked - prevents accidental changes
   readonly unlocked = signal(false);
   readonly submitting = signal(false);
   readonly showCompanyNameWarning = signal(false);
+  readonly showReferenceCodeWarning = signal(false);
 
   unlock(): void {
     this.unlocked.set(true);
@@ -33,8 +34,12 @@ export class EditCoreDetailsDialog {
   }
 
   async submit(): Promise<void> {
-    if (!this.companyName().trim()) {
-      this.showCompanyNameWarning.set(true);
+    const companyNameMissing = !this.companyName().trim();
+    const referenceCodeMissing = !this.referenceCode().trim();
+
+    if (companyNameMissing || referenceCodeMissing) {
+      this.showCompanyNameWarning.set(companyNameMissing);
+      this.showReferenceCodeWarning.set(referenceCodeMissing);
       return;
     }
 
@@ -45,7 +50,7 @@ export class EditCoreDetailsDialog {
         companyName: this.companyName().trim(),
         legalName: this.legalName().trim() || undefined,
         vatId: this.vatId().trim() || undefined,
-        referenceCode: this.referenceCode().trim().toUpperCase() || undefined,
+        referenceCode: this.referenceCode().trim().toUpperCase(),
       });
       this.dialogRef.close(updated);
     } finally {
