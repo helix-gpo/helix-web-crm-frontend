@@ -1,0 +1,96 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Mitarbeiter</h1>
+    <p class="page-subtitle">{{ employeeStore.employees().length }} Mitarbeiter</p>
+  </div>
+  <button class="add-button" (click)="openCreateDialog()">
+    <span class="material-symbols-rounded">person_add</span>
+    <span>Neuer Mitarbeiter</span>
+  </button>
+</div>
+
+@if (employeeStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Mitarbeiter werden geladen...</p>
+  </div>
+} @else {
+  <div class="employees-table">
+    <div class="table-row table-row--header">
+      <span>Mitarbeiter</span>
+      <span>Rolle</span>
+      <span>Projekte</span>
+      <span>Status</span>
+      <span></span>
+    </div>
+
+    @for (employee of employeeStore.employees(); track employee.id) {
+      <div class="table-row">
+        <div class="employee-cell">
+          <app-avatar [name]="employee.firstName + ' ' + employee.lastName"></app-avatar>
+          <div>
+            <p class="employee-name">{{ employee.firstName }} {{ employee.lastName }}</p>
+            <p class="employee-email">{{ employee.email }}</p>
+          </div>
+        </div>
+
+        <span class="role-badge" [class.role-badge--unrestricted]="employee.role.unrestricted">
+          {{ employee.role.name }}
+        </span>
+
+        <span class="project-count">
+          {{ employee.assignedProjectIds.length }}
+          {{ employee.assignedProjectIds.length === 1 ? 'Projekt' : 'Projekte' }}
+        </span>
+
+        <span
+          class="status-badge"
+          [class.status-badge--active]="employee.active"
+          [class.status-badge--inactive]="!employee.active"
+        >
+          {{ employee.active ? 'Aktiv' : 'Deaktiviert' }}
+        </span>
+
+        <button class="row-menu-button" [matMenuTriggerFor]="menu">
+          <span class="material-symbols-rounded">more_vert</span>
+        </button>
+
+        <mat-menu #menu="matMenu" class="app-menu-panel">
+          <button mat-menu-item (click)="openAssignProjectsDialog(employee)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">work</span>
+              <span>Projekte zuweisen</span>
+            </span>
+          </button>
+          <button mat-menu-item (click)="openChangeRoleDialog(employee)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">shield_person</span>
+              <span>Rolle ändern</span>
+            </span>
+          </button>
+          <mat-divider></mat-divider>
+          @if (employee.active) {
+            <button mat-menu-item (click)="deactivate(employee)">
+              <span class="menu-item-row">
+                <span class="material-symbols-rounded menu-icon">person_off</span>
+                <span>Deaktivieren</span>
+              </span>
+            </button>
+          } @else {
+            <button mat-menu-item (click)="activate(employee)">
+              <span class="menu-item-row">
+                <span class="material-symbols-rounded menu-icon">person_check</span>
+                <span>Aktivieren</span>
+              </span>
+            </button>
+          }
+        </mat-menu>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">groups</span>
+        <p>Noch keine Mitarbeiter angelegt</p>
+      </div>
+    }
+  </div>
+}

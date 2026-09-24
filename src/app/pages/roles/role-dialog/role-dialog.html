@@ -1,0 +1,80 @@
+<div class="dialog-header">
+  <h2>{{ isEditMode() ? 'Rolle bearbeiten' : 'Neue Rolle' }}</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-row">
+    <div class="field">
+      <label [class.warning]="showNameWarning()">Name *</label>
+      <input
+        type="text"
+        placeholder="z. B. Junior Developer"
+        [value]="name()"
+        (input)="name.set($any($event.target).value); showNameWarning.set(false)"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Beschreibung</label>
+    <input
+      type="text"
+      placeholder="optional"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+    />
+  </div>
+
+  <label class="unrestricted-toggle">
+    <input
+      type="checkbox"
+      [checked]="unrestricted()"
+      (change)="unrestricted.set($any($event.target).checked)"
+    />
+    <span>
+      <strong>Uneingeschränkter Zugriff</strong>
+      <span class="unrestricted-hint"
+        >Sieht alle Daten, unabhängig von Projekt-Zuweisungen (z. B. für Admins)</span
+      >
+    </span>
+  </label>
+
+  @if (!unrestricted()) {
+    <div class="permission-matrix">
+      <div class="matrix-row matrix-row--header">
+        <span></span>
+        @for (action of actions; track action.value) {
+          <span class="matrix-action-label">{{ action.label }}</span>
+        }
+      </div>
+      @for (entity of entityTypes; track entity.value) {
+        <div class="matrix-row">
+          <span class="matrix-entity-label">{{ entity.label }}</span>
+          @for (action of actions; track action.value) {
+            <label class="matrix-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isChecked(entity.value, action.value)"
+                (change)="toggle(entity.value, action.value)"
+              />
+            </label>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>{{ isEditMode() ? 'Speichern' : 'Anlegen' }}</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

@@ -33,6 +33,17 @@
           <span class="material-symbols-rounded">language</span>
           <span>Website</span>
         </a>
+        @if (auth.isAdmin()) {
+          <div class="nav-divider"></div>
+          <a class="nav-item" routerLink="/settings/roles" routerLinkActive="active">
+            <span class="material-symbols-rounded">shield_person</span>
+            <span>Rollen</span>
+          </a>
+          <a class="nav-item" routerLink="/settings/employees" routerLinkActive="active">
+            <span class="material-symbols-rounded">groups</span>
+            <span>Mitarbeiter</span>
+          </a>
+        }
       </nav>
     </aside>
 

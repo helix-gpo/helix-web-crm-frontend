@@ -1,0 +1,78 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Rollen</h1>
+    <p class="page-subtitle">{{ roleStore.roles().length }} Rollen definiert</p>
+  </div>
+  <button class="add-button" (click)="openCreateDialog()">
+    <span class="material-symbols-rounded">add</span>
+    <span>Neue Rolle</span>
+  </button>
+</div>
+
+@if (roleStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rollen werden geladen...</p>
+  </div>
+} @else {
+  <div class="roles-grid">
+    @for (role of sortedRoles(); track role.id) {
+      <div class="role-card">
+        <div class="role-card-accent"></div>
+        <div class="role-card-body">
+          <div class="role-card-header">
+            <div class="role-icon">
+              <span class="material-symbols-rounded">{{ roleIcon(role) }}</span>
+            </div>
+            <div class="role-heading">
+              <p class="role-name">{{ role.name }}</p>
+              @if (role.unrestricted) {
+                <span class="unrestricted-badge">
+                  <span class="material-symbols-rounded">verified</span>
+                  Uneingeschränkt
+                </span>
+              }
+            </div>
+          </div>
+
+          @if (role.description) {
+            <p class="role-description">{{ role.description }}</p>
+          }
+
+          @if (!role.unrestricted) {
+            <div class="permission-summary">
+              @for (group of groupedPermissions(role); track group.action) {
+                <span
+                  class="permission-chip"
+                  [class]="'permission-chip--' + group.action.toLowerCase()"
+                >
+                  <strong>{{ group.label }}:</strong> {{ group.entities }}
+                </span>
+              } @empty {
+                <span class="permission-chip permission-chip--empty">Keine Berechtigungen</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="role-card-actions">
+          <button class="icon-button" (click)="openEditDialog(role)" title="Bearbeiten">
+            <span class="material-symbols-rounded">edit</span>
+          </button>
+          <button
+            class="icon-button icon-button--danger"
+            (click)="deleteRole(role)"
+            title="Löschen"
+          >
+            <span class="material-symbols-rounded">delete</span>
+          </button>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">shield_person</span>
+        <p>Noch keine Rollen angelegt</p>
+      </div>
+    }
+  </div>
+}

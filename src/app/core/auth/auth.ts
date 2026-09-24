@@ -12,6 +12,7 @@ export class Auth {
   readonly isAuthenticated = signal(false);
   readonly userName = signal<string | null>(null);
   readonly userEmail = signal<string | null>(null);
+  readonly isAdmin = signal(false);
 
   constructor() {
     this.oauthService.events.subscribe((event) => {
@@ -71,9 +72,11 @@ export class Auth {
     this.isAuthenticated.set(hasValidToken);
 
     if (hasValidToken) {
-      const claims = this.oauthService.getIdentityClaims() as Record<string, string> | null;
-      this.userName.set(claims?.['name'] ?? null);
-      this.userEmail.set(claims?.['email'] ?? null);
+      const claims = this.oauthService.getIdentityClaims() as Record<string, unknown> | null;
+      this.userName.set((claims?.['name'] as string) ?? null);
+      this.userEmail.set((claims?.['email'] as string) ?? null);
+      const groups = (claims?.['cognito:groups'] as string[]) ?? [];
+      this.isAdmin.set(groups.includes('admin'));
     } else {
       this.clearUserState();
     }
@@ -83,5 +86,6 @@ export class Auth {
     this.isAuthenticated.set(false);
     this.userName.set(null);
     this.userEmail.set(null);
+    this.isAdmin.set(false);
   }
 }

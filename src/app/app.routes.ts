@@ -12,6 +12,9 @@ import { SessionExpired } from './pages/session-expired/session-expired';
 import { authGuard } from './core/auth/auth.guard';
 import { ProjectDetail } from './pages/project-details/project-details';
 import { InvoiceDetail } from './pages/invoice-details/invoice-details';
+import { adminGuard } from './core/auth/admin.guard';
+import { Roles } from './pages/roles/roles';
+import { Employees } from './pages/employees/employees';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -27,4 +30,6 @@ export const routes: Routes = [
   { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
   { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
   { path: 'website', component: Website, canActivate: [authGuard] },
+  { path: 'settings/roles', component: Roles, canActivate: [authGuard, adminGuard] },
+  { path: 'settings/employees', component: Employees, canActivate: [authGuard, adminGuard] },
 ];

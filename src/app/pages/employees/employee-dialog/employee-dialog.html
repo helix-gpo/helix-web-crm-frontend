@@ -1,0 +1,66 @@
+<div class="dialog-header">
+  <h2>Neuer Mitarbeiter</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-row">
+    <div class="field">
+      <label [class.warning]="showWarning() && !firstName().trim()">Vorname *</label>
+      <input
+        type="text"
+        [value]="firstName()"
+        (input)="firstName.set($any($event.target).value); showWarning.set(false)"
+      />
+    </div>
+    <div class="field">
+      <label [class.warning]="showWarning() && !lastName().trim()">Nachname *</label>
+      <input
+        type="text"
+        [value]="lastName()"
+        (input)="lastName.set($any($event.target).value); showWarning.set(false)"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label [class.warning]="showWarning() && !email().trim()">E-Mail *</label>
+    <input
+      type="email"
+      placeholder="name@beispiel.de"
+      [value]="email()"
+      (input)="email.set($any($event.target).value); showWarning.set(false)"
+    />
+  </div>
+
+  <div class="field">
+    <label [class.warning]="showWarning() && !roleId()">Rolle *</label>
+    <select
+      [value]="roleId()"
+      (change)="roleId.set($any($event.target).value); showWarning.set(false)"
+    >
+      <option value="" disabled selected>Rolle auswählen...</option>
+      @for (role of roleStore.roles(); track role.id) {
+        <option [value]="role.id">{{ role.name }}</option>
+      }
+    </select>
+  </div>
+
+  <p class="invite-hint">
+    <span class="material-symbols-rounded">mail</span>
+    Der Mitarbeiter erhält automatisch eine E-Mail mit Login-Daten und einem temporären Passwort.
+  </p>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Einladen</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

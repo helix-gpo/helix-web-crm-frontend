@@ -1,0 +1,68 @@
+import { Component, inject } from '@angular/core';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { EmployeeStore } from '../../core/access/employee-store';
+import { Toast } from '../../core/toast/toast';
+import { Avatar } from '../../util/avatar/avatar';
+import { Employee } from '../../model/access';
+import { EmployeeDialog } from './employee-dialog/employee-dialog';
+import { AssignProjectsDialog } from './assign-projects-dialog/assign-projects-dialog';
+import { ChangeRoleDialog } from './change-role-dialog/change-role-dialog';
+
+@Component({
+  selector: 'app-employees',
+  imports: [Avatar, MatMenuModule, MatDividerModule, MatDialogModule],
+  templateUrl: './employees.html',
+  styleUrl: './employees.scss',
+})
+export class Employees {
+  protected readonly employeeStore = inject(EmployeeStore);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
+
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(EmployeeDialog, {
+      width: '52rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Mitarbeiter eingeladen');
+    });
+  }
+
+  openAssignProjectsDialog(employee: Employee): void {
+    const dialogRef = this.dialog.open(AssignProjectsDialog, {
+      width: '56rem',
+      panelClass: 'app-dialog-panel',
+      data: { employee },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Projekt-Zuweisung aktualisiert');
+    });
+  }
+
+  openChangeRoleDialog(employee: Employee): void {
+    const dialogRef = this.dialog.open(ChangeRoleDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: { employee },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.toast.success('Rolle geändert');
+    });
+  }
+
+  async deactivate(employee: Employee): Promise<void> {
+    await this.employeeStore.deactivate(employee.id);
+    this.toast.success(`${employee.firstName} ${employee.lastName} deaktiviert`);
+  }
+
+  async activate(employee: Employee): Promise<void> {
+    await this.employeeStore.activate(employee.id);
+    this.toast.success(`${employee.firstName} ${employee.lastName} aktiviert`);
+  }
+}

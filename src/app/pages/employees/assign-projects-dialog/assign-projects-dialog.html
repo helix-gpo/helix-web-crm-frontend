@@ -1,0 +1,41 @@
+<div class="dialog-header">
+  <h2>Projekte zuweisen</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <p class="employee-name">{{ data.employee.firstName }} {{ data.employee.lastName }}</p>
+
+  @for (group of groupedProjects(); track group.tenant.id) {
+    <div class="tenant-group">
+      <p class="tenant-group-label">{{ group.tenant.companyName }}</p>
+      <div class="option-list">
+        @for (project of group.projects; track project.id) {
+          <label class="option-checkbox">
+            <input
+              type="checkbox"
+              [checked]="isChecked(project.id)"
+              (change)="toggle(project.id)"
+            />
+            <span>{{ project.title }}</span>
+          </label>
+        }
+      </div>
+    </div>
+  } @empty {
+    <p class="no-projects-hint">Es sind noch keine Projekte vorhanden.</p>
+  }
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>

@@ -1,0 +1,167 @@
+@use '../../../styles' as *;
+
+.page-header {
+  @include flex-between;
+  margin-bottom: 2.4rem;
+}
+
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.page-subtitle {
+  font-size: 1.4rem;
+  color: var(--text-grey);
+  margin-top: 0.4rem;
+}
+
+.add-button {
+  @include button-base;
+  background-color: var(--main-navy);
+  color: var(--text-light);
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background-color: var(--main-navy-hover);
+  }
+}
+
+.employees-table {
+  @include card-surface;
+  overflow: hidden;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1.2fr 1fr 1fr 3.2rem;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 1.4rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 1.4rem;
+  color: var(--text-dark);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--header {
+    background-color: var(--bg-light);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-grey);
+  }
+}
+
+.employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.employee-name {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.employee-email {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+  margin-top: 0.2rem;
+}
+
+.role-badge {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 1.15rem;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 0.8rem;
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+
+  &--unrestricted {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+    color: #fff;
+  }
+}
+
+.project-count {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+}
+
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 50rem;
+
+  &--active {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+
+  &--inactive {
+    background-color: rgba(138, 147, 166, 0.15);
+    color: var(--text-muted);
+  }
+}
+
+.row-menu-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--border-color);
+  }
+}
+
+.empty-state {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

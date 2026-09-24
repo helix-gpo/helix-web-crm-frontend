@@ -1,0 +1,30 @@
+<div class="dialog-header">
+  <h2>Rolle ändern</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <p class="employee-name">{{ data.employee.firstName }} {{ data.employee.lastName }}</p>
+
+  <div class="field">
+    <label>Neue Rolle</label>
+    <select [value]="roleId()" (change)="roleId.set($any($event.target).value)">
+      @for (role of roleStore.roles(); track role.id) {
+        <option [value]="role.id">{{ role.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
