@@ -25,8 +25,8 @@ export class EmployeeApi {
     return this.http.patch<Employee>(`${this.baseUrl}/${id}/role`, request);
   }
 
-  assignProject(id: string, projectId: string): Observable<Employee> {
-    return this.http.post<Employee>(`${this.baseUrl}/${id}/projects/${projectId}`, {});
+  assignProject(id: string, projectId: string, tenantId: string): Observable<Employee> {
+    return this.http.post<Employee>(`${this.baseUrl}/${id}/projects/${projectId}`, { tenantId });
   }
 
   unassignProject(id: string, projectId: string): Observable<Employee> {

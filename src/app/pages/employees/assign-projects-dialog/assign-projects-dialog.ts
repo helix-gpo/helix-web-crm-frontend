@@ -67,9 +67,19 @@ export class AssignProjectsDialog {
     const toAdd = [...after].filter((id) => !before.has(id));
     const toRemove = [...before].filter((id) => !after.has(id));
 
+    const projectTenantId = new Map(
+      this.groupedProjects().flatMap((group) =>
+        group.projects.map((p) => [p.id, group.tenant.id] as const),
+      ),
+    );
+
     try {
       for (const projectId of toAdd) {
-        await this.employeeStore.assignProject(this.data.employee.id, projectId);
+        await this.employeeStore.assignProject(
+          this.data.employee.id,
+          projectId,
+          projectTenantId.get(projectId)!,
+        );
       }
       for (const projectId of toRemove) {
         await this.employeeStore.unassignProject(this.data.employee.id, projectId);

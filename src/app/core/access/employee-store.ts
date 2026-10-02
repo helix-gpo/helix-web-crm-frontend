@@ -34,8 +34,8 @@ export class EmployeeStore {
     return employee;
   }
 
-  async assignProject(id: string, projectId: string): Promise<Employee> {
-    const employee = await firstValueFrom(this.employeeApi.assignProject(id, projectId));
+  async assignProject(id: string, projectId: string, tenantId: string): Promise<Employee> {
+    const employee = await firstValueFrom(this.employeeApi.assignProject(id, projectId, tenantId));
     this.reload();
     return employee;
   }
