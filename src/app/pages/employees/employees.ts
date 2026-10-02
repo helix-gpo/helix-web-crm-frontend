@@ -9,6 +9,7 @@ import { Employee } from '../../model/access';
 import { EmployeeDialog } from './employee-dialog/employee-dialog';
 import { AssignProjectsDialog } from './assign-projects-dialog/assign-projects-dialog';
 import { ChangeRoleDialog } from './change-role-dialog/change-role-dialog';
+import { ProjectStore } from '../../core/projects/project-store';
 
 @Component({
   selector: 'app-employees',
@@ -18,8 +19,18 @@ import { ChangeRoleDialog } from './change-role-dialog/change-role-dialog';
 })
 export class Employees {
   protected readonly employeeStore = inject(EmployeeStore);
+  protected readonly projectStore = inject(ProjectStore);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(Toast);
+
+  protected effectiveProjectCount(employee: Employee): number {
+    const selfCreatedIds = this.projectStore
+      .projects()
+      .filter((p) => p.createdBy === employee.email)
+      .map((p) => p.id);
+
+    return new Set([...employee.assignedProjectIds, ...selfCreatedIds]).size;
+  }
 
   openCreateDialog(): void {
     const dialogRef = this.dialog.open(EmployeeDialog, {

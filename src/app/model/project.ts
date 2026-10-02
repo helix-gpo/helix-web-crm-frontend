@@ -35,6 +35,7 @@ export interface Project {
   imageUrl?: string;
   notes?: string;
   milestones: Milestone[];
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }

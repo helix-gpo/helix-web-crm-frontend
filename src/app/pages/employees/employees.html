@@ -39,8 +39,8 @@
         </span>
 
         <span class="project-count">
-          {{ employee.assignedProjectIds.length }}
-          {{ employee.assignedProjectIds.length === 1 ? 'Projekt' : 'Projekte' }}
+          {{ effectiveProjectCount(employee) }}
+          {{ effectiveProjectCount(employee) === 1 ? 'Projekt' : 'Projekte' }}
         </span>
 
         <span
