@@ -11,20 +11,25 @@ import {
   UpdateTenantNotesRequest,
 } from '../../model/tenant';
 import { TenantApi } from './tenant-api';
+import { Permissions } from '../access/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class TenantStore {
   private readonly tenantApi = inject(TenantApi);
+  private readonly permissions = inject(Permissions);
 
   // Reaktive, signal-basierte Liste - lädt automatisch beim ersten Zugriff,
   // Lade-/Fehlerzustand kommt fertig aus der Resource, nichts manuell nachgeführt
   private readonly tenantsResource = httpResource<Tenant[]>(
-    () => `${environment.apiBaseUrl}/tenants`,
+    () => (this.permissions.can('TENANT:READ') ? `${environment.apiBaseUrl}/tenants` : undefined),
     { defaultValue: [] },
   );
 
-  readonly tenants = computed(() => this.tenantsResource.value() ?? []);
-  readonly loading = computed(() => this.tenantsResource.isLoading());
+  readonly tenants = computed(() =>
+    this.tenantsResource.hasValue() ? this.tenantsResource.value() : [],
+  );
+  readonly loading = computed(() => !this.permissions.loaded() || this.tenantsResource.isLoading());
+
   readonly error = computed(() =>
     this.tenantsResource.error() ? 'Mandanten konnten nicht geladen werden.' : null,
   );

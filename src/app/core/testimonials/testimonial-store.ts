@@ -4,18 +4,27 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Testimonial } from '../../model/testimonial';
 import { TestimonialApi } from './testimonial-api';
+import { Permissions } from '../access/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class TestimonialStore {
   private readonly testimonialApi = inject(TestimonialApi);
+  private readonly permissions = inject(Permissions);
 
   private readonly testimonialsResource = httpResource<Testimonial[]>(
-    () => `${environment.apiBaseUrl}/testimonials`,
+    () =>
+      this.permissions.can('TESTIMONIAL:READ')
+        ? `${environment.apiBaseUrl}/testimonials`
+        : undefined,
     { defaultValue: [] },
   );
 
-  readonly testimonials = computed(() => this.testimonialsResource.value() ?? []);
-  readonly loading = computed(() => this.testimonialsResource.isLoading());
+  readonly testimonials = computed(() =>
+    this.testimonialsResource.hasValue() ? this.testimonialsResource.value() : [],
+  );
+  readonly loading = computed(
+    () => !this.permissions.loaded() || this.testimonialsResource.isLoading(),
+  );
 
   reload(): void {
     this.testimonialsResource.reload();

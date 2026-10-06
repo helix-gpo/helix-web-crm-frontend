@@ -4,18 +4,25 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Project, CreateProjectRequest } from '../../model/project';
 import { ProjectApi } from './project-api';
+import { Permissions } from '../access/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectStore {
   private readonly projectApi = inject(ProjectApi);
+  private readonly permissions = inject(Permissions);
 
   private readonly projectsResource = httpResource<Project[]>(
-    () => `${environment.apiBaseUrl}/projects`,
+    () => (this.permissions.can('PROJECT:READ') ? `${environment.apiBaseUrl}/projects` : undefined),
     { defaultValue: [] },
   );
 
-  readonly projects = computed(() => this.projectsResource.value() ?? []);
-  readonly loading = computed(() => this.projectsResource.isLoading());
+  readonly projects = computed(() =>
+    this.projectsResource.hasValue() ? this.projectsResource.value() : [],
+  );
+  readonly loading = computed(
+    () => !this.permissions.loaded() || this.projectsResource.isLoading(),
+  );
+
   readonly error = computed(() =>
     this.projectsResource.error() ? 'Projekte konnten nicht geladen werden.' : null,
   );
