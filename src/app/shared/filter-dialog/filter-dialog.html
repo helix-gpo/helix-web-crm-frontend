@@ -9,18 +9,83 @@
   @for (field of data.fields; track field.key) {
     <div class="filter-section">
       <p class="filter-section-label">{{ field.label }}</p>
-      <div class="option-list">
-        @for (option of field.options; track option.value) {
-          <label class="option-checkbox">
-            <input
-              type="checkbox"
-              [checked]="isChecked(field.key, option.value)"
-              (change)="toggle(field.key, option.value)"
-            />
-            <span>{{ option.label }}</span>
-          </label>
-        }
-      </div>
+
+      @if (field.variant === 'dropdown') {
+        <div class="dropdown">
+          <button
+            type="button"
+            class="dropdown-trigger"
+            [class.dropdown-trigger--open]="openField() === field.key"
+            (click)="toggleDropdown(field.key)"
+          >
+            <span
+              class="dropdown-summary"
+              [class.dropdown-summary--empty]="selectedOptions(field).length === 0"
+              >{{ summary(field) }}</span
+            >
+            <span class="material-symbols-rounded">
+              {{ openField() === field.key ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
+
+          @if (openField() === field.key) {
+            <div class="dropdown-panel">
+              @if (hasSearch(field)) {
+                <div class="dropdown-search">
+                  <span class="material-symbols-rounded">search</span>
+                  <input
+                    type="text"
+                    placeholder="Suchen..."
+                    [value]="searchTerm(field.key)"
+                    (input)="setSearch(field.key, $any($event.target).value)"
+                  />
+                </div>
+              }
+
+              <div class="dropdown-options">
+                @for (option of visibleOptions(field); track option.value) {
+                  <label class="dropdown-option">
+                    <input
+                      type="checkbox"
+                      [checked]="isChecked(field.key, option.value)"
+                      (change)="toggle(field.key, option.value)"
+                    />
+                    <span>{{ option.label }}</span>
+                  </label>
+                } @empty {
+                  <p class="dropdown-empty">Keine Treffer</p>
+                }
+              </div>
+            </div>
+          }
+
+          @if (selectedOptions(field).length > 0) {
+            <div class="selected-chips">
+              @for (option of selectedOptions(field); track option.value) {
+                <span class="selected-chip">
+                  {{ option.label }}
+                  <button type="button" title="Entfernen" (click)="toggle(field.key, option.value)">
+                    <span class="material-symbols-rounded">close</span>
+                  </button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="option-list">
+          @for (option of field.options; track option.value) {
+            <label class="option-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isChecked(field.key, option.value)"
+                (change)="toggle(field.key, option.value)"
+              />
+              <span>{{ option.label }}</span>
+            </label>
+          }
+        </div>
+      }
     </div>
   }
 </div>

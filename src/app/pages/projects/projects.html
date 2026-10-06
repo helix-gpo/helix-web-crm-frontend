@@ -1,7 +1,9 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Projekte</h1>
-    <p class="page-subtitle">{{ projectStore.projects().length }} Projekte insgesamt</p>
+    <p class="page-subtitle">
+      {{ visibleCount() }} von {{ projectStore.projects().length }} Projekten
+    </p>
   </div>
 
   <div class="header-actions">
@@ -29,6 +31,25 @@
       <span>Neues Projekt</span>
     </button>
   </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Projekt oder Mandant suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
 </div>
 
 @if (projectStore.loading()) {
@@ -97,25 +118,6 @@
     }
   </div>
 } @else {
-  <div class="filter-bar">
-    <div class="filter-search">
-      <span class="material-symbols-rounded">search</span>
-      <input
-        type="text"
-        placeholder="Projekt oder Mandant suchen..."
-        [value]="searchTerm()"
-        (input)="searchTerm.set($any($event.target).value)"
-      />
-    </div>
-    <button class="filter-button" (click)="openFilterDialog()">
-      <span class="material-symbols-rounded">filter_list</span>
-      <span>Filter</span>
-      @if (activeFilterCount() > 0) {
-        <span class="filter-count-badge">{{ activeFilterCount() }}</span>
-      }
-    </button>
-  </div>
-
   <div class="projects-table">
     <div class="table-row table-row--header">
       <app-sortable-header

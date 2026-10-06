@@ -5,7 +5,8 @@ import { RoleStore } from '../../core/access/role-store';
 import { Toast } from '../../core/toast/toast';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { RoleDialog } from './role-dialog/role-dialog';
-import { EntityType, PermissionAction, Role } from '../../model/access';
+import { PermissionAction, Role } from '../../model/access';
+import { ACTION_LABELS, ENTITY_LABELS } from '../../model/access-labels';
 
 @Component({
   selector: 'app-roles',
@@ -18,20 +19,8 @@ export class Roles {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(Toast);
 
-  private readonly entityLabels: Record<EntityType, string> = {
-    TENANT: 'Mandanten',
-    PROJECT: 'Projekte',
-    MILESTONE: 'Meilensteine',
-    INVOICE: 'Rechnungen',
-    PARTNER: 'Ansprechpartner',
-    TESTIMONIAL: 'Referenzen',
-  };
-
-  private readonly actionLabels: Record<PermissionAction, string> = {
-    READ: 'Lesen',
-    WRITE: 'Bearbeiten',
-    DELETE: 'Löschen',
-  };
+  private readonly entityLabels = ENTITY_LABELS;
+  private readonly actionLabels = ACTION_LABELS;
 
   protected readonly sortedRoles = computed(() =>
     [...this.roleStore.roles()].sort((a, b) => {

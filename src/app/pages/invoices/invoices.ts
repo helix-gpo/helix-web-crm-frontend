@@ -17,6 +17,11 @@ import {
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
 import { AuditCell } from '../../shared/audit-cell/audit-cell';
 import { RequiresPermission } from '../../core/access/requires-permission';
+import {
+  CREATOR_FILTER_KEY,
+  matchesCreator,
+  withCreatorFilter,
+} from '../../shared/filter-dialog/creator-filter';
 
 type InvoiceSortKey =
   'invoiceNumber' | 'tenantName' | 'issueDate' | 'dueDate' | 'amount' | 'status';
@@ -47,13 +52,16 @@ export class Invoices {
     CANCELLED: 'Storniert',
   };
 
-  readonly filterFields: FilterFieldConfig[] = [
+  private readonly baseFilterFields: FilterFieldConfig[] = [
     {
       key: 'status',
       label: 'Status',
       options: Object.entries(this.statusLabels).map(([value, label]) => ({ value, label })),
     },
   ];
+  readonly filterFields = computed(() =>
+    withCreatorFilter(this.baseFilterFields, this.invoiceStore.invoices()),
+  );
 
   readonly activeFilterCount = computed(() =>
     Object.values(this.activeFilters()).reduce((sum, values) => sum + values.length, 0),
@@ -96,6 +104,9 @@ export class Invoices {
     if (filters['status']?.length) {
       invoices = invoices.filter((i) => filters['status'].includes(i.status));
     }
+    if (filters[CREATOR_FILTER_KEY]?.length) {
+      invoices = invoices.filter((i) => matchesCreator(filters[CREATOR_FILTER_KEY], i.createdBy));
+    }
 
     return sortByKey(invoices, this.sort(), (i, key) => {
       switch (key) {
@@ -128,7 +139,7 @@ export class Invoices {
     const dialogRef = this.dialog.open(FilterDialog, {
       width: '48rem',
       panelClass: 'app-dialog-panel',
-      data: { fields: this.filterFields, active: this.activeFilters() },
+      data: { fields: this.filterFields(), active: this.activeFilters() },
     });
 
     dialogRef.afterClosed().subscribe((result?: ActiveFilters) => {

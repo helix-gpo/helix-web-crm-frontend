@@ -21,6 +21,11 @@ import {
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
 import { AuditCell } from '../../shared/audit-cell/audit-cell';
 import { RequiresPermission } from '../../core/access/requires-permission';
+import {
+  CREATOR_FILTER_KEY,
+  matchesCreator,
+  withCreatorFilter,
+} from '../../shared/filter-dialog/creator-filter';
 
 type ViewMode = 'kanban' | 'list';
 type ProjectSortKey = 'title' | 'tenantName' | 'status';
@@ -69,7 +74,7 @@ export class Projects {
     CANCELLED: 'Abgebrochen',
   };
 
-  readonly filterFields: FilterFieldConfig[] = [
+  private readonly baseFilterFields: FilterFieldConfig[] = [
     {
       key: 'status',
       label: 'Status',
@@ -85,14 +90,55 @@ export class Projects {
     },
   ];
 
+  readonly filterFields = computed(() => {
+    const fields =
+      this.viewMode() === 'kanban'
+        ? this.baseFilterFields.filter((field) => field.key !== 'status')
+        : this.baseFilterFields;
+    return withCreatorFilter(fields, this.projectStore.projects());
+  });
+
   readonly activeFilterCount = computed(() =>
-    Object.values(this.activeFilters()).reduce((sum, values) => sum + values.length, 0),
+    Object.entries(this.activeFilters())
+      .filter(([key]) => this.viewMode() === 'list' || key !== 'status')
+      .reduce((sum, [, values]) => sum + values.length, 0),
+  );
+
+  readonly visibleCount = computed(() =>
+    this.viewMode() === 'kanban'
+      ? this.searchedProjects().length
+      : this.filteredListProjects().length,
   );
 
   private readonly tenantNameById = computed(() => {
     const map = new Map<string, string>();
     this.tenantStore.tenants().forEach((t) => map.set(t.id, t.companyName));
     return map;
+  });
+
+  // shared by list and kanban: everything except status (kanban columns are the status) and sorting
+  private readonly searchedProjects = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const filters = this.activeFilters();
+    let projects = this.projectStore.projects();
+
+    if (term) {
+      projects = projects.filter(
+        (p) =>
+          p.title.toLowerCase().includes(term) ||
+          this.tenantName(p.tenantId).toLowerCase().includes(term),
+      );
+    }
+    if (filters['visibleOnWebsite']?.length) {
+      projects = projects.filter((p) =>
+        filters['visibleOnWebsite'].includes(String(p.visibleOnWebsite)),
+      );
+    }
+    if (filters[CREATOR_FILTER_KEY]?.length) {
+      projects = projects.filter((p) => matchesCreator(filters[CREATOR_FILTER_KEY], p.createdBy));
+    }
+
+    return projects;
   });
 
   readonly groupedProjects = computed(() => {
@@ -103,31 +149,16 @@ export class Projects {
       COMPLETED: [],
       CANCELLED: [],
     };
-    this.projectStore.projects().forEach((p) => grouped[p.status].push(p));
+    this.searchedProjects().forEach((p) => grouped[p.status].push(p));
     return grouped;
   });
 
   readonly filteredListProjects = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    let projects = this.projectStore.projects();
+    let projects = this.searchedProjects();
 
-    if (term) {
-      projects = projects.filter(
-        (p) =>
-          p.title.toLowerCase().includes(term) ||
-          this.tenantName(p.tenantId).toLowerCase().includes(term),
-      );
-    }
-
-    const filters = this.activeFilters();
-
-    if (filters['status']?.length) {
-      projects = projects.filter((p) => filters['status'].includes(p.status));
-    }
-    if (filters['visibleOnWebsite']?.length) {
-      projects = projects.filter((p) =>
-        filters['visibleOnWebsite'].includes(String(p.visibleOnWebsite)),
-      );
+    const statusFilter = this.activeFilters()['status'];
+    if (statusFilter?.length) {
+      projects = projects.filter((p) => statusFilter.includes(p.status));
     }
 
     return sortByKey(projects, this.sort(), (p, key) => {
@@ -155,7 +186,7 @@ export class Projects {
     const dialogRef = this.dialog.open(FilterDialog, {
       width: '48rem',
       panelClass: 'app-dialog-panel',
-      data: { fields: this.filterFields, active: this.activeFilters() },
+      data: { fields: this.filterFields(), active: this.activeFilters() },
     });
 
     dialogRef.afterClosed().subscribe((result?: ActiveFilters) => {

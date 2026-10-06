@@ -10,6 +10,8 @@ export interface FilterFieldConfig {
   key: string;
   label: string;
   options: FilterFieldOption[];
+  // chips: small fixed sets (status), dropdown: open-ended sets that grow (people)
+  variant?: 'chips' | 'dropdown';
 }
 
 export type ActiveFilters = Record<string, string[]>;
@@ -18,6 +20,8 @@ export interface FilterDialogData {
   fields: FilterFieldConfig[];
   active: ActiveFilters;
 }
+
+const SEARCH_THRESHOLD = 6;
 
 @Component({
   selector: 'app-filter-dialog',
@@ -33,6 +37,9 @@ export class FilterDialog {
     Object.fromEntries(this.data.fields.map((f) => [f.key, [...(this.data.active[f.key] ?? [])]])),
   );
 
+  readonly openField = signal<string | null>(null);
+  readonly searchTerms = signal<Record<string, string>>({});
+
   isChecked(fieldKey: string, value: string): boolean {
     return this.selected()[fieldKey]?.includes(value) ?? false;
   }
@@ -47,8 +54,46 @@ export class FilterDialog {
     });
   }
 
+  toggleDropdown(fieldKey: string): void {
+    this.openField.update((current) => (current === fieldKey ? null : fieldKey));
+  }
+
+  hasSearch(field: FilterFieldConfig): boolean {
+    return field.options.length > SEARCH_THRESHOLD;
+  }
+
+  searchTerm(fieldKey: string): string {
+    return this.searchTerms()[fieldKey] ?? '';
+  }
+
+  setSearch(fieldKey: string, value: string): void {
+    this.searchTerms.update((state) => ({ ...state, [fieldKey]: value }));
+  }
+
+  visibleOptions(field: FilterFieldConfig): FilterFieldOption[] {
+    const term = this.searchTerm(field.key).trim().toLowerCase();
+    if (!term) {
+      return field.options;
+    }
+    return field.options.filter((option) => option.label.toLowerCase().includes(term));
+  }
+
+  selectedOptions(field: FilterFieldConfig): FilterFieldOption[] {
+    const values = this.selected()[field.key] ?? [];
+    return field.options.filter((option) => values.includes(option.value));
+  }
+
+  summary(field: FilterFieldConfig): string {
+    const chosen = this.selectedOptions(field);
+    if (chosen.length === 0) {
+      return 'Alle';
+    }
+    return chosen.length === 1 ? chosen[0].label : `${chosen.length} ausgewählt`;
+  }
+
   clearAll(): void {
     this.selected.set(Object.fromEntries(this.data.fields.map((f) => [f.key, []])));
+    this.searchTerms.set({});
   }
 
   close(): void {

@@ -1,21 +1,7 @@
 import { Directive, ElementRef, computed, effect, inject, input } from '@angular/core';
 import { EntityType, PermissionAction, PermissionKey } from '../../model/access';
 import { Permissions } from './permissions';
-
-const ENTITY_LABELS: Record<EntityType, string> = {
-  TENANT: 'Mandanten',
-  PROJECT: 'Projekte',
-  MILESTONE: 'Meilensteine',
-  INVOICE: 'Rechnungen',
-  PARTNER: 'Ansprechpartner',
-  TESTIMONIAL: 'Referenzen',
-};
-
-const ACTION_LABELS: Record<PermissionAction, string> = {
-  READ: 'lesen',
-  WRITE: 'bearbeiten',
-  DELETE: 'löschen',
-};
+import { ACTION_LABELS, ENTITY_LABELS } from '../../model/access-labels';
 
 const BLOCKED_KEYS = ['Enter', ' ', 'ArrowUp', 'ArrowDown'];
 
@@ -38,7 +24,7 @@ export class RequiresPermission {
 
   private readonly hint = computed(() => {
     const [entity, action] = this.appRequires().split(':') as [EntityType, PermissionAction];
-    return `Keine Berechtigung: ${ENTITY_LABELS[entity]} ${ACTION_LABELS[action]}`;
+    return `Keine Berechtigung: ${ENTITY_LABELS[entity]} ${ACTION_LABELS[action].toLowerCase()}`;
   });
 
   constructor() {

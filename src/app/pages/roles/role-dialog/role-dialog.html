@@ -54,7 +54,15 @@
         <div class="matrix-row">
           <span class="matrix-entity-label">{{ entity.label }}</span>
           @for (action of actions; track action.value) {
-            <label class="matrix-checkbox">
+            <label
+              class="matrix-checkbox"
+              [class.matrix-checkbox--missing]="isMissing(entity.value, action.value)"
+              [title]="
+                isMissing(entity.value, action.value)
+                  ? 'Wird von anderen Berechtigungen dieser Rolle benötigt'
+                  : ''
+              "
+            >
               <input
                 type="checkbox"
                 [checked]="isChecked(entity.value, action.value)"
@@ -65,6 +73,40 @@
         </div>
       }
     </div>
+
+    <p class="matrix-hint">
+      <span class="material-symbols-rounded">info</span>
+      Bearbeiten und Löschen setzen Lesen voraus und aktivieren es automatisch.
+    </p>
+
+    @if (missing().length > 0) {
+      <div class="dependency-warning">
+        <div class="dependency-warning-header">
+          <span class="material-symbols-rounded">warning</span>
+          <p>Damit diese Rolle vollständig funktioniert, fehlen noch Berechtigungen</p>
+        </div>
+
+        <ul class="dependency-list">
+          @for (item of missing(); track item.key) {
+            <li class="dependency-item">
+              <div class="dependency-text">
+                <p class="dependency-title">{{ item.label }}</p>
+                @for (reason of item.reasons; track reason) {
+                  <p class="dependency-reason">Benötigt für {{ reason }}</p>
+                }
+              </div>
+              <button type="button" class="dependency-add" (click)="addPermission(item.key)">
+                Ergänzen
+              </button>
+            </li>
+          }
+        </ul>
+
+        <button type="button" class="dependency-add-all" (click)="addAllMissing()">
+          Alle ergänzen
+        </button>
+      </div>
+    }
   }
 </div>
 

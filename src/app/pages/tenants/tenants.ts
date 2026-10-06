@@ -18,6 +18,11 @@ import {
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
 import { AuditCell } from '../../shared/audit-cell/audit-cell';
 import { RequiresPermission } from '../../core/access/requires-permission';
+import {
+  CREATOR_FILTER_KEY,
+  matchesCreator,
+  withCreatorFilter,
+} from '../../shared/filter-dialog/creator-filter';
 
 type TenantSortKey = 'companyName' | 'contactEmail' | 'city' | 'status';
 
@@ -45,7 +50,7 @@ export class Tenants {
   readonly sort = signal<SortState<TenantSortKey>>({ key: null, direction: null });
   readonly activeFilters = signal<ActiveFilters>({});
 
-  readonly filterFields: FilterFieldConfig[] = [
+  private readonly baseFilterFields: FilterFieldConfig[] = [
     {
       key: 'status',
       label: 'Status',
@@ -65,6 +70,9 @@ export class Tenants {
       ],
     },
   ];
+  readonly filterFields = computed(() =>
+    withCreatorFilter(this.baseFilterFields, this.tenantStore.tenants()),
+  );
 
   readonly activeFilterCount = computed(() =>
     Object.values(this.activeFilters()).reduce((sum, values) => sum + values.length, 0),
@@ -91,6 +99,9 @@ export class Tenants {
       tenants = tenants.filter((t) =>
         filters['visibleOnWebsite'].includes(String(t.visibleOnWebsite)),
       );
+    }
+    if (filters[CREATOR_FILTER_KEY]?.length) {
+      tenants = tenants.filter((t) => matchesCreator(filters[CREATOR_FILTER_KEY], t.createdBy));
     }
 
     return sortByKey(tenants, this.sort(), (t, key) => {
@@ -127,7 +138,7 @@ export class Tenants {
     const dialogRef = this.dialog.open(FilterDialog, {
       width: '48rem',
       panelClass: 'app-dialog-panel',
-      data: { fields: this.filterFields, active: this.activeFilters() },
+      data: { fields: this.filterFields(), active: this.activeFilters() },
     });
 
     dialogRef.afterClosed().subscribe((result?: ActiveFilters) => {
