@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { Avatar } from './util/avatar/avatar';
 import { Auth } from './core/auth/auth';
+import { Permissions } from './core/access/permissions';
 
 @Component({
   selector: 'app-root',
@@ -14,8 +15,9 @@ import { Auth } from './core/auth/auth';
 export class App {
   protected readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  protected readonly permissions = inject(Permissions);
 
-  private readonly publicPaths = ['/', '/login', '/session-expired'];
+  private readonly publicPaths = ['/', '/login', '/session-expired', '/no-access'];
 
   protected readonly isPublicPage = toSignal(
     this.router.events.pipe(
@@ -25,4 +27,12 @@ export class App {
     ),
     { initialValue: false },
   );
+
+  constructor() {
+    effect(() => {
+      if (this.permissions.hasNoAccount() && this.router.url !== '/no-access') {
+        this.router.navigate(['/no-access']);
+      }
+    });
+  }
 }

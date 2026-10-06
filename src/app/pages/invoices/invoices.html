@@ -5,7 +5,7 @@
       {{ filteredInvoices().length }} von {{ invoiceStore.invoices().length }} Rechnungen
     </p>
   </div>
-  <button class="add-button" (click)="openCreateDialog()">
+  <button class="add-button" (click)="openCreateDialog()" appRequires="INVOICE:WRITE">
     <span class="material-symbols-rounded">add</span>
     <span>Neue Rechnung</span>
   </button>
@@ -94,6 +94,7 @@
         [direction]="sortDirectionFor('status')"
         (clicked)="toggleSort('status')"
       />
+      <span>Angelegt</span>
     </div>
 
     @for (invoice of filteredInvoices(); track invoice.id) {
@@ -109,6 +110,7 @@
         >
           {{ statusLabels[invoice.status] }}
         </span>
+        <app-audit-cell [user]="invoice.createdBy" [date]="invoice.createdAt" />
       </div>
     } @empty {
       <div class="empty-state">

@@ -2,7 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateEmployeeRequest, Employee, UpdateEmployeeRoleRequest } from '../../model/access';
+import {
+  CreateEmployeeRequest,
+  Employee,
+  UpdateEmployeeRequest,
+} from '../../model/access';
 import { EmployeeApi } from './employee-api';
 
 @Injectable({ providedIn: 'root' })
@@ -28,10 +32,15 @@ export class EmployeeStore {
     return employee;
   }
 
-  async updateRole(id: string, request: UpdateEmployeeRoleRequest): Promise<Employee> {
-    const employee = await firstValueFrom(this.employeeApi.updateRole(id, request));
+  async update(id: string, request: UpdateEmployeeRequest): Promise<Employee> {
+    const employee = await firstValueFrom(this.employeeApi.update(id, request));
     this.reload();
     return employee;
+  }
+
+  async delete(id: string): Promise<void> {
+    await firstValueFrom(this.employeeApi.delete(id));
+    this.reload();
   }
 
   async assignProject(id: string, projectId: string, tenantId: string): Promise<Employee> {

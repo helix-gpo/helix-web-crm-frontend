@@ -1,0 +1,48 @@
+@use '../../../styles' as *;
+
+.audit-list {
+  @include flex-col(1.4rem);
+}
+
+.audit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.audit-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  font-size: 1.7rem;
+  @include flex-center;
+}
+
+.audit-text {
+  min-width: 0;
+}
+
+.audit-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-grey);
+}
+
+.audit-user {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-top: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.audit-date {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+  margin-top: 0.1rem;
+}

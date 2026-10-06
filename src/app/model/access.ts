@@ -46,6 +46,19 @@ export interface CreateEmployeeRequest {
   roleId: string;
 }
 
-export interface UpdateEmployeeRoleRequest {
+export interface UpdateEmployeeRequest {
+  firstName: string;
+  lastName: string;
   roleId: string;
 }
+
+export interface Me {
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  roleName: string | null;
+  unrestricted: boolean;
+  permissions: PermissionEntry[];
+}
+
+export type PermissionKey = `${EntityType}:${PermissionAction}`;

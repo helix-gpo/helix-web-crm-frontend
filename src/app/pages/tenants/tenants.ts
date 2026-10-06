@@ -16,12 +16,22 @@ import {
   ActiveFilters,
 } from '../../shared/filter-dialog/filter-dialog';
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
+import { AuditCell } from '../../shared/audit-cell/audit-cell';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 type TenantSortKey = 'companyName' | 'contactEmail' | 'city' | 'status';
 
 @Component({
   selector: 'app-tenants',
-  imports: [Avatar, MatMenuModule, MatDividerModule, MatDialogModule, SortableHeader],
+  imports: [
+    Avatar,
+    MatMenuModule,
+    MatDividerModule,
+    MatDialogModule,
+    SortableHeader,
+    AuditCell,
+    RequiresPermission,
+  ],
   templateUrl: './tenants.html',
   styleUrl: './tenants.scss',
 })

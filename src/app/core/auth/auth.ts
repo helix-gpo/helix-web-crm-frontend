@@ -12,7 +12,6 @@ export class Auth {
   readonly isAuthenticated = signal(false);
   readonly userName = signal<string | null>(null);
   readonly userEmail = signal<string | null>(null);
-  readonly isAdmin = signal(false);
 
   constructor() {
     this.oauthService.events.subscribe((event) => {
@@ -51,6 +50,10 @@ export class Auth {
     return this.oauthService.getAccessToken();
   }
 
+  getIdToken(): string {
+    return this.oauthService.getIdToken();
+  }
+
   private handleSessionExpired(): void {
     const wasAuthenticated = this.isAuthenticated();
     this.clearUserState();
@@ -76,7 +79,6 @@ export class Auth {
       this.userName.set((claims?.['name'] as string) ?? null);
       this.userEmail.set((claims?.['email'] as string) ?? null);
       const groups = (claims?.['cognito:groups'] as string[]) ?? [];
-      this.isAdmin.set(groups.includes('admin'));
     } else {
       this.clearUserState();
     }
@@ -86,6 +88,5 @@ export class Auth {
     this.isAuthenticated.set(false);
     this.userName.set(null);
     this.userEmail.set(null);
-    this.isAdmin.set(false);
   }
 }

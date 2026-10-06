@@ -15,6 +15,7 @@ import { InvoiceDetail } from './pages/invoice-details/invoice-details';
 import { adminGuard } from './core/auth/admin.guard';
 import { Roles } from './pages/roles/roles';
 import { Employees } from './pages/employees/employees';
+import { permissionGuard } from './core/access/permission.guard';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -22,14 +23,42 @@ export const routes: Routes = [
   { path: 'session-expired', component: SessionExpired },
   { path: 'callback', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
-  { path: 'tenants', component: Tenants, canActivate: [authGuard] },
-  { path: 'tenants/:id', component: TenantDetail, canActivate: [authGuard] },
-  { path: 'projects', component: Projects, canActivate: [authGuard] },
-  { path: 'projects/:id', component: ProjectDetail, canActivate: [authGuard] },
-  { path: 'invoices', component: Invoices, canActivate: [authGuard] },
-  { path: 'invoices/:id', component: InvoiceDetail, canActivate: [authGuard] },
-  { path: 'testimonials', component: Testimonials, canActivate: [authGuard] },
-  { path: 'website', component: Website, canActivate: [authGuard] },
+  { path: 'tenants', component: Tenants, canActivate: [authGuard, permissionGuard('TENANT:READ')] },
+  {
+    path: 'tenants/:id',
+    component: TenantDetail,
+    canActivate: [authGuard, permissionGuard('TENANT:READ')],
+  },
+  {
+    path: 'projects',
+    component: Projects,
+    canActivate: [authGuard, permissionGuard('PROJECT:READ')],
+  },
+  {
+    path: 'projects/:id',
+    component: ProjectDetail,
+    canActivate: [authGuard, permissionGuard('PROJECT:READ')],
+  },
+  {
+    path: 'invoices',
+    component: Invoices,
+    canActivate: [authGuard, permissionGuard('INVOICE:READ')],
+  },
+  {
+    path: 'invoices/:id',
+    component: InvoiceDetail,
+    canActivate: [authGuard, permissionGuard('INVOICE:READ')],
+  },
+  {
+    path: 'testimonials',
+    component: Testimonials,
+    canActivate: [authGuard, permissionGuard('TESTIMONIAL:READ')],
+  },
+  {
+    path: 'website',
+    component: Website,
+    canActivate: [authGuard, permissionGuard('TESTIMONIAL:READ')],
+  },
   { path: 'settings/roles', component: Roles, canActivate: [authGuard, adminGuard] },
   { path: 'settings/employees', component: Employees, canActivate: [authGuard, adminGuard] },
 ];

@@ -15,10 +15,12 @@ import { Toast } from '../../core/toast/toast';
 import { Project, ProjectStatus, Milestone } from '../../model/project';
 import { getContrastTextColor } from '../../util/color-contrast';
 import { ImageUpload } from '../../shared/image-upload/image-upload';
+import { AuditInfo } from '../../shared/audit-info/audit-info';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 @Component({
   selector: 'app-project-detail',
-  imports: [MatDialogModule, ImageUpload],
+  imports: [MatDialogModule, ImageUpload, AuditInfo, RequiresPermission],
   templateUrl: './project-details.html',
   styleUrl: './project-details.scss',
 })

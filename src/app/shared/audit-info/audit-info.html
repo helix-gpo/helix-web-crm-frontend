@@ -1,0 +1,38 @@
+<div class="audit-list">
+  @if (createdBy() || createdAt()) {
+    <div class="audit-row">
+      <span class="audit-icon material-symbols-rounded">add_circle</span>
+      <div class="audit-text">
+        <p class="audit-label">Angelegt</p>
+        <p class="audit-user">{{ userLabel(createdBy()) }}</p>
+        @if (createdAt()) {
+          <p class="audit-date">{{ createdAt() | date: 'dd.MM.yyyy, HH:mm' }} Uhr</p>
+        }
+      </div>
+    </div>
+  }
+
+  @if (issuedBy() || issuedAt()) {
+    <div class="audit-row">
+      <span class="audit-icon material-symbols-rounded">task_alt</span>
+      <div class="audit-text">
+        <p class="audit-label">Ausgestellt</p>
+        <p class="audit-user">{{ userLabel(issuedBy()) }}</p>
+        @if (issuedAt()) {
+          <p class="audit-date">{{ issuedAt() | date: 'dd.MM.yyyy, HH:mm' }} Uhr</p>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showUpdated()) {
+    <div class="audit-row">
+      <span class="audit-icon material-symbols-rounded">edit</span>
+      <div class="audit-text">
+        <p class="audit-label">Zuletzt geändert</p>
+        <p class="audit-user">{{ userLabel(updatedBy()) }}</p>
+        <p class="audit-date">{{ updatedAt() | date: 'dd.MM.yyyy, HH:mm' }} Uhr</p>
+      </div>
+    </div>
+  }
+</div>

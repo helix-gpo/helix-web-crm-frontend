@@ -5,7 +5,7 @@
       {{ filteredTenants().length }} von {{ tenantStore.tenants().length }} Mandanten
     </p>
   </div>
-  <button class="add-button" (click)="openCreateDialog()">
+  <button class="add-button" (click)="openCreateDialog()" appRequires="TENANT:WRITE">
     <span class="material-symbols-rounded">add</span>
     <span>Neuer Mandant</span>
   </button>
@@ -65,6 +65,7 @@
         (clicked)="toggleSort('status')"
       />
       <span>Website</span>
+      <span>Angelegt</span>
       <span></span>
     </div>
 
@@ -97,6 +98,8 @@
           </span>
         </span>
 
+        <app-audit-cell [user]="tenant.createdBy" [date]="tenant.createdAt" />
+
         <button
           class="row-menu-button"
           [matMenuTriggerFor]="menu"
@@ -112,14 +115,18 @@
               <span>Details ansehen</span>
             </span>
           </button>
-          <button mat-menu-item (click)="openEditCoreDetails(tenant); $event.stopPropagation()">
+          <button
+            mat-menu-item
+            (click)="openEditCoreDetails(tenant); $event.stopPropagation()"
+            appRequires="TENANT:WRITE"
+          >
             <span class="menu-item-row">
               <span class="material-symbols-rounded menu-icon">business_center</span>
               <span>Stammdaten bearbeiten</span>
             </span>
           </button>
           @if (tenant.status !== 'ACTIVE') {
-            <button mat-menu-item (click)="activate(tenant)">
+            <button mat-menu-item (click)="activate(tenant)" appRequires="TENANT:WRITE">
               <span class="menu-item-row">
                 <span class="material-symbols-rounded menu-icon">check_circle</span>
                 <span>Aktivieren</span>
@@ -128,7 +135,7 @@
           }
           @if (tenant.status !== 'ARCHIVED') {
             <mat-divider></mat-divider>
-            <button mat-menu-item (click)="archive(tenant)">
+            <button mat-menu-item (click)="archive(tenant)" appRequires="TENANT:WRITE">
               <span class="menu-item-row">
                 <span class="material-symbols-rounded menu-icon">archive</span>
                 <span>Archivieren</span>

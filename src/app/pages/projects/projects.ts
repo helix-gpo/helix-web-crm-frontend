@@ -19,13 +19,22 @@ import {
   ActiveFilters,
 } from '../../shared/filter-dialog/filter-dialog';
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
+import { AuditCell } from '../../shared/audit-cell/audit-cell';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 type ViewMode = 'kanban' | 'list';
 type ProjectSortKey = 'title' | 'tenantName' | 'status';
 
 @Component({
   selector: 'app-projects',
-  imports: [MatDialogModule, MatMenuModule, MatDividerModule, SortableHeader],
+  imports: [
+    MatDialogModule,
+    MatMenuModule,
+    MatDividerModule,
+    SortableHeader,
+    AuditCell,
+    RequiresPermission,
+  ],
   templateUrl: './projects.html',
   styleUrl: './projects.scss',
 })

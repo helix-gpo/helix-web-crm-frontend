@@ -52,6 +52,7 @@
               class="add-icon-button"
               (click)="openAddLineItemDialog()"
               title="Position hinzufügen"
+              appRequires="INVOICE:WRITE"
             >
               <span class="material-symbols-rounded">add</span>
             </button>
@@ -79,6 +80,7 @@
                   class="icon-button"
                   (click)="openEditLineItemDialog(item)"
                   title="Bearbeiten"
+                  appRequires="INVOICE:WRITE"
                 >
                   <span class="material-symbols-rounded">edit</span>
                 </button>
@@ -86,6 +88,7 @@
                   class="icon-button icon-button--danger"
                   (click)="removeLineItem(item)"
                   title="Entfernen"
+                  appRequires="INVOICE:WRITE"
                 >
                   <span class="material-symbols-rounded">delete</span>
                 </button>
@@ -102,6 +105,7 @@
       @if (isDraft()) {
         <button
           class="issue-button"
+          appRequires="INVOICE:WRITE"
           [disabled]="issuing() || inv.lineItems.length === 0"
           (click)="issueInvoice()"
         >
@@ -124,6 +128,7 @@
       @if (canSend()) {
         <button
           class="issue-button"
+          appRequires="INVOICE:WRITE"
           [disabled]="sending() || alreadySent()"
           [title]="
             alreadySent()
@@ -144,7 +149,12 @@
       }
 
       @if (canMarkPaid()) {
-        <button class="issue-button" [disabled]="markingPaid()" (click)="markPaid()">
+        <button
+          class="issue-button"
+          appRequires="INVOICE:WRITE"
+          [disabled]="markingPaid()"
+          (click)="markPaid()"
+        >
           @if (!markingPaid()) {
             <span class="material-symbols-rounded">paid</span>
             <span>Als bezahlt markieren</span>
@@ -174,7 +184,12 @@
         <div class="sidebar-label-row">
           <p class="sidebar-label">Details</p>
           @if (isDraft() && !editingHeader()) {
-            <button class="inline-edit-button" (click)="startEditHeader()" title="Bearbeiten">
+            <button
+              class="inline-edit-button"
+              (click)="startEditHeader()"
+              title="Bearbeiten"
+              appRequires="INVOICE:WRITE"
+            >
               <span class="material-symbols-rounded">edit</span>
             </button>
           }
@@ -223,11 +238,24 @@
         }
       </div>
 
+      <div class="sidebar-card">
+        <p class="sidebar-label">Verlauf</p>
+        <app-audit-info
+          [createdBy]="inv.createdBy"
+          [createdAt]="inv.createdAt"
+          [issuedBy]="inv.issuedBy"
+          [issuedAt]="inv.issuedAt"
+          [updatedBy]="inv.updatedBy"
+          [updatedAt]="inv.updatedAt"
+        />
+      </div>
+
       @if (isDraft()) {
         <button
           class="delete-draft-button"
           [disabled]="deletingDraft()"
           (click)="deleteDraftInvoice()"
+          appRequires="INVOICE:DELETE"
         >
           <span class="material-symbols-rounded">delete</span>
           <span>Entwurf löschen</span>

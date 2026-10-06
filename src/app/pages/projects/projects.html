@@ -24,7 +24,7 @@
       </button>
     </div>
 
-    <button class="add-button" (click)="openCreateDialog()">
+    <button class="add-button" (click)="openCreateDialog()" appRequires="PROJECT:WRITE">
       <span class="material-symbols-rounded">add</span>
       <span>Neues Projekt</span>
     </button>
@@ -84,7 +84,11 @@
             <p class="column-empty">Keine Projekte</p>
           }
 
-          <button class="column-add-button" (click)="openCreateDialog(column.status)">
+          <button
+            class="column-add-button"
+            (click)="openCreateDialog(column.status)"
+            appRequires="PROJECT:WRITE"
+          >
             <span class="material-symbols-rounded">add</span>
             <span>Neues Projekt</span>
           </button>
@@ -131,6 +135,7 @@
       />
       <span>Meilensteine</span>
       <span>Website</span>
+      <span>Angelegt</span>
       <span></span>
     </div>
 
@@ -151,6 +156,8 @@
           </span>
         </span>
 
+        <app-audit-cell [user]="project.createdBy" [date]="project.createdAt" />
+
         <button
           class="row-menu-button"
           [matMenuTriggerFor]="menu"
@@ -166,7 +173,7 @@
               <span>Details ansehen</span>
             </span>
           </button>
-          <button mat-menu-item (click)="togglePublish(project)">
+          <button mat-menu-item (click)="togglePublish(project)" appRequires="PROJECT:WRITE">
             <span class="menu-item-row">
               <span class="material-symbols-rounded menu-icon">{{
                 project.visibleOnWebsite ? 'visibility_off' : 'public'
@@ -178,7 +185,7 @@
           </button>
           @if (project.status !== 'CANCELLED') {
             <mat-divider></mat-divider>
-            <button mat-menu-item (click)="cancelProject(project)">
+            <button mat-menu-item (click)="cancelProject(project)" appRequires="PROJECT:WRITE">
               <span class="menu-item-row">
                 <span class="material-symbols-rounded menu-icon">cancel</span>
                 <span>Projekt abbrechen</span>

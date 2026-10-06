@@ -13,27 +13,35 @@
           <span class="material-symbols-rounded">dashboard</span>
           <span>Dashboard</span>
         </a>
-        <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
-          <span class="material-symbols-rounded">apartment</span>
-          <span>Mandanten</span>
-        </a>
-        <a class="nav-item" routerLink="/projects" routerLinkActive="active">
-          <span class="material-symbols-rounded">work</span>
-          <span>Projekte</span>
-        </a>
-        <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
-          <span class="material-symbols-rounded">receipt_long</span>
-          <span>Rechnungen</span>
-        </a>
-        <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
-          <span class="material-symbols-rounded">rate_review</span>
-          <span>Referenzen</span>
-        </a>
-        <a class="nav-item" routerLink="/website" routerLinkActive="active">
-          <span class="material-symbols-rounded">language</span>
-          <span>Website</span>
-        </a>
-        @if (auth.isAdmin()) {
+        @if (permissions.can('TENANT:READ')) {
+          <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
+            <span class="material-symbols-rounded">apartment</span>
+            <span>Mandanten</span>
+          </a>
+        }
+        @if (permissions.can('PROJECT:READ')) {
+          <a class="nav-item" routerLink="/projects" routerLinkActive="active">
+            <span class="material-symbols-rounded">work</span>
+            <span>Projekte</span>
+          </a>
+        }
+        @if (permissions.can('INVOICE:READ')) {
+          <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
+            <span class="material-symbols-rounded">receipt_long</span>
+            <span>Rechnungen</span>
+          </a>
+        }
+        @if (permissions.can('TESTIMONIAL:READ')) {
+          <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
+            <span class="material-symbols-rounded">rate_review</span>
+            <span>Referenzen</span>
+          </a>
+          <a class="nav-item" routerLink="/website" routerLinkActive="active">
+            <span class="material-symbols-rounded">language</span>
+            <span>Website</span>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
           <div class="nav-divider"></div>
           <a class="nav-item" routerLink="/settings/roles" routerLinkActive="active">
             <span class="material-symbols-rounded">shield_person</span>

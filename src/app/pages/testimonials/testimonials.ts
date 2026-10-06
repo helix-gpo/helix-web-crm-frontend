@@ -9,13 +9,14 @@ import {
   FilterFieldConfig,
   ActiveFilters,
 } from '../../shared/filter-dialog/filter-dialog';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 type TabFilter = TestimonialStatus | 'ALL';
 type SortOption = 'newest' | 'oldest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
 
 @Component({
   selector: 'app-testimonials',
-  imports: [Avatar, MatDialogModule],
+  imports: [Avatar, MatDialogModule, RequiresPermission],
   templateUrl: './testimonials.html',
   styleUrl: './testimonials.scss',
 })

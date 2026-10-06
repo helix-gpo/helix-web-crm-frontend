@@ -328,3 +328,15 @@ input[type='date'] {
     }
   }
 }
+
+// elements locked by the appRequires directive: greyed out, tooltip still works
+.is-locked {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.6);
+
+  // children must not react, so hover and click always hit the locked element itself
+  * {
+    pointer-events: none;
+  }
+}

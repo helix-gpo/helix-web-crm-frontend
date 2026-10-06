@@ -18,12 +18,14 @@ import { CreateProjectDialog } from '../projects/create-project-dialog/create-pr
 import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-invoice-dialog';
 import { RequestTestimonialDialog } from './request-testimonial-dialog/request-testimonial-dialog';
 import { InvitationSummary } from '../../model/testimonial';
-import { TestimonialApi } from '../../core/testimonials/testimonial-api';
 import { ImageUpload } from '../../shared/image-upload/image-upload';
+import { AuditInfo } from '../../shared/audit-info/audit-info';
+import { RequiresPermission } from '../../core/access/requires-permission';
+import { Permissions } from '../../core/access/permissions';
 
 @Component({
   selector: 'app-tenant-detail',
-  imports: [Avatar, MatDialogModule, ImageUpload],
+  imports: [Avatar, MatDialogModule, ImageUpload, AuditInfo, RequiresPermission],
   templateUrl: './tenant-detail.html',
   styleUrl: './tenant-detail.scss',
 })
@@ -35,23 +37,30 @@ export class TenantDetail {
   private readonly tenantStore = inject(TenantStore);
   private readonly tenantApi = inject(TenantApi);
   private readonly toast = inject(Toast);
+  protected readonly permissions = inject(Permissions);
 
   private readonly tenantResource = httpResource<Tenant>(
     () => `${environment.apiBaseUrl}/tenants/${this.id()}`,
   );
 
   private readonly partnersResource = httpResource<Partner[]>(
-    () => `${environment.apiBaseUrl}/tenants/${this.id()}/partners`,
+    () =>
+      this.permissions.can('PARTNER:READ')
+        ? `${environment.apiBaseUrl}/tenants/${this.id()}/partners`
+        : undefined,
     { defaultValue: [] },
   );
 
   private readonly projectsResource = httpResource<Project[]>(
-    () => `${environment.apiBaseUrl}/projects?tenantId=${this.id()}`,
+    () =>
+      this.permissions.can('PROJECT:READ')
+        ? `${environment.apiBaseUrl}/projects?tenantId=${this.id()}`
+        : undefined,
     { defaultValue: [] },
   );
 
   private readonly invitationsResource = httpResource<InvitationSummary[]>(() =>
-    this.tenant()?.id
+    this.tenant()?.id && this.permissions.can('TESTIMONIAL:READ')
       ? `${environment.apiBaseUrl}/testimonial-invitations?tenantId=${this.tenant()!.id}`
       : undefined,
   );
@@ -60,9 +69,16 @@ export class TenantDetail {
 
   readonly tenant = computed(() => this.tenantResource.value());
   readonly loading = computed(() => this.tenantResource.isLoading());
-  readonly partners = computed(() => this.partnersResource.value() ?? []);
-  readonly projects = computed(() => this.projectsResource.value() ?? []);
-  readonly invitations = computed(() => this.invitationsResource.value() ?? []);
+
+  readonly partners = computed(() =>
+    this.partnersResource.hasValue() ? this.partnersResource.value() : [],
+  );
+  readonly projects = computed(() =>
+    this.projectsResource.hasValue() ? this.projectsResource.value() : [],
+  );
+  readonly invitations = computed(() =>
+    this.invitationsResource.hasValue() ? this.invitationsResource.value() : [],
+  );
 
   readonly canCreateProject = computed(() => this.tenant()?.status === 'ACTIVE');
   readonly canRequestTestimonial = computed(() => this.projects().length > 0);

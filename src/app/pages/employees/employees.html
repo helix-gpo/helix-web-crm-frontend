@@ -56,34 +56,18 @@
         </button>
 
         <mat-menu #menu="matMenu" class="app-menu-panel">
+          <button mat-menu-item (click)="openEditDialog(employee)">
+            <span class="menu-item-row">
+              <span class="material-symbols-rounded menu-icon">edit</span>
+              <span>Bearbeiten</span>
+            </span>
+          </button>
           <button mat-menu-item (click)="openAssignProjectsDialog(employee)">
             <span class="menu-item-row">
               <span class="material-symbols-rounded menu-icon">work</span>
               <span>Projekte zuweisen</span>
             </span>
           </button>
-          <button mat-menu-item (click)="openChangeRoleDialog(employee)">
-            <span class="menu-item-row">
-              <span class="material-symbols-rounded menu-icon">shield_person</span>
-              <span>Rolle ändern</span>
-            </span>
-          </button>
-          <mat-divider></mat-divider>
-          @if (employee.active) {
-            <button mat-menu-item (click)="deactivate(employee)">
-              <span class="menu-item-row">
-                <span class="material-symbols-rounded menu-icon">person_off</span>
-                <span>Deaktivieren</span>
-              </span>
-            </button>
-          } @else {
-            <button mat-menu-item (click)="activate(employee)">
-              <span class="menu-item-row">
-                <span class="material-symbols-rounded menu-icon">person_check</span>
-                <span>Aktivieren</span>
-              </span>
-            </button>
-          }
         </mat-menu>
       </div>
     } @empty {

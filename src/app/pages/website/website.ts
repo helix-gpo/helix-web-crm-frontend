@@ -13,12 +13,13 @@ import { AddTestimonialDialog } from './add-testimonial-dialog/add-testimonial-d
 import { Project } from '../../model/project';
 import { Testimonial } from '../../model/testimonial';
 import { Avatar } from '../../util/avatar/avatar';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 const MAX_ON_WEBSITE = 6;
 
 @Component({
   selector: 'app-website',
-  imports: [MatDialogModule, Avatar],
+  imports: [MatDialogModule, Avatar, RequiresPermission],
   templateUrl: './website.html',
   styleUrl: './website.scss',
 })

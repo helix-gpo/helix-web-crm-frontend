@@ -8,8 +8,8 @@ import { Avatar } from '../../util/avatar/avatar';
 import { Employee } from '../../model/access';
 import { EmployeeDialog } from './employee-dialog/employee-dialog';
 import { AssignProjectsDialog } from './assign-projects-dialog/assign-projects-dialog';
-import { ChangeRoleDialog } from './change-role-dialog/change-role-dialog';
 import { ProjectStore } from '../../core/projects/project-store';
+import { EditEmployeeDialog } from './edit-employee-dialog/edit-employee-dialog';
 
 @Component({
   selector: 'app-employees',
@@ -55,25 +55,15 @@ export class Employees {
     });
   }
 
-  openChangeRoleDialog(employee: Employee): void {
-    const dialogRef = this.dialog.open(ChangeRoleDialog, {
-      width: '44rem',
+  openEditDialog(employee: Employee): void {
+    const dialogRef = this.dialog.open(EditEmployeeDialog, {
+      width: '52rem',
       panelClass: 'app-dialog-panel',
       data: { employee },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.toast.success('Rolle geändert');
+      if (result) this.toast.success('Mitarbeiter aktualisiert');
     });
-  }
-
-  async deactivate(employee: Employee): Promise<void> {
-    await this.employeeStore.deactivate(employee.id);
-    this.toast.success(`${employee.firstName} ${employee.lastName} deaktiviert`);
-  }
-
-  async activate(employee: Employee): Promise<void> {
-    await this.employeeStore.activate(employee.id);
-    this.toast.success(`${employee.firstName} ${employee.lastName} aktiviert`);
   }
 }

@@ -33,10 +33,10 @@
   @include flex-col(1.6rem);
 }
 
-.employee-name {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-light);
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
 }
 
 .field {
@@ -46,8 +46,13 @@
     font-size: 1.3rem;
     font-weight: 600;
     color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
   }
 
+  input,
   select {
     width: 100%;
     box-sizing: border-box;
@@ -65,9 +70,81 @@
       background-color: rgba(255, 255, 255, 0.08);
     }
 
-    option {
-      background-color: var(--main-navy);
-      color: var(--text-light);
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  select option {
+    background-color: var(--main-navy);
+    color: var(--text-light);
+  }
+}
+
+.field-hint {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+}
+
+.danger-zone {
+  margin-top: 0.8rem;
+  padding: 1.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 71, 87, 0.25);
+  background-color: rgba(255, 71, 87, 0.04);
+  @include flex-col(1.4rem);
+}
+
+.danger-zone-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--danger);
+}
+
+.danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+
+  &:not(:last-child) {
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+.danger-row-label {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.danger-row-hint {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.danger-zone-button {
+  flex-shrink: 0;
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+  padding: 0.8rem 1.4rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+
+  &--critical {
+    background-color: var(--danger);
+    color: var(--text-light);
+
+    &:hover {
+      filter: brightness(1.15);
     }
   }
 }

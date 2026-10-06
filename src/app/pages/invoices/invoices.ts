@@ -15,13 +15,15 @@ import {
   ActiveFilters,
 } from '../../shared/filter-dialog/filter-dialog';
 import { cycleSort, sortByKey, SortState, SortDirection } from '../../util/sortable/sortable';
+import { AuditCell } from '../../shared/audit-cell/audit-cell';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 type InvoiceSortKey =
   'invoiceNumber' | 'tenantName' | 'issueDate' | 'dueDate' | 'amount' | 'status';
 
 @Component({
   selector: 'app-invoices',
-  imports: [DecimalPipe, MatDialogModule, SortableHeader],
+  imports: [DecimalPipe, MatDialogModule, SortableHeader, AuditCell, RequiresPermission],
   templateUrl: './invoices.html',
   styleUrl: './invoices.scss',
 })

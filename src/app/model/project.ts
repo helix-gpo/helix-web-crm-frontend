@@ -35,9 +35,10 @@ export interface Project {
   imageUrl?: string;
   notes?: string;
   milestones: Milestone[];
-  createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface CreateProjectRequest {

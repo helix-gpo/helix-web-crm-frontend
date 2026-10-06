@@ -1,0 +1,22 @@
+<div class="no-access-page">
+  <div class="no-access-blob no-access-blob--cyan"></div>
+  <div class="no-access-blob no-access-blob--pink"></div>
+
+  <div class="no-access-card">
+    <div class="no-access-icon-wrapper">
+      <span class="material-symbols-rounded">lock_person</span>
+    </div>
+
+    <p class="no-access-eyebrow">Internes CRM</p>
+    <h1 class="no-access-title">Kein Zugang zum CRM</h1>
+    <p class="no-access-subtitle">
+      Du bist als <strong>{{ auth.userEmail() }}</strong> angemeldet, dieses Konto ist aber nicht
+      für das CRM freigeschaltet oder wurde gesperrt. Bitte wende dich an einen Administrator.
+    </p>
+
+    <button class="no-access-button" (click)="auth.logout()">
+      <span class="material-symbols-rounded">logout</span>
+      <span>Abmelden</span>
+    </button>
+  </div>
+</div>

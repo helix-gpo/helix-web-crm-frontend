@@ -106,6 +106,7 @@
               class="action-button action-button--approve"
               [disabled]="processingId() === testimonial.id"
               (click)="approve(testimonial.id)"
+              appRequires="TESTIMONIAL:WRITE"
             >
               <span class="material-symbols-rounded">check</span>
               <span>Freigeben</span>
@@ -114,6 +115,7 @@
               class="action-button action-button--reject"
               [disabled]="processingId() === testimonial.id"
               (click)="reject(testimonial.id)"
+              appRequires="TESTIMONIAL:WRITE"
             >
               <span class="material-symbols-rounded">close</span>
               <span>Ablehnen</span>
@@ -126,6 +128,7 @@
                 class="action-button action-button--reject"
                 [disabled]="processingId() === testimonial.id"
                 (click)="unpublish(testimonial.id)"
+                appRequires="TESTIMONIAL:WRITE"
               >
                 <span class="material-symbols-rounded">visibility_off</span>
                 <span>Von Website entfernen</span>
@@ -135,6 +138,7 @@
                 class="action-button action-button--approve"
                 [disabled]="processingId() === testimonial.id"
                 (click)="publish(testimonial.id)"
+                appRequires="TESTIMONIAL:WRITE"
               >
                 <span class="material-symbols-rounded">visibility</span>
                 <span>Auf Website veröffentlichen</span>

@@ -9,7 +9,6 @@ import { InvoiceStore } from '../../core/invoices/invoice-store';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { ProjectStore } from '../../core/projects/project-store';
 import { Toast } from '../../core/toast/toast';
-import { extractErrorMessage } from '../../core/errors/error-message';
 import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
 import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
 import {
@@ -28,10 +27,12 @@ import {
 import { SendInvoiceDialog } from './send-invoice-dialog/send-invoice-dialog';
 import { DatePipe } from '@angular/common';
 import { MarkPaidDialog } from './mark-paid-dialog/mark-paid-dialog';
+import { AuditInfo } from '../../shared/audit-info/audit-info';
+import { RequiresPermission } from '../../core/access/requires-permission';
 
 @Component({
   selector: 'app-invoice-detail',
-  imports: [MatDialogModule, DatePipe],
+  imports: [MatDialogModule, DatePipe, AuditInfo, RequiresPermission],
   templateUrl: './invoice-details.html',
   styleUrl: './invoice-details.scss',
 })

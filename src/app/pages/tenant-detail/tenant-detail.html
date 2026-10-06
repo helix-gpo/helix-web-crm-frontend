@@ -10,6 +10,7 @@
       <div class="hero-main">
         @if (t.logoUrl) {
           <app-image-upload
+            appRequires="TENANT:WRITE"
             [imageUrl]="t.logoUrl"
             shape="circle"
             [uploading]="uploadingLogo()"
@@ -22,6 +23,7 @@
             type="button"
             (click)="logoFileInput.click()"
             title="Logo hochladen"
+            appRequires="TENANT:WRITE"
           >
             <app-avatar [name]="t.companyName" [size]="'7.2rem'"></app-avatar>
             <div class="logo-upload-placeholder-overlay">
@@ -90,6 +92,7 @@
               class="add-icon-button"
               (click)="openAddPartnerDialog()"
               title="Ansprechpartner hinzufügen"
+              appRequires="PARTNER:WRITE"
             >
               <span class="material-symbols-rounded">add</span>
             </button>
@@ -111,11 +114,14 @@
               <p class="partner-role">
                 {{ partner.role || '-' }} · {{ partner.email || 'keine Email' }}
               </p>
-              <p class="partner-invitation-status">{{ invitationStatusLabel(partner.id) }}</p>
+              @if (permissions.can('TESTIMONIAL:READ')) {
+                <p class="partner-invitation-status">{{ invitationStatusLabel(partner.id) }}</p>
+              }
             </div>
             <div class="partner-actions">
               <button
                 class="icon-button"
+                appRequires="TESTIMONIAL:WRITE"
                 [class.icon-button--locked]="!canRequestTestimonial()"
                 [title]="
                   canRequestTestimonial()
@@ -130,6 +136,7 @@
                 class="icon-button"
                 (click)="openEditPartnerDialog(partner)"
                 title="Bearbeiten"
+                appRequires="PARTNER:WRITE"
               >
                 <span class="material-symbols-rounded">edit</span>
               </button>
@@ -137,6 +144,7 @@
                 class="icon-button icon-button--danger"
                 (click)="deletePartner(partner)"
                 title="Entfernen"
+                appRequires="PARTNER:DELETE"
               >
                 <span class="material-symbols-rounded">delete</span>
               </button>
@@ -182,18 +190,29 @@
         </div>
       </div>
 
+      <div class="sidebar-card">
+        <p class="sidebar-label">Verlauf</p>
+        <app-audit-info
+          [createdBy]="t.createdBy"
+          [createdAt]="t.createdAt"
+          [updatedBy]="t.updatedBy"
+          [updatedAt]="t.updatedAt"
+        />
+      </div>
+
       <div class="sidebar-card sidebar-card--dark">
         <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
-        <button class="sidebar-action" (click)="openEditCoreDetails()">
+        <button class="sidebar-action" (click)="openEditCoreDetails()" appRequires="TENANT:WRITE">
           <span class="material-symbols-rounded">business_center</span>
           <span>Stammdaten bearbeiten</span>
         </button>
-        <button class="sidebar-action" (click)="openEditDialog()">
+        <button class="sidebar-action" (click)="openEditDialog()" appRequires="TENANT:WRITE">
           <span class="material-symbols-rounded">edit</span>
           <span>Kontaktdaten bearbeiten</span>
         </button>
         <button
           class="sidebar-action"
+          appRequires="PROJECT:WRITE"
           [class.sidebar-action--disabled]="!canCreateProject()"
           [disabled]="!canCreateProject()"
           [title]="canCreateProject() ? '' : 'Nur für aktive Mandanten möglich'"
@@ -207,7 +226,11 @@
             }
           </span>
         </button>
-        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+        <button
+          class="sidebar-action"
+          (click)="openCreateInvoiceDialog()"
+          appRequires="INVOICE:WRITE"
+        >
           <span class="material-symbols-rounded">receipt_long</span>
           <span>Rechnung erstellen</span>
         </button>

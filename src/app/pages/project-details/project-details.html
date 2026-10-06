@@ -73,6 +73,7 @@
               class="add-icon-button"
               (click)="openAddMilestoneDialog()"
               title="Meilenstein hinzufügen"
+              appRequires="MILESTONE:WRITE"
             >
               <span class="material-symbols-rounded">add</span>
             </button>
@@ -95,6 +96,7 @@
             <div class="milestone-actions">
               <button
                 class="icon-button"
+                appRequires="MILESTONE:WRITE"
                 (click)="toggleMilestoneStatus(milestone)"
                 [title]="milestone.status === 'DONE' ? 'Als offen markieren' : 'Abschließen'"
               >
@@ -104,6 +106,7 @@
               </button>
               <button
                 class="icon-button"
+                appRequires="MILESTONE:WRITE"
                 (click)="openEditMilestoneDialog(milestone)"
                 title="Bearbeiten"
               >
@@ -111,6 +114,7 @@
               </button>
               <button
                 class="icon-button icon-button--danger"
+                appRequires="MILESTONE:DELETE"
                 (click)="deleteMilestone(milestone)"
                 title="Entfernen"
               >
@@ -127,23 +131,26 @@
     <aside class="detail-sidebar">
       <div class="sidebar-card">
         <p class="sidebar-label">Status</p>
-        <select
-          class="status-select"
-          [disabled]="changingStatus()"
-          (change)="changeStatus($any($event.target).value)"
-        >
-          @for (option of statusOptions; track option.value) {
-            <option [value]="option.value" [selected]="option.value === p.status">
-              {{ option.label }}
-            </option>
-          }
-        </select>
+        <div appRequires="PROJECT:WRITE">
+          <select
+            class="status-select"
+            [disabled]="changingStatus()"
+            (change)="changeStatus($any($event.target).value)"
+          >
+            @for (option of statusOptions; track option.value) {
+              <option [value]="option.value" [selected]="option.value === p.status">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+        </div>
       </div>
 
       <div class="sidebar-card">
         <p class="sidebar-label">Website-Sichtbarkeit</p>
         <button
           class="website-toggle"
+          appRequires="PROJECT:WRITE"
           [class.website-toggle--active]="p.visibleOnWebsite"
           [disabled]="togglingPublish()"
           (click)="togglePublish()"
@@ -159,13 +166,27 @@
         </button>
       </div>
 
+      <div class="sidebar-card">
+        <p class="sidebar-label">Verlauf</p>
+        <app-audit-info
+          [createdBy]="p.createdBy"
+          [createdAt]="p.createdAt"
+          [updatedBy]="p.updatedBy"
+          [updatedAt]="p.updatedAt"
+        />
+      </div>
+
       <div class="sidebar-card sidebar-card--dark">
         <p class="sidebar-label sidebar-label--light">Schnellaktionen</p>
-        <button class="sidebar-action" (click)="openEditDialog()">
+        <button class="sidebar-action" (click)="openEditDialog()" appRequires="PROJECT:WRITE">
           <span class="material-symbols-rounded">edit</span>
           <span>Projekt bearbeiten</span>
         </button>
-        <button class="sidebar-action" (click)="openCreateInvoiceDialog()">
+        <button
+          class="sidebar-action"
+          (click)="openCreateInvoiceDialog()"
+          appRequires="INVOICE:WRITE"
+        >
           <span class="material-symbols-rounded">receipt_long</span>
           <span>Rechnung erstellen</span>
         </button>

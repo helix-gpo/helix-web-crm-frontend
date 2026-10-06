@@ -1,0 +1,89 @@
+<div class="dialog-header">
+  <h2>Mitarbeiter bearbeiten</h2>
+  <button class="close-button" (click)="close()">
+    <span class="material-symbols-rounded">close</span>
+  </button>
+</div>
+
+<div class="dialog-body">
+  <div class="field-row">
+    <div class="field">
+      <label [class.warning]="showWarning() && !firstName().trim()">Vorname *</label>
+      <input
+        type="text"
+        [value]="firstName()"
+        (input)="firstName.set($any($event.target).value); showWarning.set(false)"
+      />
+    </div>
+    <div class="field">
+      <label [class.warning]="showWarning() && !lastName().trim()">Nachname *</label>
+      <input
+        type="text"
+        [value]="lastName()"
+        (input)="lastName.set($any($event.target).value); showWarning.set(false)"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label>E-Mail</label>
+    <input type="email" [value]="data.employee.email" disabled />
+    <p class="field-hint">
+      Die E-Mail-Adresse ist der Cognito-Login und kann nicht geändert werden.
+    </p>
+  </div>
+
+  <div class="field">
+    <label>Rolle</label>
+    <select [value]="roleId()" (change)="roleId.set($any($event.target).value)">
+      @for (role of roleStore.roles(); track role.id) {
+        <option [value]="role.id">{{ role.name }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="danger-zone">
+    <p class="danger-zone-title">Gefahrenbereich</p>
+
+    <div class="danger-row">
+      <div>
+        <p class="danger-row-label">
+          {{ data.employee.active ? 'Zugang deaktivieren' : 'Zugang aktivieren' }}
+        </p>
+        <p class="danger-row-hint">
+          {{
+            data.employee.active
+              ? 'Sperrt den Login, kann jederzeit rückgängig gemacht werden.'
+              : 'Legt einen neuen Cognito-Login an und verschickt eine neue Einladung.'
+          }}
+        </p>
+      </div>
+      <button class="danger-zone-button" (click)="toggleActive()">
+        {{ data.employee.active ? 'Deaktivieren' : 'Aktivieren' }}
+      </button>
+    </div>
+
+    <div class="danger-row">
+      <div>
+        <p class="danger-row-label">Mitarbeiter endgültig löschen</p>
+        <p class="danger-row-hint">
+          Entfernt den Mitarbeiter komplett, inklusive aller Zuweisungen.
+        </p>
+      </div>
+      <button class="danger-zone-button danger-zone-button--critical" (click)="deleteEmployee()">
+        Löschen
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button class="cancel-button" (click)="close()">Abbrechen</button>
+  <button class="submit-button" [disabled]="submitting()" (click)="submit()">
+    @if (!submitting()) {
+      <span>Speichern</span>
+    } @else {
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    }
+  </button>
+</div>
