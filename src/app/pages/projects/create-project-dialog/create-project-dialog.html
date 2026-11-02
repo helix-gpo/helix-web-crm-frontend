@@ -48,25 +48,34 @@
 
     <div class="field">
       <label [class.warning]="showWarning() && !title()">Projekttitel *</label>
-      <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" />
+      <input
+        type="text"
+        maxlength="160"
+        [value]="title()"
+        (input)="title.set($any($event.target).value)"
+      />
     </div>
 
     <div class="field">
       <label>Kurzbeschreibung</label>
       <input
         type="text"
+        maxlength="500"
         [value]="description()"
         (input)="description.set($any($event.target).value)"
       />
+      <app-char-counter [value]="description()" [max]="500" />
     </div>
 
     <div class="field">
       <label>Ausführliche Beschreibung</label>
       <textarea
         rows="3"
+        maxlength="10000"
         [value]="fullDescription()"
         (input)="fullDescription.set($any($event.target).value)"
       ></textarea>
+      <app-char-counter [value]="fullDescription()" [max]="10000" />
     </div>
 
     <div class="field-row">
@@ -101,11 +110,15 @@
       <div class="add-row">
         <input
           type="text"
+          maxlength="300"
           placeholder="Highlight hinzufügen und Enter drücken..."
           [value]="newHighlight()"
           (input)="newHighlight.set($any($event.target).value)"
           (keydown.enter)="addHighlight()"
         />
+        <button class="add-button" [disabled]="highlights().length >= 10" (click)="addHighlight()">
+          <span class="material-symbols-rounded">add</span>
+        </button>
         <button class="add-button" (click)="addHighlight()">
           <span class="material-symbols-rounded">add</span>
         </button>
@@ -133,6 +146,7 @@
       <div class="add-row">
         <input
           type="text"
+          maxlength="60"
           placeholder="Tag-Name..."
           [value]="newTagName()"
           (input)="newTagName.set($any($event.target).value)"
@@ -153,7 +167,7 @@
             ></button>
           }
         </div>
-        <button class="add-button" (click)="addTag()">
+        <button class="add-button" [disabled]="tags().length >= 10" (click)="addTag()">
           <span class="material-symbols-rounded">add</span>
         </button>
       </div>

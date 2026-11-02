@@ -60,6 +60,7 @@
         <label>Auftrags-Referenz</label>
         <input
           type="text"
+          maxlength="60"
           [placeholder]="buyerReferencePlaceholder()"
           [value]="buyerReference()"
           (input)="buyerReference.set($any($event.target).value)"
@@ -69,6 +70,7 @@
         <label>Zahlungsziel (Tage)</label>
         <input
           type="text"
+          maxlength="3"
           [value]="paymentTermsDays()"
           (input)="paymentTermsDays.set($any($event.target).value)"
         />
@@ -140,6 +142,7 @@
         <div class="free-position-row">
           <input
             type="text"
+            maxlength="300"
             class="free-description"
             placeholder="Freie Position, z. B. Gerät (Hardware)"
             [value]="freeDescription()"
@@ -147,6 +150,7 @@
           />
           <input
             type="text"
+            maxlength="12"
             class="free-quantity"
             placeholder="Menge"
             [value]="freeQuantity()"
@@ -154,6 +158,7 @@
           />
           <input
             type="text"
+            maxlength="12"
             class="free-price"
             placeholder="Preis netto"
             [value]="freeUnitPrice()"

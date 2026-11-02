@@ -10,6 +10,7 @@
     <label [class.warning]="showWarning()">Titel *</label>
     <input
       type="text"
+      maxlength="160"
       [value]="title()"
       (input)="title.set($any($event.target).value); showWarning.set(false)"
     />
@@ -19,9 +20,11 @@
     <label>Beschreibung</label>
     <textarea
       rows="2"
+      maxlength="500"
       [value]="description()"
       (input)="description.set($any($event.target).value)"
     ></textarea>
+    <app-char-counter [value]="description()" [max]="500" />
   </div>
 
   <div class="field-row">
@@ -33,6 +36,7 @@
       <label>Preis (optional, in €)</label>
       <input
         type="text"
+        maxlength="12"
         placeholder="z. B. 850,00"
         [value]="priceAmount()"
         (input)="priceAmount.set($any($event.target).value)"

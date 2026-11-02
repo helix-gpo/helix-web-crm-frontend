@@ -13,6 +13,7 @@
       <label [class.warning]="showCompanyNameWarning()">Firmenname *</label>
       <input
         type="text"
+        maxlength="160"
         placeholder="z. B. Musterfirma GmbH"
         [value]="companyName()"
         (input)="companyName.set($any($event.target).value); showCompanyNameWarning.set(false)"
@@ -25,13 +26,19 @@
         <label>Rechtsform / Vollständiger Name</label>
         <input
           type="text"
+          maxlength="160"
           [value]="legalName()"
           (input)="legalName.set($any($event.target).value)"
         />
       </div>
       <div class="field">
         <label>USt-ID</label>
-        <input type="text" [value]="vatId()" (input)="vatId.set($any($event.target).value)" />
+        <input
+          type="text"
+          maxlength="20"
+          [value]="vatId()"
+          (input)="vatId.set($any($event.target).value)"
+        />
       </div>
     </div>
 
@@ -42,6 +49,7 @@
         >
         <input
           type="text"
+          maxlength="12"
           placeholder="z. B. MBS"
           [value]="referenceCode()"
           (input)="
@@ -58,6 +66,7 @@
         <label>Kontakt-Email</label>
         <input
           type="email"
+          maxlength="254"
           [value]="contactEmail()"
           (input)="contactEmail.set($any($event.target).value)"
         />
@@ -66,6 +75,7 @@
         <label>Telefon</label>
         <input
           type="text"
+          maxlength="30"
           [value]="contactPhone()"
           (input)="contactPhone.set($any($event.target).value)"
         />
@@ -75,7 +85,12 @@
     <div class="field-row">
       <div class="field field--full">
         <label>Straße</label>
-        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
+        <input
+          type="text"
+          maxlength="120"
+          [value]="street()"
+          (input)="street.set($any($event.target).value)"
+        />
       </div>
     </div>
 
@@ -84,6 +99,7 @@
         <label>Nr.</label>
         <input
           type="text"
+          maxlength="20"
           [value]="houseNumber()"
           (input)="houseNumber.set($any($event.target).value)"
         />
@@ -92,13 +108,19 @@
         <label>PLZ</label>
         <input
           type="text"
+          maxlength="10"
           [value]="postalCode()"
           (input)="postalCode.set($any($event.target).value)"
         />
       </div>
       <div class="field">
         <label>Ort</label>
-        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
+        <input
+          type="text"
+          maxlength="80"
+          [value]="city()"
+          (input)="city.set($any($event.target).value)"
+        />
       </div>
     </div>
   </div>
@@ -138,6 +160,7 @@
               <label>Vorname</label>
               <input
                 type="text"
+                maxlength="100"
                 [value]="partner.firstName"
                 (input)="updatePartnerField($index, 'firstName', $any($event.target).value)"
               />
@@ -146,6 +169,7 @@
               <label>Nachname</label>
               <input
                 type="text"
+                maxlength="100"
                 [value]="partner.lastName"
                 (input)="updatePartnerField($index, 'lastName', $any($event.target).value)"
               />
@@ -157,6 +181,7 @@
               <label>Rolle</label>
               <input
                 type="text"
+                maxlength="100"
                 placeholder="z. B. Geschäftsführer"
                 [value]="partner.role"
                 (input)="updatePartnerField($index, 'role', $any($event.target).value)"
@@ -166,6 +191,7 @@
               <label>Email</label>
               <input
                 type="email"
+                maxlength="254"
                 [value]="partner.email"
                 (input)="updatePartnerField($index, 'email', $any($event.target).value)"
               />
@@ -174,6 +200,7 @@
               <label>Telefon</label>
               <input
                 type="text"
+                maxlength="30"
                 [value]="partner.phone"
                 (input)="updatePartnerField($index, 'phone', $any($event.target).value)"
               />

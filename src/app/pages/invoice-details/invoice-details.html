@@ -199,12 +199,14 @@
           <div class="header-edit-form">
             <input
               type="text"
+              maxlength="60"
               placeholder="Auftrags-Referenz"
               [value]="headerBuyerReference()"
               (input)="headerBuyerReference.set($any($event.target).value)"
             />
             <input
               type="text"
+              maxlength="3"
               placeholder="Zahlungsziel (Tage)"
               [value]="headerPaymentTermsDays()"
               (input)="headerPaymentTermsDays.set($any($event.target).value)"

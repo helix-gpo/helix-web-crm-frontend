@@ -4,10 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { ProjectApi } from '../../../core/projects/project-api';
 import { Project, ProjectStatus } from '../../../model/project';
 import { getContrastTextColor } from '../../../util/color-contrast';
+import { CharCounter } from '../../../shared/char-counter/char-counter';
 
 @Component({
   selector: 'app-edit-project-dialog',
-  imports: [],
+  imports: [CharCounter],
   templateUrl: './edit-project-dialog.html',
   styleUrl: './edit-project-dialog.scss',
 })

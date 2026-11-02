@@ -2,10 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Tenant } from '../../../model/tenant';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TenantStore } from '../../../core/tenants/tenant-store';
+import { CharCounter } from '../../../shared/char-counter/char-counter';
 
 @Component({
   selector: 'app-edit-tenant-dialog',
-  imports: [],
+  imports: [CharCounter],
   templateUrl: './edit-tenant-dialog.html',
   styleUrl: './edit-tenant-dialog.scss',
 })

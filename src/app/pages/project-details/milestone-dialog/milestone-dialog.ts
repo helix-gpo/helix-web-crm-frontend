@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { ProjectApi } from '../../../core/projects/project-api';
 import { Milestone, MilestoneStatus } from '../../../model/project';
+import { CharCounter } from '../../../shared/char-counter/char-counter';
 
 export interface MilestoneDialogData {
   projectId: string;
@@ -11,7 +12,7 @@ export interface MilestoneDialogData {
 
 @Component({
   selector: 'app-milestone-dialog',
-  imports: [],
+  imports: [CharCounter],
   templateUrl: './milestone-dialog.html',
   styleUrl: './milestone-dialog.scss',
 })

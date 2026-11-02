@@ -14,6 +14,7 @@
         <label>Kontakt-Email</label>
         <input
           type="email"
+          maxlength="254"
           [value]="contactEmail()"
           (input)="contactEmail.set($any($event.target).value)"
         />
@@ -22,6 +23,7 @@
         <label>Telefon</label>
         <input
           type="text"
+          maxlength="30"
           [value]="contactPhone()"
           (input)="contactPhone.set($any($event.target).value)"
         />
@@ -31,7 +33,12 @@
     <div class="field-row">
       <div class="field field--full">
         <label>Straße</label>
-        <input type="text" [value]="street()" (input)="street.set($any($event.target).value)" />
+        <input
+          type="text"
+          maxlength="120"
+          [value]="street()"
+          (input)="street.set($any($event.target).value)"
+        />
       </div>
     </div>
 
@@ -40,6 +47,7 @@
         <label>Nr.</label>
         <input
           type="text"
+          maxlength="20"
           [value]="houseNumber()"
           (input)="houseNumber.set($any($event.target).value)"
         />
@@ -48,13 +56,19 @@
         <label>PLZ</label>
         <input
           type="text"
+          maxlength="10"
           [value]="postalCode()"
           (input)="postalCode.set($any($event.target).value)"
         />
       </div>
       <div class="field">
         <label>Ort</label>
-        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" />
+        <input
+          type="text"
+          maxlength="80"
+          [value]="city()"
+          (input)="city.set($any($event.target).value)"
+        />
       </div>
     </div>
 
@@ -63,6 +77,7 @@
         <label>Website</label>
         <input
           type="url"
+          maxlength="500"
           placeholder="https://beispiel.de"
           [value]="websiteUrl()"
           (input)="websiteUrl.set($any($event.target).value)"
@@ -77,10 +92,12 @@
       <div class="field field--full">
         <textarea
           rows="4"
+          maxlength="10000"
           placeholder="Interne Notizen zu diesem Mandanten..."
           [value]="notes()"
           (input)="notes.set($any($event.target).value)"
         ></textarea>
+        <app-char-counter [value]="notes()" [max]="10000" />
       </div>
     </div>
   </div>

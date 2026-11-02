@@ -11,6 +11,7 @@
       <label [class.warning]="showNameWarning()">Name *</label>
       <input
         type="text"
+        maxlength="60"
         placeholder="z. B. Junior Developer"
         [value]="name()"
         (input)="name.set($any($event.target).value); showNameWarning.set(false)"
@@ -22,6 +23,7 @@
     <label>Beschreibung</label>
     <input
       type="text"
+      maxlength="255"
       placeholder="optional"
       [value]="description()"
       (input)="description.set($any($event.target).value)"

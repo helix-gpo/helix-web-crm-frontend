@@ -11,6 +11,7 @@
     <label>Rechnungs-E-Mail-Adresse</label>
     <input
       type="email"
+      maxlength="254"
       placeholder="rechnung@mandant.de"
       [value]="email()"
       (input)="email.set($any($event.target).value)"

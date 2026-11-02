@@ -4,6 +4,7 @@ import { ProjectStore } from '../../../core/projects/project-store';
 import { TenantStore } from '../../../core/tenants/tenant-store';
 import { getContrastTextColor } from '../../../util/color-contrast';
 import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
+import { CharCounter } from '../../../shared/char-counter/char-counter';
 
 export interface CreateProjectDialogData {
   initialStatus?: ProjectStatus;
@@ -12,7 +13,7 @@ export interface CreateProjectDialogData {
 
 @Component({
   selector: 'app-create-project-dialog',
-  imports: [],
+  imports: [CharCounter],
   templateUrl: './create-project-dialog.html',
   styleUrl: './create-project-dialog.scss',
 })
@@ -72,7 +73,7 @@ export class CreateProjectDialog {
 
   addHighlight(): void {
     const value = this.newHighlight().trim();
-    if (!value) return;
+    if (!value || this.highlights().length >= 10) return;
     this.highlights.update((list) => [...list, value]);
     this.newHighlight.set('');
   }
@@ -83,7 +84,7 @@ export class CreateProjectDialog {
 
   addTag(): void {
     const value = this.newTagName().trim();
-    if (!value) return;
+    if (!value || this.tags().length >= 10) return;
     this.tags.update((list) => [...list, { value, colorHex: this.newTagColor() }]);
     this.newTagName.set('');
   }

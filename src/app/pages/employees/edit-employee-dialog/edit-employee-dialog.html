@@ -11,6 +11,7 @@
       <label [class.warning]="showWarning() && !firstName().trim()">Vorname *</label>
       <input
         type="text"
+        maxlength="100"
         [value]="firstName()"
         (input)="firstName.set($any($event.target).value); showWarning.set(false)"
       />
@@ -19,6 +20,7 @@
       <label [class.warning]="showWarning() && !lastName().trim()">Nachname *</label>
       <input
         type="text"
+        maxlength="100"
         [value]="lastName()"
         (input)="lastName.set($any($event.target).value); showWarning.set(false)"
       />
