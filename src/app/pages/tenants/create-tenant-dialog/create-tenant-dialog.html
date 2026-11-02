@@ -182,6 +182,10 @@
         </div>
       }
 
+      @if (showPartnerNameWarning()) {
+        <p class="partner-warning">Bitte bei jedem Partner Vor- und Nachnamen angeben.</p>
+      }
+
       <button class="add-partner-button" type="button" (click)="addPartnerRow()">
         <span class="material-symbols-rounded">add</span>
         <span>Weiteren Partner hinzufügen</span>

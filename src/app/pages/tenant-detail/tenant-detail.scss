@@ -152,6 +152,39 @@
   }
 }
 
+.project-row--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  .project-title {
+    transition: color 0.15s;
+  }
+
+  &:hover {
+    .project-title {
+      color: var(--accent-cyan-active);
+    }
+
+    .project-row-chevron {
+      transform: translateX(0.2rem);
+      color: var(--accent-cyan-active);
+    }
+  }
+}
+
+.project-row-end {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.project-row-chevron {
+  font-size: 2rem;
+  color: var(--text-grey);
+  transition: transform 0.15s;
+}
+
 .partner-row,
 .project-row {
   display: flex;
@@ -159,10 +192,6 @@
   gap: 1.2rem;
   padding: 1.2rem 0;
   border-top: 1px solid var(--bg-light);
-
-  &:first-of-type {
-    border-top: none;
-  }
 }
 
 .project-row {

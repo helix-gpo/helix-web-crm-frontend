@@ -161,18 +161,25 @@
           <span class="count-badge">{{ projects().length }}</span>
         </div>
         @for (project of projects(); track project.id) {
-          <div class="project-row">
+          <a
+            class="project-row project-row--link"
+            [routerLink]="['/projects', project.id]"
+            [state]="{ backTo: '/tenants/' + id() }"
+          >
             <div>
               <p class="project-title">{{ project.title }}</p>
               <p class="project-meta">{{ project.milestones.length }} Meilensteine</p>
             </div>
-            <span
-              class="status-badge status-badge--project"
-              [class]="'status-badge--' + project.status.toLowerCase()"
-            >
-              {{ projectStatusLabels[project.status] }}
-            </span>
-          </div>
+            <div class="project-row-end">
+              <span
+                class="status-badge status-badge--project"
+                [class]="'status-badge--' + project.status.toLowerCase()"
+              >
+                {{ projectStatusLabels[project.status] }}
+              </span>
+              <span class="material-symbols-rounded project-row-chevron">chevron_right</span>
+            </div>
+          </a>
         } @empty {
           <p class="empty-hint">Noch keine Projekte für diesen Mandanten.</p>
         }

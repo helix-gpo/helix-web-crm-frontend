@@ -29,6 +29,7 @@ import {
 
 type ViewMode = 'kanban' | 'list';
 type ProjectSortKey = 'title' | 'tenantName' | 'status';
+const TENANT_FILTER_KEY = 'tenantId';
 
 @Component({
   selector: 'app-projects',
@@ -95,7 +96,10 @@ export class Projects {
       this.viewMode() === 'kanban'
         ? this.baseFilterFields.filter((field) => field.key !== 'status')
         : this.baseFilterFields;
-    return withCreatorFilter(fields, this.projectStore.projects());
+    return withCreatorFilter(
+      [...fields, ...this.tenantFilterField()],
+      this.projectStore.projects(),
+    );
   });
 
   readonly activeFilterCount = computed(() =>
@@ -134,6 +138,9 @@ export class Projects {
         filters['visibleOnWebsite'].includes(String(p.visibleOnWebsite)),
       );
     }
+    if (filters[TENANT_FILTER_KEY]?.length) {
+      projects = projects.filter((p) => filters[TENANT_FILTER_KEY].includes(p.tenantId));
+    }
     if (filters[CREATOR_FILTER_KEY]?.length) {
       projects = projects.filter((p) => matchesCreator(filters[CREATOR_FILTER_KEY], p.createdBy));
     }
@@ -151,6 +158,17 @@ export class Projects {
     };
     this.searchedProjects().forEach((p) => grouped[p.status].push(p));
     return grouped;
+  });
+
+  private readonly tenantFilterField = computed<FilterFieldConfig[]>(() => {
+    const tenantIds = new Set(this.projectStore.projects().map((p) => p.tenantId));
+    const options = [...tenantIds]
+      .map((id) => ({ value: id, label: this.tenantName(id) }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'de'));
+
+    return options.length > 0
+      ? [{ key: TENANT_FILTER_KEY, label: 'Mandant', variant: 'dropdown', options }]
+      : [];
   });
 
   readonly filteredListProjects = computed(() => {

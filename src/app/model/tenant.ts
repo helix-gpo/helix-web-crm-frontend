@@ -36,6 +36,7 @@ export interface CreateTenantRequest {
   address?: Address;
   contactEmail?: string;
   contactPhone?: string;
+  partners?: CreatePartnerRequest[];
 }
 
 export interface UpdateTenantContactDetailsRequest {
@@ -72,6 +73,7 @@ export interface CreatePartnerRequest {
   role?: string;
   email?: string;
   phone?: string;
+  partners?: CreatePartnerRequest[];
 }
 
 export interface UpdatePartnerRequest {

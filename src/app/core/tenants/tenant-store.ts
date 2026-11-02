@@ -38,15 +38,8 @@ export class TenantStore {
     this.tenantsResource.reload();
   }
 
-  async create(request: CreateTenantRequest, partners?: CreatePartnerRequest[]): Promise<Tenant> {
+  async create(request: CreateTenantRequest): Promise<Tenant> {
     const tenant = await firstValueFrom(this.tenantApi.create(request));
-
-    if (partners && partners.length > 0) {
-      for (const partner of partners) {
-        await firstValueFrom(this.tenantApi.addPartner(tenant.id, partner));
-      }
-    }
-
     this.reload();
     return tenant;
   }

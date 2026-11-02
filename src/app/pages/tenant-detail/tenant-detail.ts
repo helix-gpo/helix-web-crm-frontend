@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { Avatar } from '../../util/avatar/avatar';
@@ -25,7 +25,7 @@ import { Permissions } from '../../core/access/permissions';
 
 @Component({
   selector: 'app-tenant-detail',
-  imports: [Avatar, MatDialogModule, ImageUpload, AuditInfo, RequiresPermission],
+  imports: [Avatar, MatDialogModule, ImageUpload, AuditInfo, RequiresPermission, RouterLink],
   templateUrl: './tenant-detail.html',
   styleUrl: './tenant-detail.scss',
 })

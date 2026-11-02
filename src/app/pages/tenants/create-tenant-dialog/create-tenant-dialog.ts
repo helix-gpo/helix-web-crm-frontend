@@ -37,6 +37,8 @@ export class CreateTenantDialog {
   readonly postalCode = signal('');
   readonly city = signal('');
 
+  readonly showPartnerNameWarning = signal(false);
+
   // Optionale Partner - beliebig viele
   readonly includePartner = signal(false);
   readonly partners = signal<PartnerDraft[]>([emptyPartnerDraft()]);
@@ -87,6 +89,16 @@ export class CreateTenantDialog {
       return;
     }
 
+    // rows with any input count as intended - they need first and last name
+    const filledRows = this.includePartner()
+      ? this.partners().filter((p) => Object.values(p).some((v) => v.trim()))
+      : [];
+    const incomplete = filledRows.some((p) => !p.firstName.trim() || !p.lastName.trim());
+    this.showPartnerNameWarning.set(incomplete);
+    if (incomplete) {
+      return;
+    }
+
     this.submitting.set(true);
 
     const request: CreateTenantRequest = {
@@ -106,24 +118,17 @@ export class CreateTenantDialog {
               countryCode: 'DE',
             }
           : undefined,
+      partners: filledRows.map((p) => ({
+        firstName: p.firstName.trim(),
+        lastName: p.lastName.trim(),
+        role: p.role.trim() || undefined,
+        email: p.email.trim() || undefined,
+        phone: p.phone.trim() || undefined,
+      })),
     };
 
-    // Nur Zeilen mit ausgefülltem Vor- und Nachnamen wirklich anlegen -
-    // leere Zusatzzeilen (z.B. durch versehentliches Plus-Klicken) werden ignoriert
-    const partners: CreatePartnerRequest[] = this.includePartner()
-      ? this.partners()
-          .filter((p) => p.firstName.trim() && p.lastName.trim())
-          .map((p) => ({
-            firstName: p.firstName.trim(),
-            lastName: p.lastName.trim(),
-            role: p.role.trim() || undefined,
-            email: p.email.trim() || undefined,
-            phone: p.phone.trim() || undefined,
-          }))
-      : [];
-
     try {
-      const tenant = await this.tenantStore.create(request, partners);
+      const tenant = await this.tenantStore.create(request);
       this.dialogRef.close(tenant);
     } finally {
       this.submitting.set(false);
