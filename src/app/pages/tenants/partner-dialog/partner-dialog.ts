@@ -3,6 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { TenantApi } from '../../../core/tenants/tenant-api';
 import { Partner } from '../../../model/tenant';
+import { Toast } from '../../../core/toast/toast';
+import { ImageUpload } from '../../../shared/image-upload/image-upload';
 import { isValidEmail } from '../../../util/validation/email';
 
 export interface PartnerDialogData {

@@ -10931,6 +10931,268 @@ export class RequestTestimonialDialog {
 }
 </file>
 
+<file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.scss">
+@use '../../../../styles/mixins' as *;
+
+.dialog-header {
+  @include flex-between;
+  padding: 2.4rem 2.4rem 0;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+}
+
+.close-button {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+  }
+}
+
+.dialog-body {
+  padding: 2rem 2.4rem;
+  box-sizing: border-box; // stellt sicher, dass Padding NICHT zur Breite addiert wird
+  max-height: 60vh;
+  overflow-y: auto;
+  @include flex-col(2.4rem);
+}
+
+.field-group {
+  @include flex-col(1.4rem);
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-muted);
+}
+
+.section-title-row {
+  @include flex-between;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  input {
+    accent-color: var(--accent-cyan);
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  width: 100%;
+
+  &--three {
+    grid-template-columns: 8rem 8rem 1fr;
+  }
+}
+
+.field {
+  @include flex-col(0.6rem);
+  min-width: 0; // verhindert, dass Inputs die Grid-Spalte sprengen
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  &--wide {
+    grid-column: span 2;
+  }
+
+  &--small {
+    max-width: 10rem;
+  }
+
+  &--small input {
+    text-align: center;
+  }
+
+  label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-light);
+
+    &.warning {
+      color: var(--accent-pink);
+    }
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    transition: all 0.2s;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+.dialog-footer {
+  @include flex-between;
+  padding: 1.6rem 2.4rem 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+}
+
+.cancel-button {
+  @include button-base;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.submit-button {
+  @include button-base;
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+  box-shadow: var(--shadow-cyan);
+  min-width: 14rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.field input {
+  // ... bestehende Styles bleiben ...
+
+  // Browser überschreiben bei Autofill die Hintergrundfarbe unabhängig
+  // von normalem CSS - dieser Trick mit riesigem inset-box-shadow
+  // "übermalt" den Autofill-Hintergrund zuverlässig
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-light);
+    -webkit-box-shadow: 0 0 0 100rem rgba(255, 255, 255, 0.05) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+.partner-block {
+  @include flex-col(1.2rem);
+  padding: 1.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.02);
+
+  &:not(:last-of-type) {
+    margin-bottom: 1.2rem;
+  }
+}
+
+.partner-block-header {
+  @include flex-between;
+}
+
+.partner-block-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+}
+
+.remove-partner-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover {
+    background-color: rgba(255, 71, 87, 0.12);
+    color: #ff4757;
+  }
+}
+
+.add-partner-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-color);
+  background: none;
+  color: var(--accent-cyan);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(3, 219, 255, 0.06);
+  }
+}
+</file>
+
 <file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.html">
 <div class="dialog-header dialog-header--warning">
   <div>
@@ -18657,6 +18919,1337 @@ export class CreateInvoiceDialog {
       // error toast is shown by errorInterceptor
     } finally {
       this.submitting.set(false);
+    }
+  }
+}
+</file>
+
+<file path="src/app/pages/invoices/invoices.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Rechnungen</h1>
+    <p class="page-subtitle">
+      {{ filteredInvoices().length }} von {{ invoiceStore.invoices().length }} Rechnungen
+    </p>
+  </div>
+  <button class="add-button" (click)="openCreateDialog()" appRequires="INVOICE:WRITE">
+    <span class="material-symbols-rounded">add</span>
+    <span>Neue Rechnung</span>
+  </button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="material-symbols-rounded">payments</span>
+    <div>
+      <p class="stat-value">{{ openAmount() | number: '1.2-2' : 'de' }} €</p>
+      <p class="stat-label">Offener Betrag</p>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card--warning">
+    <span class="material-symbols-rounded">warning</span>
+    <div>
+      <p class="stat-value">{{ overdueCount() }}</p>
+      <p class="stat-label">Überfällig</p>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card--muted">
+    <span class="material-symbols-rounded">edit_note</span>
+    <div>
+      <p class="stat-value">{{ draftCount() }}</p>
+      <p class="stat-label">Entwürfe</p>
+    </div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Rechnungsnummer oder Mandant suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+</div>
+
+@if (invoiceStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Rechnungen werden geladen...</p>
+  </div>
+} @else {
+  <div class="invoices-table">
+    <div class="table-row table-row--header">
+      <app-sortable-header
+        label="Nummer"
+        [direction]="sortDirectionFor('invoiceNumber')"
+        (clicked)="toggleSort('invoiceNumber')"
+      />
+      <app-sortable-header
+        label="Mandant"
+        [direction]="sortDirectionFor('tenantName')"
+        (clicked)="toggleSort('tenantName')"
+      />
+      <app-sortable-header
+        label="Ausgestellt"
+        [direction]="sortDirectionFor('issueDate')"
+        (clicked)="toggleSort('issueDate')"
+      />
+      <app-sortable-header
+        label="Fällig"
+        [direction]="sortDirectionFor('dueDate')"
+        (clicked)="toggleSort('dueDate')"
+      />
+      <app-sortable-header
+        label="Betrag"
+        [direction]="sortDirectionFor('amount')"
+        (clicked)="toggleSort('amount')"
+      />
+      <app-sortable-header
+        label="Status"
+        [direction]="sortDirectionFor('status')"
+        (clicked)="toggleSort('status')"
+      />
+      <span>Angelegt</span>
+    </div>
+
+    @for (invoice of filteredInvoices(); track invoice.id) {
+      <div class="table-row" (click)="openInvoice(invoice.id)">
+        <span class="invoice-number">{{ invoice.invoiceNumber || '- (Entwurf)' }}</span>
+        <span>{{ tenantName(invoice.tenantId) }}</span>
+        <span>{{ invoice.issueDate || '-' }}</span>
+        <span>{{ invoice.dueDate || '-' }}</span>
+        <span class="amount-cell">{{ formatAmount(invoice) }}</span>
+        <span
+          class="status-badge"
+          [class]="'status-badge--invoice-' + invoice.status.toLowerCase()"
+        >
+          {{ statusLabels[invoice.status] }}
+        </span>
+        <app-audit-cell [user]="invoice.createdBy" [date]="invoice.createdAt" />
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">receipt_long</span>
+        <p>Keine Rechnungen gefunden</p>
+      </div>
+    }
+  </div>
+}
+</file>
+
+<file path="src/app/pages/tenant-detail/tenant-detail.scss">
+@use '../../../styles/mixins' as *;
+
+.detail-hero {
+  background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
+  padding: 4rem 3.2rem 5.6rem;
+  position: relative;
+  overflow: hidden;
+  margin: -3.2rem -3.2rem 0;
+}
+
+.detail-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px);
+  background-size: 2.4rem 2.4rem;
+  mask-image: linear-gradient(180deg, black, transparent);
+}
+
+.detail-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 100rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 0.8rem;
+  padding: 0.6rem 1.4rem 0.6rem 1rem;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  cursor: pointer;
+  margin-bottom: 2.4rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo-upload-placeholder {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.logo-upload-placeholder-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 20, 36, 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  .material-symbols-rounded {
+    color: #fff;
+    font-size: 2rem;
+  }
+}
+
+.logo-upload-placeholder:hover .logo-upload-placeholder-overlay {
+  opacity: 1;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.4rem;
+}
+
+.hero-legal {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.detail-body {
+  max-width: 100rem;
+  margin: -3.2rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr 30rem;
+  gap: 2.4rem;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 3.2rem;
+
+  @include respond(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-main {
+  @include flex-col(2rem);
+}
+
+.info-card {
+  @include card-surface;
+  padding: 2.4rem;
+}
+
+.info-card-header {
+  @include flex-between;
+  margin-bottom: 1.6rem;
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.6rem;
+}
+
+.info-card-header .info-card-title {
+  margin-bottom: 0;
+}
+
+.count-badge {
+  background-color: var(--bg-light);
+  color: var(--text-grey);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.2rem 1rem;
+  border-radius: 50rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem 0;
+  font-size: 1.4rem;
+  color: var(--text-dark);
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+    font-size: 2rem;
+  }
+}
+
+.partner-row,
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--bg-light);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.project-row {
+  justify-content: space-between;
+}
+
+.partner-name,
+.project-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.partner-role,
+.project-meta {
+  font-size: 1.2rem;
+  color: var(--text-grey);
+}
+
+.empty-hint {
+  font-size: 1.3rem;
+  color: var(--text-grey);
+  padding: 1.2rem 0;
+}
+
+.detail-sidebar {
+  @include flex-col(1.6rem);
+}
+
+.sidebar-card {
+  @include card-surface;
+  padding: 2rem;
+
+  &--dark {
+    background-color: var(--main-navy);
+    border: none;
+  }
+}
+
+.sidebar-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04rem;
+  color: var(--text-grey);
+  margin-bottom: 1.2rem;
+
+  &--light {
+    color: var(--text-muted);
+  }
+}
+
+.website-status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 2.2rem;
+  }
+
+  &--active {
+    color: var(--accent-cyan-hover);
+  }
+}
+
+.sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1rem 0.8rem;
+  color: var(--text-light);
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-align: left;
+
+  .material-symbols-rounded {
+    color: var(--accent-cyan);
+  }
+
+  .sidebar-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .sidebar-action-hint {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #ffb020;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &.sidebar-action--disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+
+    .material-symbols-rounded {
+      color: #ffb020;
+    }
+
+    .sidebar-action-text > span:first-child {
+      color: var(--text-muted);
+    }
+
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}
+
+.status-badge--project {
+  &.status-badge--lead {
+    background-color: var(--accent-cyan-light);
+    color: var(--accent-cyan-hover);
+  }
+  &.status-badge--in_progress {
+    background-color: var(--warning-light);
+    color: var(--warning);
+  }
+  &.status-badge--on_hold {
+    background-color: var(--bg-light);
+    color: var(--text-grey);
+  }
+  &.status-badge--completed {
+    background-color: var(--success-light);
+    color: var(--success);
+  }
+  &.status-badge--cancelled {
+    background-color: var(--danger-light);
+    color: var(--danger);
+  }
+}
+
+.state-panel {
+  @include flex-col(1.2rem);
+  align-items: center;
+  padding: 6.4rem 2rem;
+  color: var(--text-grey);
+
+  .material-symbols-rounded {
+    font-size: 3.6rem;
+    color: var(--accent-cyan);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.add-icon-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-cyan-light);
+  color: var(--accent-cyan-hover);
+  cursor: pointer;
+  @include flex-center;
+
+  &:hover {
+    background-color: var(--accent-cyan);
+    color: var(--text-light);
+  }
+}
+
+.partner-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.partner-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.partner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.partner-actions {
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.partner-row:hover .partner-actions {
+  opacity: 1;
+}
+
+.icon-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-grey);
+  cursor: pointer;
+  outline: none;
+  @include flex-center;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--bg-light) !important;
+  }
+
+  &--danger {
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--danger) !important;
+      color: var(--text-light) !important;
+    }
+  }
+
+  &--locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+
+    &:hover,
+    &:focus-visible {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.partner-invitation-status {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+</file>
+
+<file path="src/app/pages/testimonials/testimonials.html">
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Referenzen</h1>
+    <p class="page-subtitle">
+      {{ filteredTestimonials().length }} von
+      {{ testimonialStore.testimonials().length }} Referenzen
+    </p>
+  </div>
+</div>
+
+<div class="tabs">
+  @for (tab of tabs; track tab.status) {
+    <button
+      class="tab"
+      [class.tab--active]="activeTab() === tab.status"
+      (click)="activeTab.set(tab.status)"
+    >
+      {{ tab.label }}
+      @if (tab.status === 'PENDING_REVIEW' && pendingCount() > 0) {
+        <span class="tab-badge">{{ pendingCount() }}</span>
+      }
+    </button>
+  }
+</div>
+
+<div class="filter-bar">
+  <div class="filter-search">
+    <span class="material-symbols-rounded">search</span>
+    <input
+      type="text"
+      placeholder="Partner, Firma oder Text suchen..."
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+    />
+  </div>
+
+  <select
+    class="sort-select"
+    [value]="sortOption()"
+    (change)="sortOption.set($any($event.target).value)"
+  >
+    @for (option of sortOptions; track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+
+  <button class="filter-button" (click)="openFilterDialog()">
+    <span class="material-symbols-rounded">filter_list</span>
+    <span>Filter</span>
+    @if (activeFilterCount() > 0) {
+      <span class="filter-count-badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+</div>
+
+@if (testimonialStore.loading()) {
+  <div class="state-panel">
+    <span class="material-symbols-rounded spin">progress_activity</span>
+    <p>Referenzen werden geladen...</p>
+  </div>
+} @else {
+  <div class="testimonials-grid">
+    @for (testimonial of filteredTestimonials(); track testimonial.id) {
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          @if (testimonial.partnerPhotoUrl) {
+            <img class="cell-avatar-img" [src]="testimonial.partnerPhotoUrl" alt="" />
+          } @else {
+            <app-avatar [name]="testimonial.partnerName"></app-avatar>
+          }
+          <div class="testimonial-stars">
+            @for (i of ratingArray; track i) {
+              <span
+                class="material-symbols-rounded star"
+                [class.star--filled]="i <= testimonial.rating"
+                >star</span
+              >
+            }
+          </div>
+        </div>
+
+        <div class="testimonial-tags">
+          <span class="status-tag" [class]="'status-tag--' + testimonial.status.toLowerCase()">
+            {{ statusLabels[testimonial.status] }}
+          </span>
+          <span class="website-tag" [class.website-tag--active]="testimonial.visibleOnWebsite">
+            <span class="material-symbols-rounded">
+              {{ testimonial.visibleOnWebsite ? 'visibility' : 'visibility_off' }}
+            </span>
+            {{ testimonial.visibleOnWebsite ? 'Auf Website' : 'Nicht auf Website' }}
+          </span>
+        </div>
+
+        <p class="testimonial-description">"{{ testimonial.description }}"</p>
+
+        <div class="testimonial-footer">
+          <p class="testimonial-name">{{ testimonial.partnerName }}</p>
+          <p class="testimonial-role">
+            {{ testimonial.partnerRole }} · {{ testimonial.companyName }}
+          </p>
+        </div>
+
+        @if (testimonial.status === 'PENDING_REVIEW') {
+          <div class="testimonial-actions">
+            <button
+              class="action-button action-button--approve"
+              [disabled]="processingId() === testimonial.id"
+              (click)="approve(testimonial.id)"
+              appRequires="TESTIMONIAL:WRITE"
+            >
+              <span class="material-symbols-rounded">check</span>
+              <span>Freigeben</span>
+            </button>
+            <button
+              class="action-button action-button--reject"
+              [disabled]="processingId() === testimonial.id"
+              (click)="reject(testimonial.id)"
+              appRequires="TESTIMONIAL:WRITE"
+            >
+              <span class="material-symbols-rounded">close</span>
+              <span>Ablehnen</span>
+            </button>
+          </div>
+        } @else if (testimonial.status === 'APPROVED') {
+          <div class="testimonial-actions">
+            @if (testimonial.visibleOnWebsite) {
+              <button
+                class="action-button action-button--reject"
+                [disabled]="processingId() === testimonial.id"
+                (click)="unpublish(testimonial.id)"
+                appRequires="TESTIMONIAL:WRITE"
+              >
+                <span class="material-symbols-rounded">visibility_off</span>
+                <span>Von Website entfernen</span>
+              </button>
+            } @else {
+              <button
+                class="action-button action-button--approve"
+                [disabled]="processingId() === testimonial.id"
+                (click)="publish(testimonial.id)"
+                appRequires="TESTIMONIAL:WRITE"
+              >
+                <span class="material-symbols-rounded">visibility</span>
+                <span>Auf Website veröffentlichen</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">rate_review</span>
+        <p>Keine Referenzen gefunden</p>
+      </div>
+    }
+  </div>
+}
+</file>
+
+<file path="src/app/pages/testimonials/testimonials.ts">
+import { Component, computed, inject, signal } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Avatar } from '../../util/avatar/avatar';
+import { TestimonialStore } from '../../core/testimonials/testimonial-store';
+import { Toast } from '../../core/toast/toast';
+import { TestimonialStatus } from '../../model/testimonial';
+import {
+  FilterDialog,
+  FilterFieldConfig,
+  ActiveFilters,
+} from '../../shared/filter-dialog/filter-dialog';
+import { RequiresPermission } from '../../core/access/requires-permission';
+
+type TabFilter = TestimonialStatus | 'ALL';
+type SortOption = 'newest' | 'oldest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
+
+@Component({
+  selector: 'app-testimonials',
+  imports: [Avatar, MatDialogModule, RequiresPermission],
+  templateUrl: './testimonials.html',
+  styleUrl: './testimonials.scss',
+})
+export class Testimonials {
+  protected readonly testimonialStore = inject(TestimonialStore);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(Toast);
+
+  readonly activeTab = signal<TabFilter>('ALL');
+  readonly ratingArray = [1, 2, 3, 4, 5];
+  readonly processingId = signal<string | null>(null);
+
+  readonly searchTerm = signal('');
+  readonly sortOption = signal<SortOption>('newest');
+  readonly activeFilters = signal<ActiveFilters>({});
+
+  readonly tabs: { status: TabFilter; label: string }[] = [
+    { status: 'ALL', label: 'Alle' },
+    { status: 'PENDING_REVIEW', label: 'Zur Prüfung' },
+    { status: 'APPROVED', label: 'Freigegeben' },
+    { status: 'REJECTED', label: 'Abgelehnt' },
+  ];
+
+  readonly statusLabels: Record<TestimonialStatus, string> = {
+    PENDING_REVIEW: 'Zur Prüfung',
+    APPROVED: 'Freigegeben',
+    REJECTED: 'Abgelehnt',
+  };
+
+  readonly sortOptions: { value: SortOption; label: string }[] = [
+    { value: 'newest', label: 'Neueste zuerst' },
+    { value: 'oldest', label: 'Älteste zuerst' },
+    { value: 'rating-desc', label: 'Bewertung: hoch zuerst' },
+    { value: 'rating-asc', label: 'Bewertung: niedrig zuerst' },
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'name-desc', label: 'Name (Z-A)' },
+  ];
+
+  readonly filterFields: FilterFieldConfig[] = [
+    {
+      key: 'visibleOnWebsite',
+      label: 'Website-Sichtbarkeit',
+      options: [
+        { value: 'true', label: 'Sichtbar' },
+        { value: 'false', label: 'Nicht sichtbar' },
+      ],
+    },
+    {
+      key: 'rating',
+      label: 'Bewertung',
+      options: [
+        { value: '5', label: '5 Sterne' },
+        { value: '4', label: '4 Sterne' },
+        { value: '3', label: '3 Sterne' },
+        { value: '2', label: '2 Sterne' },
+        { value: '1', label: '1 Stern' },
+      ],
+    },
+  ];
+
+  readonly activeFilterCount = computed(() =>
+    Object.values(this.activeFilters()).reduce((sum, values) => sum + values.length, 0),
+  );
+
+  readonly filteredTestimonials = computed(() => {
+    const tab = this.activeTab();
+    const term = this.searchTerm().toLowerCase().trim();
+    const filters = this.activeFilters();
+
+    let items = this.testimonialStore.testimonials();
+
+    if (tab !== 'ALL') {
+      items = items.filter((t) => t.status === tab);
+    }
+
+    if (term) {
+      items = items.filter(
+        (t) =>
+          t.partnerName.toLowerCase().includes(term) ||
+          t.companyName.toLowerCase().includes(term) ||
+          t.description.toLowerCase().includes(term),
+      );
+    }
+
+    if (filters['visibleOnWebsite']?.length) {
+      items = items.filter((t) => filters['visibleOnWebsite'].includes(String(t.visibleOnWebsite)));
+    }
+    if (filters['rating']?.length) {
+      items = items.filter((t) => filters['rating'].includes(String(t.rating)));
+    }
+
+    return [...items].sort((a, b) => {
+      switch (this.sortOption()) {
+        case 'newest':
+          return b.createdAt.localeCompare(a.createdAt);
+        case 'oldest':
+          return a.createdAt.localeCompare(b.createdAt);
+        case 'rating-desc':
+          return b.rating - a.rating;
+        case 'rating-asc':
+          return a.rating - b.rating;
+        case 'name-asc':
+          return a.partnerName.localeCompare(b.partnerName, 'de');
+        case 'name-desc':
+          return b.partnerName.localeCompare(a.partnerName, 'de');
+      }
+    });
+  });
+
+  readonly pendingCount = computed(
+    () => this.testimonialStore.testimonials().filter((t) => t.status === 'PENDING_REVIEW').length,
+  );
+
+  openFilterDialog(): void {
+    const dialogRef = this.dialog.open(FilterDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { fields: this.filterFields, active: this.activeFilters() },
+    });
+
+    dialogRef.afterClosed().subscribe((result?: ActiveFilters) => {
+      if (result) this.activeFilters.set(result);
+    });
+  }
+
+  async approve(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.approve(id);
+      this.toast.success('Referenz freigegeben');
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async reject(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.reject(id);
+      this.toast.success('Referenz abgelehnt');
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async publish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.publish(id);
+      this.toast.success('Referenz auf der Website veröffentlicht');
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+
+  async unpublish(id: string): Promise<void> {
+    this.processingId.set(id);
+    try {
+      await this.testimonialStore.unpublish(id);
+      this.toast.success('Referenz von der Website entfernt');
+    } finally {
+      this.processingId.set(null);
+    }
+  }
+}
+</file>
+
+<file path="src/app/app.html">
+@if (isPublicPage()) {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="/images/logo-no-bg.svg" alt="Helix GPO" class="sidebar-logo" />
+        <span class="sidebar-title">CRM</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <span class="material-symbols-rounded">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        @if (permissions.can('TENANT:READ')) {
+          <a class="nav-item" routerLink="/tenants" routerLinkActive="active">
+            <span class="material-symbols-rounded">apartment</span>
+            <span>Mandanten</span>
+          </a>
+        }
+        @if (permissions.can('PROJECT:READ')) {
+          <a class="nav-item" routerLink="/projects" routerLinkActive="active">
+            <span class="material-symbols-rounded">work</span>
+            <span>Projekte</span>
+          </a>
+        }
+        @if (permissions.can('INVOICE:READ')) {
+          <a class="nav-item" routerLink="/invoices" routerLinkActive="active">
+            <span class="material-symbols-rounded">receipt_long</span>
+            <span>Rechnungen</span>
+          </a>
+        }
+        @if (permissions.can('TESTIMONIAL:READ')) {
+          <a class="nav-item" routerLink="/testimonials" routerLinkActive="active">
+            <span class="material-symbols-rounded">rate_review</span>
+            <span>Referenzen</span>
+          </a>
+          <a class="nav-item" routerLink="/website" routerLinkActive="active">
+            <span class="material-symbols-rounded">language</span>
+            <span>Website</span>
+          </a>
+        }
+        @if (permissions.isAdmin()) {
+          <div class="nav-divider"></div>
+          <a class="nav-item" routerLink="/settings/roles" routerLinkActive="active">
+            <span class="material-symbols-rounded">shield_person</span>
+            <span>Rollen</span>
+          </a>
+          <a class="nav-item" routerLink="/settings/employees" routerLinkActive="active">
+            <span class="material-symbols-rounded">groups</span>
+            <span>Mitarbeiter</span>
+          </a>
+        }
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-search">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" placeholder="Suchen..." />
+        </div>
+
+        <div class="topbar-user">
+          <app-avatar [name]="auth.userName() ?? '?'" [size]="'3.6rem'"></app-avatar>
+          <span class="user-name">{{ auth.userName() ?? 'Wird geladen...' }}</span>
+          <button class="logout-button" (click)="auth.logout()">
+            <span class="material-symbols-rounded">logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+}
+</file>
+
+<file path="src/app/pages/invoice-details/invoice-details.ts">
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { InvoiceApi } from '../../core/invoices/invoice-api';
+import { InvoiceStore } from '../../core/invoices/invoice-store';
+import { TenantStore } from '../../core/tenants/tenant-store';
+import { ProjectStore } from '../../core/projects/project-store';
+import { Toast } from '../../core/toast/toast';
+import { ConfirmDialog } from '../../util/confirm-dialog/confirm-dialog';
+import { AddLineItemDialog } from './add-line-item-dialog/add-line-item-dialog';
+import {
+  Address,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  Money,
+  UpdateInvoiceHeaderRequest,
+} from '../../model/invoice';
+import { EditLineItemDialog } from './edit-line-item-dialog/edit-line-item-dialog';
+import {
+  IssueInvoiceDialog,
+  IssueInvoiceDialogResult,
+} from './issue-invoice-dialog/issue-invoice-dialog';
+import { SendInvoiceDialog } from './send-invoice-dialog/send-invoice-dialog';
+import { DatePipe } from '@angular/common';
+import { MarkPaidDialog } from './mark-paid-dialog/mark-paid-dialog';
+import { AuditInfo } from '../../shared/audit-info/audit-info';
+import { RequiresPermission } from '../../core/access/requires-permission';
+
+@Component({
+  selector: 'app-invoice-detail',
+  imports: [MatDialogModule, DatePipe, AuditInfo, RequiresPermission],
+  templateUrl: './invoice-details.html',
+  styleUrl: './invoice-details.scss',
+})
+export class InvoiceDetail {
+  readonly id = input.required<string>();
+
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly invoiceApi = inject(InvoiceApi);
+  private readonly invoiceStore = inject(InvoiceStore);
+  private readonly tenantStore = inject(TenantStore);
+  private readonly projectStore = inject(ProjectStore);
+  private readonly toast = inject(Toast);
+
+  readonly editingHeader = signal(false);
+  readonly headerBuyerReference = signal('');
+  readonly headerPaymentTermsDays = signal('');
+  readonly savingHeader = signal(false);
+
+  readonly deletingDraft = signal(false);
+
+  private readonly invoiceResource = httpResource<Invoice>(
+    () => `${environment.apiBaseUrl}/invoices/${this.id()}`,
+  );
+
+  readonly markingPaid = signal(false);
+  readonly canMarkPaid = computed(() => {
+    const status = this.invoice()?.status;
+    return status === 'ISSUED' || status === 'SENT' || status === 'OVERDUE';
+  });
+
+  readonly invoice = computed(() => this.invoiceResource.value());
+  readonly loading = computed(() => this.invoiceResource.isLoading());
+
+  readonly canSend = computed(() => {
+    const status = this.invoice()?.status;
+    return !!status && status !== 'DRAFT' && status !== 'CANCELLED';
+  });
+  readonly alreadySent = computed(() => this.invoice()?.status === 'SENT');
+  readonly sending = signal(false);
+
+  readonly statusLabels: Record<InvoiceStatus, string> = {
+    DRAFT: 'Entwurf',
+    ISSUED: 'Ausgestellt',
+    SENT: 'Versendet',
+    PAID: 'Bezahlt',
+    OVERDUE: 'Überfällig',
+    CANCELLED: 'Storniert',
+  };
+
+  readonly tenantName = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return '';
+    return (
+      this.tenantStore.tenants().find((t) => t.id === inv.tenantId)?.companyName ?? 'Unbekannt'
+    );
+  });
+
+  readonly projectName = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.projectId) return '';
+    return this.projectStore.projects().find((p) => p.id === inv.projectId)?.title ?? 'Unbekannt';
+  });
+
+  readonly isDraft = computed(() => this.invoice()?.status === 'DRAFT');
+
+  readonly issuing = signal(false);
+
+  private refreshEverywhere(): void {
+    this.invoiceResource.reload();
+    this.invoiceStore.reload();
+  }
+
+  back(): void {
+    this.router.navigate(['/invoices']);
+  }
+
+  itemNet(item: InvoiceLineItem): Money {
+    return item.netAmount;
+  }
+
+  formatMoney(money?: Money): string {
+    if (!money) return '–';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: money.currencyCode,
+    }).format(money.amount);
+  }
+
+  formatAddress(address?: Address): string {
+    if (!address) return '–';
+    const line1 = [address.street, address.houseNumber].filter(Boolean).join(' ');
+    const line2 = [address.postalCode, address.city].filter(Boolean).join(' ');
+    return [line1, line2].filter(Boolean).join(', ');
+  }
+
+  openAddLineItemDialog(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(AddLineItemDialog, {
+      width: '64rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        invoiceId: inv.id,
+        tenantId: inv.tenantId,
+        projectId: inv.projectId,
+        existingMilestoneIds: inv.lineItems
+          .map((i) => i.milestoneId)
+          .filter((id): id is string => !!id),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position hinzugefügt');
+      }
+    });
+  }
+
+  async removeLineItem(item: InvoiceLineItem): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Position entfernen?',
+        message: `"${item.description}" wird von dieser Rechnung entfernt.`,
+        confirmLabel: 'Entfernen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (confirmed) {
+      await firstValueFrom(this.invoiceApi.removeLineItem(inv.id, item.id));
+      this.refreshEverywhere();
+      this.toast.success('Position entfernt');
+    }
+  }
+
+  async issueInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(IssueInvoiceDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { buyerEmail: inv.buyer?.email },
+    });
+
+    const result = (await firstValueFrom(dialogRef.afterClosed())) as
+      IssueInvoiceDialogResult | false;
+    if (!result) return;
+
+    this.issuing.set(true);
+    try {
+      await firstValueFrom(
+        this.invoiceApi.issue(inv.id, {
+          sendEmailDirectly: result.sendEmail,
+          invoiceEmail: result.email,
+        }),
+      );
+      this.refreshEverywhere();
+      this.toast.success(
+        result.sendEmail ? 'Rechnung ausgestellt und versendet' : 'Rechnung ausgestellt',
+      );
+    } finally {
+      this.issuing.set(false);
+    }
+  }
+
+  async sendInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv || this.alreadySent()) return;
+
+    const dialogRef = this.dialog.open(SendInvoiceDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { buyerEmail: inv.sentToEmail ?? inv.buyer?.email },
+    });
+
+    const email = await firstValueFrom(dialogRef.afterClosed());
+    if (!email) return;
+
+    this.sending.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.send(inv.id, { email }));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung versendet');
+    } finally {
+      this.sending.set(false);
+    }
+  }
+
+  async openDocument(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+    const { url } = await firstValueFrom(this.invoiceApi.getDocumentUrl(inv.id));
+    window.open(url, '_blank');
+  }
+
+  startEditHeader(): void {
+    const inv = this.invoice();
+    if (!inv) return;
+    this.headerBuyerReference.set(inv.buyerReference ?? '');
+    this.headerPaymentTermsDays.set(inv.paymentTermsDays?.toString() ?? '14');
+    this.editingHeader.set(true);
+  }
+
+  cancelEditHeader(): void {
+    this.editingHeader.set(false);
+  }
+
+  async saveHeader(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.savingHeader.set(true);
+    const request: UpdateInvoiceHeaderRequest = {
+      buyerReference: this.headerBuyerReference().trim() || undefined,
+      paymentTermsDays: parseInt(this.headerPaymentTermsDays(), 10) || undefined,
+    };
+
+    try {
+      await firstValueFrom(this.invoiceApi.updateHeader(inv.id, request));
+      this.editingHeader.set(false);
+      this.refreshEverywhere();
+      this.toast.success('Rechnungsdaten aktualisiert');
+    } finally {
+      this.savingHeader.set(false);
+    }
+  }
+
+  openEditLineItemDialog(item: InvoiceLineItem): void {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(EditLineItemDialog, {
+      width: '48rem',
+      panelClass: 'app-dialog-panel',
+      data: { invoiceId: inv.id, item },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refreshEverywhere();
+        this.toast.success('Position aktualisiert');
+      }
+    });
+  }
+
+  async deleteDraftInvoice(): Promise<void> {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '46rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Rechnungsentwurf löschen?',
+        message: 'Der komplette Entwurf inkl. aller Positionen wird unwiderruflich gelöscht.',
+        confirmLabel: 'Löschen',
+        danger: true,
+      },
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
+    if (!confirmed) return;
+
+    this.deletingDraft.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.deleteDraft(inv.id));
+      this.invoiceStore.reload();
+      this.toast.success('Entwurf gelöscht');
+      this.router.navigate(['/invoices']);
+    } finally {
+      this.deletingDraft.set(false);
+    }
+  }
+
+  async markPaid(): Promise<void> {
+    if (!this.canMarkPaid()) return;
+
+    const dialogRef = this.dialog.open(MarkPaidDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+    });
+
+    const paidDate = await firstValueFrom(dialogRef.afterClosed());
+    if (!paidDate) return;
+
+    this.markingPaid.set(true);
+    try {
+      await firstValueFrom(this.invoiceApi.markPaid(this.invoice()!.id, { paidDate }));
+      this.refreshEverywhere();
+      this.toast.success('Rechnung als bezahlt markiert');
+    } finally {
+      this.markingPaid.set(false);
     }
   }
 }
