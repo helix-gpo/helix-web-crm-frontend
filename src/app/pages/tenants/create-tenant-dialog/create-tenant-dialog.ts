@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TenantStore } from '../../../core/tenants/tenant-store';
-import { CreateTenantRequest, CreatePartnerRequest } from '../../../model/tenant';
+import { CreateTenantRequest } from '../../../model/tenant';
+import { isValidEmail } from '../../../util/validation/email';
 
 interface PartnerDraft {
   firstName: string;
@@ -38,15 +39,18 @@ export class CreateTenantDialog {
   readonly city = signal('');
 
   readonly showPartnerNameWarning = signal(false);
+  readonly showCompanyNameWarning = signal(false);
+  readonly showReferenceCodeWarning = signal(false);
+
+  readonly showContactEmailError = signal(false);
+  readonly showPartnerEmailError = signal(false);
 
   // Optionale Partner - beliebig viele
   readonly includePartner = signal(false);
   readonly partners = signal<PartnerDraft[]>([emptyPartnerDraft()]);
 
   readonly submitting = signal(false);
-  readonly showCompanyNameWarning = signal(false);
 
-  readonly showReferenceCodeWarning = signal(false);
   readonly isValid = computed(
     () => this.companyName().trim().length > 0 && this.referenceCode().trim().length > 0,
   );
@@ -96,6 +100,14 @@ export class CreateTenantDialog {
     const incomplete = filledRows.some((p) => !p.firstName.trim() || !p.lastName.trim());
     this.showPartnerNameWarning.set(incomplete);
     if (incomplete) {
+      return;
+    }
+
+    const contactEmailInvalid = !isValidEmail(this.contactEmail());
+    const partnerEmailInvalid = filledRows.some((p) => !isValidEmail(p.email));
+    this.showContactEmailError.set(contactEmailInvalid);
+    this.showPartnerEmailError.set(partnerEmailInvalid);
+    if (contactEmailInvalid || partnerEmailInvalid) {
       return;
     }
 

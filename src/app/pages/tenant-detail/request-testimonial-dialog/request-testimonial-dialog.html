@@ -26,7 +26,11 @@
           placeholder="partner@mandant.de"
           [value]="email()"
           (input)="email.set($any($event.target).value)"
+          (blur)="emailTouched.set(true)"
         />
+        @if (emailTouched() && emailInvalid()) {
+          <p class="field-error">Bitte eine gültige E-Mail-Adresse angeben.</p>
+        }
         @if (!data.partner.email) {
           <p class="field-hint">
             Für diesen Partner ist keine E-Mail hinterlegt - bitte manuell eintragen.

@@ -6,7 +6,6 @@ import { ProjectApi } from '../../core/projects/project-api';
 import { TenantStore } from '../../core/tenants/tenant-store';
 import { TestimonialStore } from '../../core/testimonials/testimonial-store';
 import { Toast } from '../../core/toast/toast';
-import { extractErrorMessage } from '../../core/errors/error-message';
 import { getContrastTextColor } from '../../util/color-contrast';
 import { AddProjectDialog } from './add-project-dialog/add-project-dialog';
 import { AddTestimonialDialog } from './add-testimonial-dialog/add-testimonial-dialog';
@@ -96,7 +95,7 @@ export class Website {
       this.projectStore.reload();
       this.toast.success(`${project.title} von der Website entfernt`);
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.processingProjectId.set(null);
     }
@@ -108,7 +107,7 @@ export class Website {
       await this.testimonialStore.unpublish(testimonial.id);
       this.toast.success(`Referenz von ${testimonial.partnerName} von der Website entfernt`);
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Entfernen fehlgeschlagen'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.processingTestimonialId.set(null);
     }

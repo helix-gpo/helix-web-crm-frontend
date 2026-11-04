@@ -1,4 +1,4 @@
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -260,5 +260,5 @@
 
 .partner-warning {
   font-size: 1.3rem;
-  color: var(--toastr-error);
+  color: var(--danger);
 }

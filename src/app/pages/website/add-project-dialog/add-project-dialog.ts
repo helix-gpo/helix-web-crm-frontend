@@ -5,7 +5,6 @@ import { ProjectStore } from '../../../core/projects/project-store';
 import { ProjectApi } from '../../../core/projects/project-api';
 import { TenantStore } from '../../../core/tenants/tenant-store';
 import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
 
 const MAX_ON_WEBSITE = 6;
 
@@ -49,7 +48,7 @@ export class AddProjectDialog {
       this.projectStore.reload();
       this.toast.success('Projekt auf der Website veröffentlicht');
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.processingId.set(null);
     }

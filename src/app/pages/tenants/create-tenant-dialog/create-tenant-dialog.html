@@ -68,8 +68,11 @@
           type="email"
           maxlength="254"
           [value]="contactEmail()"
-          (input)="contactEmail.set($any($event.target).value)"
+          (input)="contactEmail.set($any($event.target).value); showContactEmailError.set(false)"
         />
+        @if (showContactEmailError()) {
+          <p class="field-error">Bitte eine gültige E-Mail-Adresse angeben.</p>
+        }
       </div>
       <div class="field">
         <label>Telefon</label>
@@ -193,7 +196,10 @@
                 type="email"
                 maxlength="254"
                 [value]="partner.email"
-                (input)="updatePartnerField($index, 'email', $any($event.target).value)"
+                (input)="
+                  updatePartnerField($index, 'email', $any($event.target).value);
+                  showPartnerEmailError.set(false)
+                "
               />
             </div>
             <div class="field">
@@ -211,6 +217,10 @@
 
       @if (showPartnerNameWarning()) {
         <p class="partner-warning">Bitte bei jedem Partner Vor- und Nachnamen angeben.</p>
+      }
+
+      @if (showPartnerEmailError()) {
+        <p class="partner-warning">Bitte bei allen Partnern eine gültige E-Mail-Adresse angeben.</p>
       }
 
       <button class="add-partner-button" type="button" (click)="addPartnerRow()">

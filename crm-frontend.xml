@@ -960,7 +960,7 @@ export const ACTION_LABELS: Record<PermissionAction, string> = {
 </file>
 
 <file path="src/app/pages/dashboard/dashboard.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   @include flex-between;
@@ -1511,7 +1511,7 @@ export class Dashboard {
 </file>
 
 <file path="src/app/pages/employees/assign-projects-dialog/assign-projects-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -1755,7 +1755,7 @@ export class Dashboard {
 </file>
 
 <file path="src/app/pages/employees/edit-employee-dialog/edit-employee-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -2153,7 +2153,7 @@ export class EditEmployeeDialog {
 </file>
 
 <file path="src/app/pages/employees/employee-dialog/employee-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -2363,7 +2363,7 @@ export class EmployeeDialog {
 </file>
 
 <file path="src/app/pages/employees/employees.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   @include flex-between;
@@ -2685,7 +2685,7 @@ export class EmployeeDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/add-line-item-dialog/add-line-item-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -3283,7 +3283,7 @@ export class AddLineItemDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/edit-line-item-dialog/edit-line-item-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -3798,7 +3798,7 @@ export class EditLineItemDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/issue-invoice-dialog/issue-invoice-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .confirm-dialog {
   padding: 3.2rem 2.8rem 2.4rem;
@@ -3983,7 +3983,7 @@ export class IssueInvoiceDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/mark-paid-dialog/mark-paid-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .confirm-dialog {
   padding: 3.2rem 2.8rem 2.4rem;
@@ -4152,7 +4152,7 @@ export class MarkPaidDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/send-invoice-dialog/send-invoice-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .confirm-dialog {
   padding: 3.2rem 2.8rem 2.4rem;
@@ -4329,7 +4329,7 @@ export class SendInvoiceDialog {
 </file>
 
 <file path="src/app/pages/login/login.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .login-page {
   min-height: 100vh;
@@ -4490,7 +4490,7 @@ export class Login {
 </file>
 
 <file path="src/app/pages/no-access/no-access.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .no-access-page {
   min-height: 100vh;
@@ -4674,7 +4674,7 @@ export class NoAccess {
 </file>
 
 <file path="src/app/pages/project-details/milestone-dialog/milestone-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -5103,7 +5103,7 @@ export function findMissingPermissions(
 </file>
 
 <file path="src/app/pages/roles/roles.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   @include flex-between;
@@ -5354,7 +5354,7 @@ export function findMissingPermissions(
 </file>
 
 <file path="src/app/pages/session-expired/session-expired.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .session-page {
   min-height: 100vh;
@@ -5470,7 +5470,7 @@ export class SessionExpired {
 </file>
 
 <file path="src/app/pages/tenants/edit-core-details-dialog/edit-core-details-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -5715,7 +5715,7 @@ export class SessionExpired {
 </file>
 
 <file path="src/app/pages/website/add-project-dialog/add-project-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -5943,7 +5943,7 @@ export class AddProjectDialog {
 </file>
 
 <file path="src/app/pages/website/add-testimonial-dialog/add-testimonial-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -6163,7 +6163,7 @@ export class AddTestimonialDialog {
 </file>
 
 <file path="src/app/pages/welcome/welcome.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .welcome-page {
   min-height: 100vh;
@@ -6477,7 +6477,7 @@ export class AuditCell {
 </file>
 
 <file path="src/app/shared/audit-info/audit-info.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .audit-list {
   @include flex-col(1.4rem);
@@ -6676,7 +6676,7 @@ export function matchesCreator(
 </file>
 
 <file path="src/app/shared/image-upload/image-upload.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .image-upload {
   position: relative;
@@ -6887,7 +6887,7 @@ export class SortableHeader {
 </file>
 
 <file path="src/app/util/avatar/avatar.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .avatar {
   border-radius: 50%;
@@ -7694,7 +7694,7 @@ export class AssignProjectsDialog {
 </file>
 
 <file path="src/app/pages/invoice-details/invoice-details.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .detail-hero {
   background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
@@ -8086,7 +8086,7 @@ export class AssignProjectsDialog {
 </file>
 
 <file path="src/app/pages/invoices/create-invoice-dialog/create-invoice-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -8674,7 +8674,7 @@ export class AssignProjectsDialog {
 </file>
 
 <file path="src/app/pages/project-details/edit-project-dialog/edit-project-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -9188,7 +9188,7 @@ export class EditProjectDialog {
 </file>
 
 <file path="src/app/pages/roles/role-dialog/role-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -9833,7 +9833,7 @@ export class Roles {
 </file>
 
 <file path="src/app/pages/tenant-detail/request-testimonial-dialog/request-testimonial-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -10085,7 +10085,7 @@ export class RequestTestimonialDialog {
 </file>
 
 <file path="src/app/pages/tenants/create-tenant-dialog/create-tenant-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -10549,7 +10549,7 @@ export class RequestTestimonialDialog {
 </file>
 
 <file path="src/app/pages/tenants/edit-tenant-dialog/edit-tenant-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -10895,7 +10895,7 @@ export class EditTenantDialog {
 </file>
 
 <file path="src/app/pages/tenants/partner-dialog/partner-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -11354,7 +11354,7 @@ export class Website {
 </file>
 
 <file path="src/app/shared/filter-dialog/filter-dialog.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -11735,7 +11735,7 @@ export class FilterDialog {
 </file>
 
 <file path="src/app/util/confirm-dialog/confirm-dialog.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .confirm-dialog {
   padding: 3.2rem 2.8rem 2.4rem;
@@ -11902,7 +11902,7 @@ export const appConfig: ApplicationConfig = {
 </file>
 
 <file path="src/app/app.scss">
-@use '../styles' as *;
+@use '../styles/mixins' as *;
 
 .admin-layout {
   display: flex;
@@ -12580,7 +12580,7 @@ export class Employees {
 </file>
 
 <file path="src/app/pages/invoices/invoices.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   @include flex-between;
@@ -12836,7 +12836,7 @@ export class Employees {
 </file>
 
 <file path="src/app/pages/projects/create-project-dialog/create-project-dialog.scss">
-@use '../../../../styles' as *;
+@use '../../../../styles/mixins' as *;
 
 .dialog-header {
   @include flex-between;
@@ -13309,7 +13309,7 @@ export class EditCoreDetailsDialog {
 </file>
 
 <file path="src/app/pages/website/website.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   margin-bottom: 2.4rem;
@@ -14053,7 +14053,7 @@ export interface InvitationSummary {
 </file>
 
 <file path="src/app/pages/project-details/project-details.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .detail-hero {
   background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
@@ -14988,7 +14988,7 @@ export class CreateProjectDialog {
 </file>
 
 <file path="src/app/pages/projects/projects.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 // =====================
 // PAGE HEADER
@@ -15989,7 +15989,7 @@ export class CreateTenantDialog {
 </file>
 
 <file path="src/app/pages/tenants/tenants.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   @include flex-between;
@@ -16264,7 +16264,7 @@ export class CreateTenantDialog {
 </file>
 
 <file path="src/app/pages/testimonials/testimonials.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   margin-bottom: 2.4rem;
@@ -18026,7 +18026,7 @@ export class CreateInvoiceDialog {
 </file>
 
 <file path="src/app/pages/tenant-detail/tenant-detail.scss">
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .detail-hero {
   background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);

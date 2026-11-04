@@ -5,6 +5,7 @@ import { TenantApi } from '../../../core/tenants/tenant-api';
 import { Partner } from '../../../model/tenant';
 import { Toast } from '../../../core/toast/toast';
 import { ImageUpload } from '../../../shared/image-upload/image-upload';
+import { isValidEmail } from '../../../util/validation/email';
 
 export interface PartnerDialogData {
   tenantId: string;
@@ -32,8 +33,11 @@ export class PartnerDialog {
   readonly email = signal(this.data.partner?.email ?? '');
   readonly phone = signal(this.data.partner?.phone ?? '');
 
-  readonly submitting = signal(false);
   readonly showNameWarning = signal(false);
+
+  readonly showEmailError = signal(false);
+
+  readonly submitting = signal(false);
 
   close(): void {
     this.dialogRef.close();
@@ -42,6 +46,11 @@ export class PartnerDialog {
   async submit(): Promise<void> {
     if (!this.firstName().trim() || !this.lastName().trim()) {
       this.showNameWarning.set(true);
+      return;
+    }
+
+    if (!isValidEmail(this.email())) {
+      this.showEmailError.set(true);
       return;
     }
 

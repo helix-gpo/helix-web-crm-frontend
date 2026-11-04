@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TestimonialStore } from '../../../core/testimonials/testimonial-store';
 import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
 
 const MAX_ON_WEBSITE = 6;
 
@@ -39,7 +38,7 @@ export class AddTestimonialDialog {
       await this.testimonialStore.publish(testimonialId);
       this.toast.success('Referenz auf der Website veröffentlicht');
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Veröffentlichung fehlgeschlagen'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.processingId.set(null);
     }

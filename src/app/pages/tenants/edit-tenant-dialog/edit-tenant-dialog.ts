@@ -3,6 +3,7 @@ import { Tenant } from '../../../model/tenant';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TenantStore } from '../../../core/tenants/tenant-store';
 import { CharCounter } from '../../../shared/char-counter/char-counter';
+import { isValidEmail } from '../../../util/validation/email';
 
 @Component({
   selector: 'app-edit-tenant-dialog',
@@ -24,6 +25,8 @@ export class EditTenantDialog {
   readonly websiteUrl = signal(this.tenant.websiteUrl ?? '');
   readonly notes = signal(this.tenant.notes ?? '');
 
+  readonly showEmailError = signal(false);
+
   readonly submitting = signal(false);
 
   readonly companyName = computed(() => this.tenant.companyName);
@@ -33,6 +36,11 @@ export class EditTenantDialog {
   }
 
   async submit(): Promise<void> {
+    if (!isValidEmail(this.contactEmail())) {
+      this.showEmailError.set(true);
+      return;
+    }
+
     this.submitting.set(true);
 
     try {

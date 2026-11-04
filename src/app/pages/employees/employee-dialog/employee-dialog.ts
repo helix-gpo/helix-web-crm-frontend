@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { EmployeeStore } from '../../../core/access/employee-store';
 import { RoleStore } from '../../../core/access/role-store';
+import { isValidEmail } from '../../../util/validation/email';
 
 @Component({
   selector: 'app-employee-dialog',
@@ -19,8 +20,11 @@ export class EmployeeDialog {
   readonly lastName = signal('');
   readonly roleId = signal('');
 
-  readonly submitting = signal(false);
   readonly showWarning = signal(false);
+
+  readonly showEmailError = signal(false);
+
+  readonly submitting = signal(false);
 
   readonly isValid = computed(
     () =>
@@ -37,6 +41,11 @@ export class EmployeeDialog {
   async submit(): Promise<void> {
     if (!this.isValid()) {
       this.showWarning.set(true);
+      return;
+    }
+
+    if (!isValidEmail(this.email())) {
+      this.showEmailError.set(true);
       return;
     }
 

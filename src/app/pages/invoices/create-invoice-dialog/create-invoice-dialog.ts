@@ -13,7 +13,6 @@ import {
   MilestoneOption,
 } from '../../../model/invoice';
 import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
 
 export interface CreateInvoiceDialogData {
   tenantId?: string;
@@ -251,7 +250,7 @@ export class CreateInvoiceDialog {
       const invoice = await this.invoiceStore.create(request);
       this.dialogRef.close(invoice);
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Rechnung konnte nicht angelegt werden'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.submitting.set(false);
     }
