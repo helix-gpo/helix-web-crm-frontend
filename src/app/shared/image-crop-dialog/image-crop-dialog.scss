@@ -1,0 +1,130 @@
+@use '../../../styles/mixins' as *;
+
+.crop-dialog {
+  padding: 3.2rem 2.8rem 2.4rem;
+  @include flex-col(1.2rem);
+  align-items: center;
+  text-align: center;
+}
+
+.crop-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.crop-message {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+.crop-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background-color: #ffffff; // same fill as the exported image
+  cursor: grab;
+  touch-action: none; // lets pointer events drag on touch devices
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.crop-image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  pointer-events: none;
+}
+
+// shows the part that stays visible in the round avatar
+.crop-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--accent-cyan);
+  box-shadow: 0 0 0 100rem rgba(13, 20, 36, 0.55);
+  pointer-events: none;
+}
+
+.crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.8rem;
+
+  .material-symbols-rounded {
+    font-size: 2rem;
+    color: var(--text-muted);
+  }
+
+  input[type='range'] {
+    flex: 1;
+    accent-color: var(--accent-cyan);
+    cursor: pointer;
+  }
+}
+
+.fit-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 1.2rem;
+  color: var(--accent-cyan);
+  cursor: pointer;
+
+  .material-symbols-rounded {
+    font-size: 1.6rem;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.crop-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.2rem;
+}
+
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  @include button-base;
+}
+
+.cancel-button {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.confirm-button {
+  background-color: var(--accent-cyan);
+  color: var(--main-navy);
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-cyan-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

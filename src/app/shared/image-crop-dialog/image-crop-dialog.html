@@ -1,0 +1,54 @@
+<div class="crop-dialog">
+  <h2 class="crop-title">Logo zuschneiden</h2>
+  <p class="crop-message">Bild verschieben zum Positionieren, mit Regler oder Mausrad zoomen.</p>
+
+  <div
+    class="crop-viewport"
+    [style.width.px]="viewport"
+    [style.height.px]="viewport"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp()"
+    (pointercancel)="onPointerUp()"
+    (wheel)="onWheel($event)"
+  >
+    <img
+      #image
+      class="crop-image"
+      alt=""
+      draggable="false"
+      [src]="sourceUrl"
+      [style.width.px]="displayWidth()"
+      [style.height.px]="displayHeight()"
+      [style.transform]="transform()"
+      (load)="onImageLoad($event)"
+    />
+    <div class="crop-mask"></div>
+  </div>
+
+  <div class="crop-zoom">
+    <span class="material-symbols-rounded">zoom_out</span>
+    <input
+      type="range"
+      step="any"
+      [min]="minScale()"
+      [max]="maxScale()"
+      [value]="scale()"
+      [disabled]="!loaded()"
+      (input)="setScale(+$any($event.target).value)"
+    />
+    <span class="material-symbols-rounded">zoom_in</span>
+  </div>
+
+  <button class="fit-button" type="button" [disabled]="!loaded()" (click)="fitWhole()">
+    <span class="material-symbols-rounded">fit_screen</span>
+    Ganz anzeigen
+  </button>
+
+  <div class="crop-actions">
+    <button class="cancel-button" (click)="cancel()">Abbrechen</button>
+    <button class="confirm-button" [disabled]="!loaded() || saving()" (click)="confirm()">
+      Übernehmen
+    </button>
+  </div>
+</div>

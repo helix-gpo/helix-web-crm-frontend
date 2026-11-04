@@ -23,6 +23,7 @@ import { AuditInfo } from '../../shared/audit-info/audit-info';
 import { RequiresPermission } from '../../core/access/requires-permission';
 import { Permissions } from '../../core/access/permissions';
 import { validateImageFile } from '../../util/validation/image-file';
+import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -261,9 +262,17 @@ export class TenantDetail {
   }
 
   async uploadLogo(file: File): Promise<void> {
+    const dialogRef = this.dialog.open(ImageCropDialog, {
+      width: '40rem',
+      panelClass: 'app-dialog-panel',
+      data: { file },
+    });
+    const cropped = await firstValueFrom(dialogRef.afterClosed());
+    if (!cropped) return;
+
     this.uploadingLogo.set(true);
     try {
-      await firstValueFrom(this.tenantApi.uploadLogo(this.id(), file));
+      await firstValueFrom(this.tenantApi.uploadLogo(this.id(), cropped));
       this.refreshEverywhere();
       this.toast.success('Logo hochgeladen');
     } finally {
