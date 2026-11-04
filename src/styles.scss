@@ -1,76 +1,5 @@
 @use '@angular/material' as mat;
-
-// =====================
-// MIXINS (identisch zur Website, plus Ergänzungen für Admin-Layout)
-// =====================
-
-@mixin respond($breakpoint) {
-  @if $breakpoint == xl {
-    @media (max-width: 75em) {
-      @content;
-    }
-  }
-  @if $breakpoint == lg {
-    @media (max-width: 64em) {
-      @content;
-    }
-  }
-  @if $breakpoint == md {
-    @media (max-width: 52em) {
-      @content;
-    }
-  }
-  @if $breakpoint == sm {
-    @media (max-width: 36em) {
-      @content;
-    }
-  }
-  @if $breakpoint == xs {
-    @media (max-width: 27em) {
-      @content;
-    }
-  }
-}
-
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@mixin flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-@mixin flex-col($gap: 0) {
-  display: flex;
-  flex-direction: column;
-  @if $gap > 0 {
-    gap: $gap;
-  }
-}
-
-@mixin button-base {
-  font-family: inherit;
-  font-size: 1.4rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 1rem 1.8rem;
-  @include flex-center;
-  gap: 0.6rem;
-}
-
-@mixin card-surface {
-  background-color: var(--bg-white);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
+@use 'styles/mixins' as *;
 
 // =====================
 // RESET & BASE
@@ -339,4 +268,14 @@ input[type='date'] {
   * {
     pointer-events: none;
   }
+}
+
+// =====================
+// FORM ERRORS
+// =====================
+
+.field-error {
+  font-size: 1.2rem;
+  color: var(--danger);
+  margin-top: 0.4rem;
 }

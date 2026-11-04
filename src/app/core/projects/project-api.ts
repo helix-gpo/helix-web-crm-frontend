@@ -74,14 +74,4 @@ export class ProjectApi {
   removeMilestone(projectId: string, milestoneId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${projectId}/milestones/${milestoneId}`);
   }
-
-  uploadImage(id: string, file: File): Observable<Project> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<Project>(`${this.baseUrl}/${id}/image`, formData);
-  }
-
-  removeImage(id: string): Observable<Project> {
-    return this.http.delete<Project>(`${this.baseUrl}/${id}/image`);
-  }
 }

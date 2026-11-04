@@ -14,13 +14,12 @@ import { CreateInvoiceDialog } from '../invoices/create-invoice-dialog/create-in
 import { Toast } from '../../core/toast/toast';
 import { Project, ProjectStatus, Milestone } from '../../model/project';
 import { getContrastTextColor } from '../../util/color-contrast';
-import { ImageUpload } from '../../shared/image-upload/image-upload';
 import { AuditInfo } from '../../shared/audit-info/audit-info';
 import { RequiresPermission } from '../../core/access/requires-permission';
 
 @Component({
   selector: 'app-project-detail',
-  imports: [MatDialogModule, ImageUpload, AuditInfo, RequiresPermission],
+  imports: [MatDialogModule, AuditInfo, RequiresPermission],
   templateUrl: './project-details.html',
   styleUrl: './project-details.scss',
 })
@@ -58,7 +57,6 @@ export class ProjectDetail {
 
   readonly togglingPublish = signal(false);
   readonly changingStatus = signal(false);
-  readonly uploadingImage = signal(false);
 
   // Zieht die Änderung sowohl in die eigene (Detail-)Ressource als auch
   // in den geteilten ProjectStore, den Kanban/Liste nutzen - sonst
@@ -203,27 +201,5 @@ export class ProjectDetail {
       style: 'currency',
       currency: money.currencyCode,
     }).format(money.amount);
-  }
-
-  async uploadImage(file: File): Promise<void> {
-    this.uploadingImage.set(true);
-    try {
-      await firstValueFrom(this.projectApi.uploadImage(this.id(), file));
-      this.refreshEverywhere();
-      this.toast.success('Bild hochgeladen');
-    } finally {
-      this.uploadingImage.set(false);
-    }
-  }
-
-  async removeImage(): Promise<void> {
-    this.uploadingImage.set(true);
-    try {
-      await firstValueFrom(this.projectApi.removeImage(this.id()));
-      this.refreshEverywhere();
-      this.toast.success('Bild entfernt');
-    } finally {
-      this.uploadingImage.set(false);
-    }
   }
 }

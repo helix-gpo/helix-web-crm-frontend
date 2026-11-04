@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { isValidEmail } from '../../../util/validation/email';
 
 export interface IssueInvoiceDialogData {
   buyerEmail?: string;
@@ -22,9 +23,12 @@ export class IssueInvoiceDialog {
 
   protected readonly sendEmail = signal(!!this.data.buyerEmail);
   protected readonly email = signal(this.data.buyerEmail ?? '');
-  protected readonly canConfirm = computed(
-    () => !this.sendEmail() || this.email().trim().length > 3,
+
+  protected readonly emailTouched = signal(false);
+  protected readonly emailInvalid = computed(
+    () => !this.email().trim() || !isValidEmail(this.email()),
   );
+  protected readonly canConfirm = computed(() => !this.sendEmail() || !this.emailInvalid());
 
   toggleSendEmail(): void {
     this.sendEmail.update((v) => !v);

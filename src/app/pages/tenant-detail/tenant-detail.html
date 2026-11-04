@@ -101,14 +101,10 @@
 
         @for (partner of partners(); track partner.id) {
           <div class="partner-row">
-            @if (partner.photoUrl) {
-              <img class="partner-avatar" [src]="partner.photoUrl" alt="" />
-            } @else {
-              <app-avatar
-                [name]="partner.firstName + ' ' + partner.lastName"
-                [size]="'3.6rem'"
-              ></app-avatar>
-            }
+            <app-avatar
+              [name]="partner.firstName + ' ' + partner.lastName"
+              [size]="'3.6rem'"
+            ></app-avatar>
             <div class="partner-info">
               <p class="partner-name">{{ partner.firstName }} {{ partner.lastName }}</p>
               <p class="partner-role">

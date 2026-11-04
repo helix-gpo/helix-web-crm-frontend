@@ -32,7 +32,6 @@ export interface Project {
   startDate?: string;
   endDate?: string;
   visibleOnWebsite: boolean;
-  imageUrl?: string;
   notes?: string;
   milestones: Milestone[];
   createdAt: string;

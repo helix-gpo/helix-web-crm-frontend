@@ -8,14 +8,6 @@
       </button>
 
       <div class="hero-main">
-        <app-image-upload
-          [imageUrl]="p.imageUrl"
-          placeholderIcon="work"
-          shape="square"
-          [uploading]="uploadingImage()"
-          (fileSelected)="uploadImage($event)"
-          (removed)="removeImage()"
-        />
         <div>
           <p class="hero-tenant">{{ tenantName() }}</p>
           <h1 class="hero-title">{{ p.title }}</h1>

@@ -1,4 +1,4 @@
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .detail-hero {
   background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);

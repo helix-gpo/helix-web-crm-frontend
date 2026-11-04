@@ -64,7 +64,6 @@ export interface Partner {
   role?: string;
   email?: string;
   phone?: string;
-  photoUrl?: string;
 }
 
 export interface CreatePartnerRequest {

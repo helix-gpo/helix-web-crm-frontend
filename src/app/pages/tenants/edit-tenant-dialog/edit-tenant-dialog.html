@@ -16,8 +16,11 @@
           type="email"
           maxlength="254"
           [value]="contactEmail()"
-          (input)="contactEmail.set($any($event.target).value)"
+          (input)="contactEmail.set($any($event.target).value); showEmailError.set(false)"
         />
+        @if (showEmailError()) {
+          <p class="field-error">Bitte eine gültige E-Mail-Adresse angeben.</p>
+        }
       </div>
       <div class="field">
         <label>Telefon</label>

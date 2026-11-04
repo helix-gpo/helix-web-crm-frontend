@@ -1,4 +1,4 @@
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   margin-bottom: 2.4rem;
@@ -172,14 +172,6 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-
-.cell-avatar-img {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
 }
 
 .project-title {

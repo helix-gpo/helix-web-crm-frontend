@@ -1,4 +1,4 @@
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .detail-hero {
   background: linear-gradient(135deg, var(--main-navy) 0%, var(--main-navy-light) 100%);
@@ -387,14 +387,6 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
-}
-
-.partner-avatar {
-  width: 3.6rem;
-  height: 3.6rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
 }
 
 .partner-info {

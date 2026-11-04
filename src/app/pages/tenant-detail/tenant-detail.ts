@@ -22,6 +22,7 @@ import { ImageUpload } from '../../shared/image-upload/image-upload';
 import { AuditInfo } from '../../shared/audit-info/audit-info';
 import { RequiresPermission } from '../../core/access/requires-permission';
 import { Permissions } from '../../core/access/permissions';
+import { validateImageFile } from '../../util/validation/image-file';
 
 @Component({
   selector: 'app-tenant-detail',
@@ -284,7 +285,14 @@ export class TenantDetail {
   onLogoFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (file) this.uploadLogo(file);
     input.value = '';
+    if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+      this.toast.error(error);
+      return;
+    }
+    this.uploadLogo(file);
   }
 }

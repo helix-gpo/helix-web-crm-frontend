@@ -1,4 +1,4 @@
-@use '../../../styles' as *;
+@use '../../../styles/mixins' as *;
 
 .page-header {
   margin-bottom: 2.4rem;
@@ -236,14 +236,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.cell-avatar-img {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
 }
 
 .filter-bar {

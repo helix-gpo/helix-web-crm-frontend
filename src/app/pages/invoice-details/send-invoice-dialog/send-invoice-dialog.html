@@ -15,7 +15,11 @@
       placeholder="rechnung@mandant.de"
       [value]="email()"
       (input)="email.set($any($event.target).value)"
+      (blur)="emailTouched.set(true)"
     />
+    @if (emailTouched() && !canConfirm()) {
+      <p class="field-error">Bitte eine gültige E-Mail-Adresse angeben.</p>
+    }
   </div>
 
   <div class="confirm-actions">

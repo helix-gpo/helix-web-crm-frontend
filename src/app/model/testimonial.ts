@@ -12,7 +12,6 @@ export interface Testimonial {
   rating: number;
   status: TestimonialStatus;
   visibleOnWebsite: boolean;
-  partnerPhotoUrl?: string;
   createdAt: string;
 }
 

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Toast } from '../../core/toast/toast';
+import { validateImageFile } from '../../util/validation/image-file';
 
 @Component({
   selector: 'app-image-upload',
@@ -21,21 +22,15 @@ export class ImageUpload {
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    input.value = ''; // gleiche Datei erneut wählbar machen
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.toast.error('Die Datei ist zu groß - maximal 5 MB erlaubt.');
-      input.value = '';
+    const error = validateImageFile(file);
+    if (error) {
+      this.toast.error(error);
       return;
     }
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      this.toast.error('Nur JPEG-, PNG- oder WebP-Bilder sind erlaubt.');
-      input.value = '';
-      return;
-    }
-
     this.fileSelected.emit(file);
-    input.value = ''; // gleiche Datei erneut wählbar machen
   }
 
   remove(event: Event): void {

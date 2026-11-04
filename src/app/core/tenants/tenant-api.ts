@@ -76,19 +76,6 @@ export class TenantApi {
     return this.http.delete<Tenant>(`${this.baseUrl}/${id}/logo`);
   }
 
-  uploadPartnerPhoto(tenantId: string, partnerId: string, file: File): Observable<Partner> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<Partner>(
-      `${this.baseUrl}/${tenantId}/partners/${partnerId}/photo`,
-      formData,
-    );
-  }
-
-  removePartnerPhoto(tenantId: string, partnerId: string): Observable<Partner> {
-    return this.http.delete<Partner>(`${this.baseUrl}/${tenantId}/partners/${partnerId}/photo`);
-  }
-
   updateNotes(id: string, request: UpdateTenantNotesRequest): Observable<Tenant> {
     return this.http.patch<Tenant>(`${this.baseUrl}/${id}/notes`, request);
   }

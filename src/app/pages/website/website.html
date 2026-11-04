@@ -92,11 +92,7 @@
           </button>
 
           <div class="testimonial-card-header">
-            @if (testimonial.partnerPhotoUrl) {
-              <img class="cell-avatar-img" [src]="testimonial.partnerPhotoUrl" alt="" />
-            } @else {
-              <app-avatar [name]="testimonial.partnerName"></app-avatar>
-            }
+            <app-avatar [name]="testimonial.partnerName"></app-avatar>
             <div class="testimonial-stars">
               @for (i of ratingArray; track i) {
                 <span

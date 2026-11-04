@@ -3,10 +3,9 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { TestimonialApi } from '../../../core/testimonials/testimonial-api';
-import { Toast } from '../../../core/toast/toast';
-import { extractErrorMessage } from '../../../core/errors/error-message';
 import { Partner } from '../../../model/tenant';
 import { Project } from '../../../model/project';
+import { isValidEmail } from '../../../util/validation/email';
 
 export interface RequestTestimonialDialogData {
   partner: Partner;
@@ -22,7 +21,6 @@ export interface RequestTestimonialDialogData {
 export class RequestTestimonialDialog {
   private readonly dialogRef = inject(MatDialogRef<RequestTestimonialDialog>);
   private readonly testimonialApi = inject(TestimonialApi);
-  private readonly toast = inject(Toast);
   protected readonly data = inject<RequestTestimonialDialogData>(MAT_DIALOG_DATA);
 
   readonly projectId = signal('');
@@ -31,7 +29,9 @@ export class RequestTestimonialDialog {
 
   readonly sendEmail = signal(!!this.data.partner.email);
   readonly email = signal(this.data.partner.email ?? '');
-  readonly canSubmit = computed(() => !this.sendEmail() || this.email().trim().length > 3);
+  readonly emailTouched = signal(false);
+  readonly emailInvalid = computed(() => !this.email().trim() || !isValidEmail(this.email()));
+  readonly canSubmit = computed(() => !this.sendEmail() || !this.emailInvalid());
 
   readonly generatedLink = signal<string | null>(null);
   readonly wasSent = signal(false);
@@ -61,7 +61,7 @@ export class RequestTestimonialDialog {
       this.generatedLink.set(`${environment.websiteBaseUrl}/feedback?token=${response.rawToken}`);
       this.wasSent.set(response.sent);
     } catch (err) {
-      this.toast.error(extractErrorMessage(err, 'Einladung konnte nicht erzeugt werden'));
+      // error toast is shown by errorInterceptor
     } finally {
       this.submitting.set(false);
     }
