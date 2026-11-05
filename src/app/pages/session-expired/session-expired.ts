@@ -10,6 +10,8 @@ import { Router } from '@angular/router';
 export class SessionExpired {
   private readonly router = inject(Router);
 
+  protected readonly deactivated = history.state?.reason === 'deactivated';
+
   backToStart(): void {
     this.router.navigate(['/']);
   }

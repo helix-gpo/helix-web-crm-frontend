@@ -32,7 +32,14 @@ export class Auth {
 
   async init(): Promise<void> {
     this.oauthService.configure(authConfig);
-    await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    try {
+      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    } catch (error) {
+      // code exchange failed (code already used, or login started in another tab) - start over cleanly
+      console.warn('Login-Callback fehlgeschlagen, Login wird neu gestartet', error);
+      this.oauthService.logOut(true);
+      history.replaceState(null, '', '/login');
+    }
     this.oauthService.setupAutomaticSilentRefresh();
     this.updateUserState();
   }
@@ -61,6 +68,12 @@ export class Auth {
     if (wasAuthenticated) {
       this.router.navigate(['/session-expired']);
     }
+  }
+
+  handleDeactivated(): void {
+    this.oauthService.logOut(true);
+    this.clearUserState();
+    this.router.navigate(['/session-expired'], { state: { reason: 'deactivated' } });
   }
 
   private buildCognitoLogoutUrl(): string {

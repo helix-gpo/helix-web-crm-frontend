@@ -4,15 +4,23 @@
 
   <div class="session-card">
     <div class="session-icon-wrapper">
-      <span class="material-symbols-rounded">schedule</span>
+      <span class="material-symbols-rounded">{{ deactivated ? 'block' : 'schedule' }}</span>
     </div>
 
     <p class="session-eyebrow">Internes CRM</p>
-    <h1 class="session-title">Deine Sitzung ist abgelaufen</h1>
-    <p class="session-subtitle">
-      Aus Sicherheitsgründen wurdest du nach längerer Inaktivität automatisch abgemeldet. Kehr zur
-      Startseite zurück, um dich erneut anzumelden.
-    </p>
+
+    @if (deactivated) {
+      <h1 class="session-title">Dein Zugang wurde deaktiviert</h1>
+      <p class="session-subtitle">
+        Du kannst nicht mehr auf das CRM zugreifen. Wende dich bei Fragen an einen Administrator.
+      </p>
+    } @else {
+      <h1 class="session-title">Deine Sitzung ist abgelaufen</h1>
+      <p class="session-subtitle">
+        Aus Sicherheitsgründen wurdest du nach längerer Inaktivität automatisch abgemeldet. Kehr zur
+        Startseite zurück, um dich erneut anzumelden.
+      </p>
+    }
 
     <button class="session-button" (click)="backToStart()">
       <span class="material-symbols-rounded">arrow_back</span>
