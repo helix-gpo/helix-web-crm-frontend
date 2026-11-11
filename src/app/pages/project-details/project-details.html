@@ -66,11 +66,19 @@
               (click)="openAddMilestoneDialog()"
               title="Meilenstein hinzufügen"
               appRequires="MILESTONE:WRITE"
+              [disabled]="closed()"
             >
               <span class="material-symbols-rounded">add</span>
             </button>
           </div>
         </div>
+
+        @if (closed()) {
+          <p class="closed-hint">
+            <span class="material-symbols-rounded">lock</span>
+            Das Projekt ist geschlossen. Öffne es über den Status wieder, um Meilensteine zu ändern.
+          </p>
+        }
 
         @for (milestone of p.milestones; track milestone.id) {
           <div class="milestone-row" [class.milestone-row--done]="milestone.status === 'DONE'">
@@ -91,6 +99,7 @@
                 appRequires="MILESTONE:WRITE"
                 (click)="toggleMilestoneStatus(milestone)"
                 [title]="milestone.status === 'DONE' ? 'Als offen markieren' : 'Abschließen'"
+                [disabled]="closed()"
               >
                 <span class="material-symbols-rounded">
                   {{ milestone.status === 'DONE' ? 'replay' : 'done' }}
@@ -101,6 +110,7 @@
                 appRequires="MILESTONE:WRITE"
                 (click)="openEditMilestoneDialog(milestone)"
                 title="Bearbeiten"
+                [disabled]="closed()"
               >
                 <span class="material-symbols-rounded">edit</span>
               </button>
@@ -109,6 +119,7 @@
                 appRequires="MILESTONE:DELETE"
                 (click)="deleteMilestone(milestone)"
                 title="Entfernen"
+                [disabled]="closed()"
               >
                 <span class="material-symbols-rounded">delete</span>
               </button>
@@ -127,9 +138,9 @@
           <select
             class="status-select"
             [disabled]="changingStatus()"
-            (change)="changeStatus($any($event.target).value)"
+            (change)="changeStatus($any($event.target))"
           >
-            @for (option of statusOptions; track option.value) {
+            @for (option of statusOptions(); track option.value) {
               <option [value]="option.value" [selected]="option.value === p.status">
                 {{ option.label }}
               </option>

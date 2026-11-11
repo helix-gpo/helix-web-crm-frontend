@@ -9,6 +9,7 @@ import { Website } from './pages/website/website';
 import { Welcome } from './pages/welcome/welcome';
 import { Login } from './pages/login/login';
 import { SessionExpired } from './pages/session-expired/session-expired';
+import { NoAccess } from './pages/no-access/no-access';
 import { authGuard } from './core/auth/auth.guard';
 import { ProjectDetail } from './pages/project-details/project-details';
 import { InvoiceDetail } from './pages/invoice-details/invoice-details';
@@ -16,13 +17,17 @@ import { adminGuard } from './core/auth/admin.guard';
 import { Roles } from './pages/roles/roles';
 import { Employees } from './pages/employees/employees';
 import { permissionGuard } from './core/access/permission.guard';
+import { homeGuard } from './core/access/home.guard';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
   { path: 'login', component: Login },
   { path: 'session-expired', component: SessionExpired },
-  { path: 'callback', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'no-access', component: NoAccess, canActivate: [authGuard] },
+  { path: 'callback', redirectTo: 'home', pathMatch: 'full' },
+  // no component: the guard always redirects to the user's start page
+  { path: 'home', canActivate: [authGuard, homeGuard], children: [] },
+  { path: 'dashboard', component: Dashboard, canActivate: [authGuard, adminGuard] },
   { path: 'tenants', component: Tenants, canActivate: [authGuard, permissionGuard('TENANT:READ')] },
   {
     path: 'tenants/:id',
@@ -61,4 +66,5 @@ export const routes: Routes = [
   },
   { path: 'settings/roles', component: Roles, canActivate: [authGuard, adminGuard] },
   { path: 'settings/employees', component: Employees, canActivate: [authGuard, adminGuard] },
+  { path: '**', redirectTo: 'home' },
 ];

@@ -52,13 +52,26 @@
   <div class="field-row">
     <div class="field">
       <label>Startdatum</label>
-      <input type="date" [value]="startDate()" (input)="startDate.set($any($event.target).value)" />
+      <input
+        type="date"
+        [max]="endDate()"
+        [value]="startDate()"
+        (input)="startDate.set($any($event.target).value)"
+      />
     </div>
     <div class="field">
       <label>Enddatum</label>
-      <input type="date" [value]="endDate()" (input)="endDate.set($any($event.target).value)" />
+      <input
+        type="date"
+        [min]="startDate()"
+        [value]="endDate()"
+        (input)="endDate.set($any($event.target).value)"
+      />
     </div>
   </div>
+  @if (dateProblem(); as problem) {
+    <p class="field-error">{{ problem }}</p>
+  }
 
   <div class="field-group">
     <p class="section-title">Notizen</p>

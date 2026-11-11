@@ -5,6 +5,8 @@ import { TenantStore } from '../../../core/tenants/tenant-store';
 import { getContrastTextColor } from '../../../util/color-contrast';
 import { CreateProjectRequest, ProjectStatus } from '../../../model/project';
 import { CharCounter } from '../../../shared/char-counter/char-counter';
+import { PROJECT_STATUS_LABELS } from '../../../model/project-status';
+import { periodError } from '../../../util/validation/date-range';
 
 export interface CreateProjectDialogData {
   initialStatus?: ProjectStatus;
@@ -27,13 +29,10 @@ export class CreateProjectDialog {
 
   protected readonly getContrastTextColor = getContrastTextColor;
 
-  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'LEAD', label: 'Interessent' },
-    { value: 'IN_PROGRESS', label: 'In Arbeit' },
-    { value: 'ON_HOLD', label: 'Pausiert' },
-    { value: 'COMPLETED', label: 'Abgeschlossen' },
-    { value: 'CANCELLED', label: 'Abgebrochen' },
-  ];
+  readonly statusOptions = (Object.keys(PROJECT_STATUS_LABELS) as ProjectStatus[]).map((value) => ({
+    value,
+    label: PROJECT_STATUS_LABELS[value],
+  }));
 
   readonly title = signal('');
   readonly description = signal('');
@@ -64,11 +63,16 @@ export class CreateProjectDialog {
     this.tenantStore.tenants().find((t) => t.id === this.tenantId()),
   );
 
+  readonly dateProblem = computed(() =>
+    periodError(this.startDate() || undefined, this.endDate() || undefined),
+  );
+
   readonly isValid = computed(
     () =>
       this.tenantId() !== '' &&
       this.title().trim().length > 0 &&
-      this.selectedTenant()?.status === 'ACTIVE',
+      this.selectedTenant()?.status === 'ACTIVE' &&
+      !this.dateProblem(),
   );
 
   addHighlight(): void {

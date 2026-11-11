@@ -4,10 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { ProjectApi } from '../../../core/projects/project-api';
 import { Milestone, MilestoneStatus } from '../../../model/project';
 import { CharCounter } from '../../../shared/char-counter/char-counter';
+import { dueDateError } from '../../../util/validation/date-range';
 
 export interface MilestoneDialogData {
   projectId: string;
   milestone?: Milestone;
+  projectStart?: string;
+  projectEnd?: string;
 }
 
 @Component({
@@ -22,6 +25,10 @@ export class MilestoneDialog {
   protected readonly data = inject<MilestoneDialogData>(MAT_DIALOG_DATA);
 
   readonly isEditMode = computed(() => !!this.data.milestone);
+
+  readonly dueDateProblem = computed(() =>
+    dueDateError(this.dueDate() || undefined, this.data.projectStart, this.data.projectEnd),
+  );
 
   readonly statusOptions: { value: MilestoneStatus; label: string }[] = [
     { value: 'PLANNED', label: 'Geplant' },
@@ -45,6 +52,10 @@ export class MilestoneDialog {
   async submit(): Promise<void> {
     if (!this.title().trim()) {
       this.showWarning.set(true);
+      return;
+    }
+
+    if (this.dueDateProblem()) {
       return;
     }
 

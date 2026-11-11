@@ -16,6 +16,8 @@ import { Project, ProjectStatus, Milestone } from '../../model/project';
 import { getContrastTextColor } from '../../util/color-contrast';
 import { AuditInfo } from '../../shared/audit-info/audit-info';
 import { RequiresPermission } from '../../core/access/requires-permission';
+import { allowedStatusOptions, isClosed } from '../../model/project-status';
+import { InvoiceApi } from '../../core/invoices/invoice-api';
 
 @Component({
   selector: 'app-project-detail',
@@ -28,6 +30,7 @@ export class ProjectDetail {
 
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly invoiceApi = inject(InvoiceApi);
   private readonly projectApi = inject(ProjectApi);
   private readonly projectStore = inject(ProjectStore);
   private readonly tenantStore = inject(TenantStore);
@@ -41,13 +44,15 @@ export class ProjectDetail {
   readonly project = computed(() => this.projectResource.value());
   readonly loading = computed(() => this.projectResource.isLoading());
 
-  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'LEAD', label: 'Interessent' },
-    { value: 'IN_PROGRESS', label: 'In Arbeit' },
-    { value: 'ON_HOLD', label: 'Pausiert' },
-    { value: 'COMPLETED', label: 'Abgeschlossen' },
-    { value: 'CANCELLED', label: 'Abgebrochen' },
-  ];
+  readonly statusOptions = computed(() => {
+    const p = this.project();
+    return p ? allowedStatusOptions(p.status) : [];
+  });
+
+  readonly closed = computed(() => {
+    const p = this.project();
+    return !!p && isClosed(p.status);
+  });
 
   readonly tenantName = computed(() => {
     const p = this.project();
@@ -70,15 +75,46 @@ export class ProjectDetail {
     this.router.navigate(['/projects']);
   }
 
-  async changeStatus(status: string): Promise<void> {
+  async changeStatus(select: HTMLSelectElement): Promise<void> {
+    const p = this.project();
+    if (!p) return;
+    const target = select.value as ProjectStatus;
+    // select keeps the picked value in the DOM - reset it if the change does not happen
+    const reset = () => (select.value = p.status);
+
+    if (target === 'COMPLETED' && !(await this.confirmUninvoicedMilestones(p))) {
+      reset();
+      return;
+    }
+
     this.changingStatus.set(true);
     try {
-      await firstValueFrom(this.projectApi.changeStatus(this.id(), status));
+      await firstValueFrom(this.projectApi.changeStatus(this.id(), target));
       this.refreshEverywhere();
       this.toast.success('Status aktualisiert');
+    } catch {
+      reset(); // error toast comes from the interceptor
     } finally {
       this.changingStatus.set(false);
     }
+  }
+
+  // not blocking: the final invoice often comes after completion
+  private async confirmUninvoicedMilestones(p: Project): Promise<boolean> {
+    const prefill = await firstValueFrom(this.invoiceApi.prefill(p.tenantId, p.id));
+    const open = prefill.availableMilestones.filter((m) => !m.alreadyInvoiced);
+    if (open.length === 0) return true;
+
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '44rem',
+      panelClass: 'app-dialog-panel',
+      data: {
+        title: 'Projekt trotzdem abschließen?',
+        message: `Noch nicht abgerechnet: ${open.map((m) => m.title).join(', ')}. Du kannst sie auch nach dem Abschluss noch abrechnen.`,
+        confirmLabel: 'Abschließen',
+      },
+    });
+    return !!(await firstValueFrom(dialogRef.afterClosed()));
   }
 
   async togglePublish(): Promise<void> {
@@ -140,7 +176,11 @@ export class ProjectDetail {
     const dialogRef = this.dialog.open(MilestoneDialog, {
       width: '52rem',
       panelClass: 'app-dialog-panel',
-      data: { projectId: this.id() },
+      data: {
+        projectId: this.id(),
+        projectStart: this.project()?.startDate,
+        projectEnd: this.project()?.endDate,
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -155,7 +195,12 @@ export class ProjectDetail {
     const dialogRef = this.dialog.open(MilestoneDialog, {
       width: '52rem',
       panelClass: 'app-dialog-panel',
-      data: { projectId: this.id(), milestone },
+      data: {
+        projectId: this.id(),
+        milestone,
+        projectStart: this.project()?.startDate,
+        projectEnd: this.project()?.endDate,
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {

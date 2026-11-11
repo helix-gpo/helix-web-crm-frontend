@@ -11,6 +11,7 @@ export const adminGuard: CanActivateFn = () => {
   return toObservable(permissions.loaded).pipe(
     filter(Boolean),
     take(1),
-    map(() => permissions.isAdmin() || router.createUrlTree(['/dashboard'])),
+    // /home picks the right start page - /dashboard would loop for non-admins
+    map(() => permissions.isAdmin() || router.createUrlTree(['/home'])),
   );
 };

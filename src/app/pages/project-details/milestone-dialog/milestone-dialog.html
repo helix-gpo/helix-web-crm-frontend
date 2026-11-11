@@ -30,7 +30,16 @@
   <div class="field-row">
     <div class="field">
       <label>Fälligkeitsdatum</label>
-      <input type="date" [value]="dueDate()" (input)="dueDate.set($any($event.target).value)" />
+      <input
+        type="date"
+        [min]="data.projectStart ?? ''"
+        [max]="data.projectEnd ?? ''"
+        [value]="dueDate()"
+        (input)="dueDate.set($any($event.target).value)"
+      />
+      @if (dueDateProblem(); as problem) {
+        <p class="field-error">{{ problem }}</p>
+      }
     </div>
     <div class="field">
       <label>Preis (optional, in €)</label>

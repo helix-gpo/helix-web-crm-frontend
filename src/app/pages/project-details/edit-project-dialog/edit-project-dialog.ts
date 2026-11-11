@@ -5,6 +5,8 @@ import { ProjectApi } from '../../../core/projects/project-api';
 import { Project, ProjectStatus } from '../../../model/project';
 import { getContrastTextColor } from '../../../util/color-contrast';
 import { CharCounter } from '../../../shared/char-counter/char-counter';
+import { allowedStatusOptions } from '../../../model/project-status';
+import { dueDateError, periodError } from '../../../util/validation/date-range';
 
 @Component({
   selector: 'app-edit-project-dialog',
@@ -18,13 +20,7 @@ export class EditProjectDialog {
   protected readonly data = inject<Project>(MAT_DIALOG_DATA);
   protected readonly getContrastTextColor = getContrastTextColor;
 
-  readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'LEAD', label: 'Interessent' },
-    { value: 'IN_PROGRESS', label: 'In Arbeit' },
-    { value: 'ON_HOLD', label: 'Pausiert' },
-    { value: 'COMPLETED', label: 'Abgeschlossen' },
-    { value: 'CANCELLED', label: 'Abgebrochen' },
-  ];
+  readonly statusOptions = allowedStatusOptions(this.data.status);
 
   readonly title = signal(this.data.title);
   readonly description = signal(this.data.description ?? '');
@@ -50,6 +46,19 @@ export class EditProjectDialog {
   readonly showWarning = signal(false);
 
   readonly isValid = computed(() => this.title().trim().length > 0);
+
+  readonly dateProblem = computed(() => {
+    const start = this.startDate() || undefined;
+    const end = this.endDate() || undefined;
+    const period = periodError(start, end);
+    if (period) return period;
+
+    // existing milestones must still fit into the new period
+    const conflict = this.data.milestones.find((m) => dueDateError(m.dueDate, start, end));
+    return conflict
+      ? `Meilenstein „${conflict.title}“ läge außerhalb des neuen Projektzeitraums.`
+      : null;
+  });
 
   addHighlight(): void {
     const value = this.newHighlight().trim();
@@ -80,6 +89,10 @@ export class EditProjectDialog {
   async submit(): Promise<void> {
     if (!this.isValid()) {
       this.showWarning.set(true);
+      return;
+    }
+
+    if (this.dateProblem()) {
       return;
     }
 

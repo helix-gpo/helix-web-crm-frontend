@@ -393,3 +393,24 @@
     transform: rotate(360deg);
   }
 }
+
+.closed-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  background-color: rgba(245, 166, 35, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+
+  .material-symbols-rounded {
+    font-size: 1.8rem;
+    color: var(--warning);
+  }
+}
+
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

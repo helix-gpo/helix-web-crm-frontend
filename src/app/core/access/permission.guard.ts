@@ -14,6 +14,7 @@ export const permissionGuard =
     return toObservable(permissions.loaded).pipe(
       filter(Boolean),
       take(1),
-      map(() => permissions.can(key) || router.createUrlTree(['/dashboard'])),
+      // /home picks the right start page - /dashboard would loop for non-admins
+      map(() => permissions.can(key) || router.createUrlTree(['/home'])),
     );
   };

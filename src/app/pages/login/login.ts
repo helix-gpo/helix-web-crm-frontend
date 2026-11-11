@@ -15,7 +15,7 @@ export class Login {
   constructor() {
     effect(() => {
       if (this.auth.isAuthenticated()) {
-        this.router.navigate(['/tenants']);
+        this.router.navigate(['/home']);
       }
     });
   }
