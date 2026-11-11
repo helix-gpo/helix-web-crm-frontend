@@ -1,14 +1,14 @@
-// values marked TODO come from terraform outputs once the prod cognito pool exists (block 5)
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://api.helix-gpo.com/api/crm',
-  websiteBaseUrl: 'https://www.helix-gpo.com',
+  apiBaseUrl: "https://api.helix-gpo.com/api/crm",
+  websiteBaseUrl: "https://www.helix-gpo.com",
   auth: {
-    issuer: 'https://cognito-idp.eu-central-1.amazonaws.com/TODO_POOL_ID',
-    clientId: 'TODO_CLIENT_ID',
+    issuer:
+      "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_UPTwKD0cx",
+    clientId: "sso4fl9sjnksldrr2lc9r36fp",
     redirectUri: `${window.location.origin}/callback`,
     postLogoutRedirectUri: window.location.origin,
-    scope: 'openid email profile',
-    cognitoDomain: 'https://TODO_DOMAIN.auth.eu-central-1.amazoncognito.com',
+    scope: "openid email profile",
+    cognitoDomain: "https://helix-gpo-crm.auth.eu-central-1.amazoncognito.com",
   },
 };
