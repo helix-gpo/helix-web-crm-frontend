@@ -19,6 +19,7 @@ export interface Address {
 export interface BillingParty {
   name: string;
   vatId?: string;
+  taxNumber?: string;
   address?: Address;
   email?: string;
   iban?: string;
